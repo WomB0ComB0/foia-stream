@@ -70,7 +70,6 @@ jobs:
             p/secrets
             p/typescript
             p/nodejs
-          generateSarif: true
         continue-on-error: true
 
       - name: Upload Semgrep results
@@ -136,13 +135,18 @@ jobs:
 
       # OSV Scanner for additional coverage
       - name: OSV Scanner
-        uses: google/osv-scanner-action@v1
+        run: |
+          # Install and run google/osv-scanner locally (uses Go to install the binary)
+          set -e
+          if ! command -v osv-scanner >/dev/null 2>&1; then
+            echo "Installing osv-scanner..."
+            go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+            # Add GOPATH bin to PATH for this step
+            export PATH="$PATH:$(go env GOPATH 2>/dev/null)/bin"
+          fi
+          # Run the scanner with same args as before
+          osv-scanner --lockfile=bun.lock --format=sarif --output=osv-results.sarif
         continue-on-error: true
-        with:
-          scan-args: |-
-            --lockfile=bun.lock
-            --format=sarif
-            --output=osv-results.sarif
 
       - name: Upload OSV results
         uses: github/codeql-action/upload-sarif@v3
@@ -168,11 +172,11 @@ jobs:
           fetch-depth: 0
 
       # Gitleaks secret detection
+      # Note: No license required for personal GitHub accounts
       - name: Gitleaks scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
         continue-on-error: true
 
       # TruffleHog for additional coverage

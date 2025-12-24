@@ -1,0 +1,10 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Dashboard from '@/components/react/Dashboard';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Dashboard">
+  <Dashboard client:load />
+</BaseLayout>

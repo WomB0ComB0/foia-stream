@@ -108,7 +108,7 @@ export const AgencySearchSchema = S.Struct({
   pageSize: S.NumberFromString.pipe(
     S.int(),
     S.positive(),
-    S.lessThanOrEqualTo(100),
+    S.lessThanOrEqualTo(1000),
     S.optionalWith({ default: () => 20 }),
   ),
 });

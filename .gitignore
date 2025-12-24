@@ -47,3 +47,5 @@ drizzle/meta/
 
 .turbo/
 .next/
+
+./apps/api/data/*

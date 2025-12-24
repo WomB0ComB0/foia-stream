@@ -1,0 +1,45 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/Logo.astro';
+import RegisterForm from '@/components/react/RegisterForm';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Create Account">
+  <div class="relative min-h-screen overflow-hidden">
+    <!-- Background -->
+    <div class="pointer-events-none absolute inset-0 bg-grid opacity-20"></div>
+
+    <div class="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
+      <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <a href="/" class="flex items-center justify-center gap-3">
+          <Logo size={44} />
+          <span class="font-display text-2xl font-bold tracking-tight">
+            FOIA<span class="text-accent-400">Stream</span>
+          </span>
+        </a>
+        <h1 class="mt-8 text-center text-2xl font-bold tracking-tight text-surface-100">
+          Create your account
+        </h1>
+        <p class="mt-2 text-center text-sm text-surface-400">
+          Already have an account?{' '}
+          <a href="/login" class="font-medium text-accent-400 hover:text-accent-300">
+            Sign in
+          </a>
+        </p>
+      </div>
+
+      <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="rounded-2xl border border-surface-800 bg-surface-900/50 px-6 py-8 shadow-xl backdrop-blur-sm sm:px-10">
+          <RegisterForm client:load />
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { initAuth } from '@/stores/auth';
+  initAuth();
+</script>

@@ -1,0 +1,81 @@
+---
+import Logo from './Logo.astro';
+---
+
+<header class="sticky top-0 z-50 border-b border-surface-800 bg-surface-950/80 backdrop-blur-xl">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
+      <a href="/" class="flex items-center gap-3 transition-opacity hover:opacity-80">
+        <Logo size={32} />
+        <span class="font-display text-lg font-semibold tracking-tight text-surface-100">
+          FOIA<span class="text-accent-400">Stream</span>
+        </span>
+      </a>
+
+      <nav class="hidden items-center gap-8 md:flex">
+        <a href="/dashboard" class="text-sm text-surface-400 transition-colors hover:text-surface-100">
+          Dashboard
+        </a>
+        <a href="/agencies" class="text-sm text-surface-400 transition-colors hover:text-surface-100">
+          Agencies
+        </a>
+        <a href="/templates" class="text-sm text-surface-400 transition-colors hover:text-surface-100">
+          Templates
+        </a>
+      </nav>
+
+      <div id="header-auth" class="flex items-center gap-4">
+        <!-- Auth buttons rendered by React -->
+        <div class="flex items-center gap-3">
+          <a
+            href="/login"
+            class="text-sm text-surface-300 transition-colors hover:text-surface-100"
+            data-auth-guest
+          >
+            Sign In
+          </a>
+          <a
+            href="/register"
+            class="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
+            data-auth-guest
+          >
+            Get Started
+          </a>
+          <a
+            href="/dashboard"
+            class="hidden rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-200 transition-all hover:border-surface-600 hover:bg-surface-800"
+            data-auth-user
+          >
+            Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  import { $isAuthenticated, $isLoading, initAuth } from '@/stores/auth';
+
+  // Initialize auth on page load
+  initAuth();
+
+  // Update UI based on auth state
+  function updateAuthUI() {
+    const isAuth = $isAuthenticated.get();
+    const isLoading = $isLoading.get();
+
+    if (isLoading) return;
+
+    document.querySelectorAll('[data-auth-guest]').forEach((el) => {
+      (el as HTMLElement).classList.toggle('hidden', isAuth);
+    });
+
+    document.querySelectorAll('[data-auth-user]').forEach((el) => {
+      (el as HTMLElement).classList.toggle('hidden', !isAuth);
+    });
+  }
+
+  $isAuthenticated.subscribe(updateAuthUI);
+  $isLoading.subscribe(updateAuthUI);
+</script>

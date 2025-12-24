@@ -1,0 +1,13 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import RequestDetail from '@/components/react/RequestDetail';
+
+// Since request IDs are dynamic and come from the API, we need SSR
+export const prerender = false;
+
+const { id } = Astro.params;
+---
+
+<BaseLayout title="Request Details">
+  <RequestDetail requestId={id!} client:load />
+</BaseLayout>

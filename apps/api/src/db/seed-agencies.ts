@@ -9,7 +9,6 @@
  * ```
  */
 
-import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db, schema } from './index';
 
@@ -744,22 +743,19 @@ export async function seedAgencies() {
 
   console.log(`🌱 Seeding ${allAgencies.length} agencies...`);
 
+  const existingAgencies = await db.select({ name: schema.agencies.name }).from(schema.agencies);
+  const existingNames = new Set(existingAgencies.map((a) => a.name));
+
   let inserted = 0;
   let skipped = 0;
 
   for (const agency of allAgencies) {
+    if (existingNames.has(agency.name)) {
+      skipped++;
+      continue;
+    }
+
     try {
-      const existing = await db
-        .select()
-        .from(schema.agencies)
-        .where(eq(schema.agencies.name, agency.name))
-        .get();
-
-      if (existing) {
-        skipped++;
-        continue;
-      }
-
       await db.insert(schema.agencies).values({
         id: nanoid(),
         name: agency.name,
@@ -776,7 +772,6 @@ export async function seedAgencies() {
         createdAt: now,
         updatedAt: now,
       });
-
       inserted++;
     } catch (error) {
       console.error(`Failed to insert ${agency.name}:`, error);

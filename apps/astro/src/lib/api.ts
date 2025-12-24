@@ -61,7 +61,7 @@ export interface Agency {
   city?: string | null;
   county?: string | null;
   foiaEmail?: string | null;
-  foiaUrl?: string | null;
+  foiaPortalUrl?: string | null;
   phoneNumber?: string | null;
   address?: string | null;
   responseDeadlineDays?: number | null;

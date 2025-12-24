@@ -68,7 +68,7 @@ import Logo from './Logo.astro';
     if (isLoading) return;
 
     document.querySelectorAll('[data-auth-guest]').forEach((el) => {
-      (el as HTMLElement).style.display = isAuth ? 'none' : '';
+      (el as HTMLElement).classList.toggle('hidden', isAuth);
     });
 
     document.querySelectorAll('[data-auth-user]').forEach((el) => {

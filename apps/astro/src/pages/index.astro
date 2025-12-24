@@ -1,0 +1,494 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/Logo.astro';
+
+// Static landing page - pre-render at build time
+export const prerender = true;
+---
+
+<BaseLayout title="Government Transparency, Simplified">
+  <div class="relative min-h-screen overflow-hidden">
+    <!-- Animated Background Particles -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div class="particle" style="left: 10%; top: 20%; --drift-x: 80px; --drift-y: -150px; --duration: 12s; --delay: 0s;"></div>
+      <div class="particle" style="left: 20%; top: 60%; --drift-x: -60px; --drift-y: -180px; --duration: 10s; --delay: 2s;"></div>
+      <div class="particle" style="left: 80%; top: 30%; --drift-x: -100px; --drift-y: -120px; --duration: 14s; --delay: 1s;"></div>
+      <div class="particle" style="left: 70%; top: 70%; --drift-x: 50px; --drift-y: -200px; --duration: 11s; --delay: 3s;"></div>
+      <div class="particle" style="left: 40%; top: 80%; --drift-x: 30px; --drift-y: -160px; --duration: 9s; --delay: 4s;"></div>
+      <div class="particle" style="left: 90%; top: 50%; --drift-x: -70px; --drift-y: -140px; --duration: 13s; --delay: 0.5s;"></div>
+      <div class="particle" style="left: 5%; top: 40%; --drift-x: 90px; --drift-y: -170px; --duration: 15s; --delay: 2.5s;"></div>
+      <div class="particle" style="left: 60%; top: 90%; --drift-x: -40px; --drift-y: -190px; --duration: 8s; --delay: 1.5s;"></div>
+    </div>
+
+    <!-- Background effects with parallax -->
+    <div class="pointer-events-none absolute inset-0 bg-grid opacity-30" data-parallax="slow"></div>
+    <div class="pointer-events-none absolute inset-x-0 -top-1/4 h-[100vh] w-full" data-parallax="medium">
+      <div class="gradient-hero gradient-animate h-full w-full"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-8" data-reveal="up">
+      <a href="/" class="flex items-center gap-3" data-magnetic>
+        <Logo size={36} />
+        <span class="font-display text-xl font-semibold tracking-tight">
+          FOIA<span class="text-accent-400">Stream</span>
+        </span>
+      </a>
+
+      <div class="flex items-center gap-6">
+        <a href="/login" class="text-sm text-surface-400 transition-colors hover:text-surface-100" data-magnetic>
+          Sign In
+        </a>
+        <a
+          href="/register"
+          class="rounded-lg bg-accent-500 px-5 py-2.5 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 hover:shadow-lg hover:shadow-accent-500/20"
+          data-magnetic
+        >
+          Get Started Free
+        </a>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative z-10 mx-auto max-w-7xl px-6 pt-16 text-center lg:px-8 lg:pt-24">
+      <div class="mx-auto max-w-4xl">
+        <!-- Badge -->
+        <div class="mb-8 inline-flex items-center gap-2 rounded-full border border-surface-700 bg-surface-900/50 px-4 py-2 backdrop-blur-sm" data-reveal="scale" data-delay="1">
+          <span class="h-2 w-2 animate-pulse rounded-full bg-accent-400"></span>
+          <span class="font-display text-xs uppercase tracking-widest text-surface-400">
+            Open Source • Privacy First
+          </span>
+        </div>
+
+        <!-- Headline with word animation -->
+        <h1 class="font-display text-4xl font-bold tracking-tight text-surface-50 sm:text-6xl lg:text-7xl">
+          <span class="block overflow-hidden" data-reveal="up" data-delay="2">
+            <span class="hero-word inline-block">Public Records</span>
+          </span>
+          <span class="mt-2 block overflow-hidden" data-reveal="up" data-delay="3">
+            <span class="hero-word inline-block bg-gradient-to-r from-accent-400 via-accent-300 to-teal-300 bg-clip-text text-transparent gradient-animate">
+              Made Accessible
+            </span>
+          </span>
+        </h1>
+
+        <p class="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-surface-400 sm:text-xl" data-reveal="blur" data-delay="4">
+          FOIA Stream bridges the gap between agencies and citizens. Automate FOIA requests,
+          track deadlines, and ensure government accountability with professional-grade tools.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6" data-reveal="up" data-delay="5">
+          <a
+            href="/register"
+            class="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-accent-500 px-8 py-4 text-base font-semibold text-surface-950 transition-all hover:bg-accent-400 glow-on-reveal"
+            data-magnetic
+          >
+            <span class="relative z-10">Start Filing Requests</span>
+            <svg class="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+            </svg>
+            <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full"></div>
+          </a>
+          <a
+            href="#features"
+            class="inline-flex items-center gap-2 rounded-xl border border-surface-700 px-8 py-4 text-base font-medium text-surface-300 transition-all hover:border-surface-600 hover:bg-surface-900"
+            data-magnetic
+          >
+            <span>See How It Works</span>
+            <svg class="h-5 w-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats with counter animation -->
+      <div class="mx-auto mt-24 grid max-w-4xl grid-cols-2 gap-8 border-t border-surface-800 pt-12 sm:grid-cols-4 divider-animate" data-reveal="fade">
+        <div data-reveal="up" data-delay="1">
+          <div class="font-display text-3xl font-bold text-surface-100">
+            <span class="counter-animate" data-count="50000" data-suffix="+">0</span>
+          </div>
+          <div class="mt-1 text-sm text-surface-500">Requests Filed</div>
+        </div>
+        <div data-reveal="up" data-delay="2">
+          <div class="font-display text-3xl font-bold text-surface-100">
+            <span class="counter-animate" data-count="2400" data-suffix="+">0</span>
+          </div>
+          <div class="mt-1 text-sm text-surface-500">Agencies</div>
+        </div>
+        <div data-reveal="up" data-delay="3">
+          <div class="font-display text-3xl font-bold text-accent-400">
+            <span class="counter-animate" data-count="98" data-suffix="%">0</span>
+          </div>
+          <div class="mt-1 text-sm text-surface-500">Success Rate</div>
+        </div>
+        <div data-reveal="up" data-delay="4">
+          <div class="font-display text-3xl font-bold text-surface-100">
+            <span class="counter-animate" data-count="24" data-suffix="hrs">0</span>
+          </div>
+          <div class="mt-1 text-sm text-surface-500">Avg. Response</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="relative z-10 mx-auto max-w-7xl px-6 py-32 lg:px-8">
+      <!-- Decorative line -->
+      <div class="absolute left-1/2 top-0 h-24 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-accent-500/50 to-transparent" data-reveal="scale"></div>
+
+      <div class="text-center">
+        <h2 class="font-display text-sm uppercase tracking-widest text-accent-400" data-reveal="up">Features</h2>
+        <p class="mt-4 text-3xl font-bold text-surface-100 sm:text-4xl" data-reveal="blur" data-delay="1">
+          Everything you need for transparency
+        </p>
+      </div>
+
+      <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Feature 1 -->
+        <div class="card-reveal group relative rounded-2xl border border-surface-800 bg-surface-900/50 p-8 transition-all hover:border-surface-700 hover:bg-surface-900" data-reveal="up" data-delay="1">
+          <div class="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-500/5 blur-2xl transition-all group-hover:bg-accent-500/10"></div>
+          <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400 transition-transform group-hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-100">Simple Templates</h3>
+          <p class="mt-2 text-surface-400">
+            Pre-made request templates for bodycam footage, contracts, personnel records, and more.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="card-reveal group relative rounded-2xl border border-surface-800 bg-surface-900/50 p-8 transition-all hover:border-surface-700 hover:bg-surface-900" data-reveal="up" data-delay="2">
+          <div class="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-500/5 blur-2xl transition-all group-hover:bg-accent-500/10"></div>
+          <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400 transition-transform group-hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-100">Deadline Tracking</h3>
+          <p class="mt-2 text-surface-400">
+            Automatic statutory deadline monitoring with alerts when agencies miss appropriate response windows.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="card-reveal group relative rounded-2xl border border-surface-800 bg-surface-900/50 p-8 transition-all hover:border-surface-700 hover:bg-surface-900" data-reveal="up" data-delay="3">
+          <div class="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-500/5 blur-2xl transition-all group-hover:bg-accent-500/10"></div>
+          <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400 transition-transform group-hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-100">Agency Directory</h3>
+          <p class="mt-2 text-surface-400">
+            Constantly updated database of eligable federal, state, and local agencies with contact info and submission requirements.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="card-reveal group relative rounded-2xl border border-surface-800 bg-surface-900/50 p-8 transition-all hover:border-surface-700 hover:bg-surface-900" data-reveal="up" data-delay="4">
+          <div class="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-500/5 blur-2xl transition-all group-hover:bg-accent-500/10"></div>
+          <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400 transition-transform group-hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-100">Enterprise Security</h3>
+          <p class="mt-2 text-surface-400">
+            End-to-end encryption, MFA support, and full audit trails. Your sensitive documents stay secure and private.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="card-reveal group relative rounded-2xl border border-surface-800 bg-surface-900/50 p-8 transition-all hover:border-surface-700 hover:bg-surface-900" data-reveal="up" data-delay="5">
+          <div class="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-500/5 blur-2xl transition-all group-hover:bg-accent-500/10"></div>
+          <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400 transition-transform group-hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-100">Compliance Analytics</h3>
+          <p class="mt-2 text-surface-400">
+            Track agency response times and denial rates. Generate public accountability reports automatically.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="card-reveal group relative rounded-2xl border border-surface-800 bg-surface-900/50 p-8 transition-all hover:border-surface-700 hover:bg-surface-900" data-reveal="up" data-delay="6">
+          <div class="absolute -right-12 -top-12 h-24 w-24 rounded-full bg-accent-500/5 blur-2xl transition-all group-hover:bg-accent-500/10"></div>
+          <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent-500/10 text-accent-400 transition-transform group-hover:scale-110">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-100">Blazing Fast</h3>
+          <p class="mt-2 text-surface-400">
+            Built with Astro and modern web technologies. Fast, secure, and easy to use.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="relative z-10 mx-auto max-w-7xl px-6 pb-24 lg:px-8">
+      <div class="text-center">
+        <h2 class="font-display text-sm uppercase tracking-widest text-accent-400" data-reveal="up">How It Works</h2>
+        <p class="mt-4 text-3xl font-bold text-surface-100 sm:text-4xl" data-reveal="blur" data-delay="1">
+          Three steps to transparency
+        </p>
+      </div>
+
+      <div class="relative mt-16">
+        <!-- Connecting line -->
+        <div class="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-gradient-to-b from-accent-500/50 via-accent-500/20 to-transparent lg:block" data-reveal="scale"></div>
+
+        <div class="grid gap-12 lg:grid-cols-3">
+          <!-- Step 1 -->
+          <div class="relative text-center" data-reveal="left" data-delay="1">
+            <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-500 bg-surface-950 font-display text-2xl font-bold text-accent-400">
+              1
+            </div>
+            <h3 class="text-xl font-semibold text-surface-100">Choose Template</h3>
+            <p class="mt-3 text-surface-400">
+              Select from our library of professionally crafted FOIA request templates or create your own.
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="relative text-center" data-reveal="up" data-delay="2">
+            <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-500 bg-surface-950 font-display text-2xl font-bold text-accent-400">
+              2
+            </div>
+            <h3 class="text-xl font-semibold text-surface-100">Submit Request</h3>
+            <p class="mt-3 text-surface-400">
+              We route your request to the right agency and handle all the submission formalities.
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="relative text-center" data-reveal="right" data-delay="3">
+            <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent-500 bg-surface-950 font-display text-2xl font-bold text-accent-400">
+              3
+            </div>
+            <h3 class="text-xl font-semibold text-surface-100">Track & Receive</h3>
+            <p class="mt-3 text-surface-400">
+              Monitor progress in real-time. We'll notify you of updates and deliver your documents securely.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="relative z-10 mx-auto max-w-7xl px-6 pb-32 lg:px-8">
+      <div class="relative overflow-hidden rounded-3xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-950 px-8 py-16 text-center sm:px-16 sm:py-24" data-reveal="scale">
+        <div class="pointer-events-none absolute inset-0 bg-grid opacity-20"></div>
+
+        <!-- Subtle aurora blobs -->
+        <div class="aurora-container rounded-3xl">
+          <div class="aurora-blob aurora-blob-1"></div>
+          <div class="aurora-blob aurora-blob-2"></div>
+        </div>
+
+        <div class="relative z-10">
+          <h2 class="font-display text-3xl font-bold text-surface-100 sm:text-4xl" data-reveal="up" data-delay="1">
+            Ready to increase transparency?
+          </h2>
+          <p class="mx-auto mt-4 max-w-xl text-lg text-surface-400" data-reveal="up" data-delay="2">
+            Join journalists, attorneys, and citizens using FOIA Stream to hold agencies accountable.
+          </p>
+          <a
+            href="/register"
+            class="mt-8 inline-flex items-center gap-2 rounded-xl bg-accent-500 px-8 py-4 text-base font-semibold text-surface-950 transition-all hover:bg-accent-400 hover:shadow-xl hover:shadow-accent-500/25"
+            data-reveal="up" data-delay="3"
+          >
+            Create Free Account
+            <svg class="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-surface-800" data-reveal="fade">
+      <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+        <div class="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          <div class="flex items-center gap-3">
+            <Logo size={28} />
+            <span class="font-display text-sm text-surface-500">
+              FOIA<span class="text-accent-500">Stream</span>
+            </span>
+          </div>
+          <p class="text-sm text-surface-600">
+            Built with ⚖️ for a more transparent future.
+          </p>
+          <div class="flex items-center gap-6">
+            <a href="/privacy" class="text-sm text-surface-500 hover:text-surface-300 transition-colors">Privacy</a>
+            <a href="/terms" class="text-sm text-surface-500 hover:text-surface-300 transition-colors">Terms</a>
+            <a href="https://github.com/WomB0ComB0/foia-stream" target="_blank" rel="noopener noreferrer" class="text-surface-500 hover:text-surface-300 transition-colors">
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</BaseLayout>
+
+<script>
+  // Scroll reveal animation system
+  function initScrollReveal() {
+    const revealElements = document.querySelectorAll('[data-reveal]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+
+          // Trigger counter animation if present
+          const counter = entry.target.querySelector('.counter-animate');
+          if (counter) {
+            animateCounter(counter);
+          }
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    revealElements.forEach(el => observer.observe(el));
+  }
+
+  // Counter animation
+  function animateCounter(element: Element) {
+    const target = parseInt(element.getAttribute('data-count') || '0');
+    const suffix = element.getAttribute('data-suffix') || '';
+    const duration = 2000;
+    const startTime = performance.now();
+
+    function formatNumber(num: number): string {
+      if (num >= 1000) {
+        return (num / 1000).toFixed(num >= 10000 ? 0 : 1) + 'K';
+      }
+      return num.toString();
+    }
+
+    function update(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (ease-out cubic)
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(eased * target);
+
+      element.textContent = formatNumber(current) + suffix;
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+
+    requestAnimationFrame(update);
+  }
+
+  // Parallax effect
+  function initParallax() {
+    const parallaxElements = document.querySelectorAll('[data-parallax]');
+
+    let ticking = false;
+
+    function updateParallax() {
+      const scrollY = window.scrollY;
+
+      parallaxElements.forEach(el => {
+        const speed = el.getAttribute('data-parallax');
+        let factor = 0.1;
+
+        if (speed === 'medium') factor = 0.2;
+        if (speed === 'fast') factor = 0.3;
+
+        const yOffset = scrollY * factor;
+        (el as HTMLElement).style.transform = `translate3d(0, ${yOffset}px, 0)`;
+      });
+
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateParallax);
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+
+  // Magnetic cursor effect
+  function initMagnetic() {
+    const magneticElements = document.querySelectorAll('[data-magnetic]');
+
+    magneticElements.forEach(el => {
+      el.addEventListener('mousemove', (e) => {
+        const rect = (el as HTMLElement).getBoundingClientRect();
+        const x = (e as MouseEvent).clientX - rect.left - rect.width / 2;
+        const y = (e as MouseEvent).clientY - rect.top - rect.height / 2;
+
+        (el as HTMLElement).style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
+      });
+
+      el.addEventListener('mouseleave', () => {
+        (el as HTMLElement).style.transform = '';
+      });
+    });
+  }
+
+  // Hero word animation
+  function initHeroAnimation() {
+    const heroWords = document.querySelectorAll('.hero-word');
+
+    heroWords.forEach((word, wordIndex) => {
+      const text = word.textContent || '';
+      word.textContent = '';
+
+      [...text].forEach((char, charIndex) => {
+        const span = document.createElement('span');
+        span.textContent = char === ' ' ? '\u00A0' : char;
+        span.className = 'char-animate';
+        span.style.animationDelay = `${(wordIndex * 0.3) + (charIndex * 0.03)}s`;
+        word.appendChild(span);
+      });
+    });
+  }
+
+  // Initialize all animations
+  document.addEventListener('DOMContentLoaded', () => {
+    // Small delay to ensure styles are loaded
+    requestAnimationFrame(() => {
+      initScrollReveal();
+      initParallax();
+      initMagnetic();
+      initHeroAnimation();
+    });
+  });
+
+  // Re-init on page transitions (Astro View Transitions)
+  document.addEventListener('astro:page-load', () => {
+    initScrollReveal();
+    initParallax();
+    initMagnetic();
+    initHeroAnimation();
+  });
+</script>
+
+<style>
+  /* Hero character animation is handled by JS but we need base styles */
+  .hero-word {
+    perspective: 1000px;
+  }
+</style>

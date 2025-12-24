@@ -1,0 +1,10 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import NewRequestForm from '@/components/react/NewRequestForm';
+
+export const prerender = true;
+---
+
+<BaseLayout title="New Request">
+  <NewRequestForm client:load />
+</BaseLayout>

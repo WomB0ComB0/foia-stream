@@ -1,0 +1,39 @@
+---
+interface Props {
+  size?: number;
+  class?: string;
+}
+
+const { size = 40, class: className = '' } = Astro.props;
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 40 40"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  class={className}
+>
+  <!-- Outer ring -->
+  <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5" class="text-surface-700" />
+
+  <!-- Inner geometric pattern -->
+  <path
+    d="M20 6 L28 14 L28 26 L20 34 L12 26 L12 14 Z"
+    stroke="currentColor"
+    stroke-width="1.5"
+    fill="none"
+    class="text-accent-500"
+  />
+
+  <!-- Center document icon -->
+  <rect x="15" y="14" width="10" height="12" rx="1" fill="currentColor" class="text-accent-400" />
+  <rect x="17" y="17" width="6" height="1" rx="0.5" fill="currentColor" class="text-surface-950" />
+  <rect x="17" y="19.5" width="6" height="1" rx="0.5" fill="currentColor" class="text-surface-950" />
+  <rect x="17" y="22" width="4" height="1" rx="0.5" fill="currentColor" class="text-surface-950" />
+
+  <!-- Data stream lines -->
+  <path d="M8 20 L11 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="text-accent-300 animate-pulse-subtle" />
+  <path d="M29 20 L32 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="text-accent-300 animate-pulse-subtle" />
+</svg>

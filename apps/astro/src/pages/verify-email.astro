@@ -1,0 +1,137 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/Logo.astro';
+---
+
+<BaseLayout title="Verify Email">
+  <div class="flex min-h-screen items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md text-center">
+      <a href="/" class="inline-flex items-center gap-3">
+        <Logo size={40} />
+        <span class="font-display text-2xl font-semibold tracking-tight text-surface-100">
+          FOIA<span class="text-accent-400">Stream</span>
+        </span>
+      </a>
+
+      <div class="mt-8 rounded-2xl border border-surface-800 bg-surface-900/50 p-8">
+        <!-- Pending verification state -->
+        <div id="pending-state">
+          <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-accent-500/10">
+            <svg class="h-10 w-10 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+
+          <h1 class="text-2xl font-bold text-surface-100">Check your email</h1>
+          <p class="mt-3 text-surface-400">
+            We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.
+          </p>
+
+          <div class="mt-8 space-y-4">
+            <button
+              id="resend-btn"
+              class="flex w-full items-center justify-center gap-2 rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-sm font-medium text-surface-200 transition-all hover:border-surface-600 hover:bg-surface-700"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span id="resend-text">Resend verification email</span>
+            </button>
+
+            <a
+              href="/dashboard"
+              class="flex w-full items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400"
+            >
+              Continue to Dashboard
+            </a>
+          </div>
+
+          <p class="mt-6 text-sm text-surface-500">
+            Didn't receive the email? Check your spam folder or
+            <a href="/settings" class="text-accent-400 hover:text-accent-300">update your email address</a>.
+          </p>
+        </div>
+
+        <!-- Verified state -->
+        <div id="verified-state" class="hidden">
+          <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
+            <svg class="h-10 w-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+
+          <h1 class="text-2xl font-bold text-surface-100">Email verified!</h1>
+          <p class="mt-3 text-surface-400">
+            Your email has been successfully verified. You now have full access to all features.
+          </p>
+
+          <a
+            href="/dashboard"
+            class="mt-8 flex w-full items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400"
+          >
+            Go to Dashboard
+          </a>
+        </div>
+      </div>
+
+      <!-- Demo notice -->
+      <div class="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-left">
+        <div class="flex items-start gap-3">
+          <svg class="h-5 w-5 flex-shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-amber-400">Demo Mode</p>
+            <p class="mt-1 text-xs text-amber-400/70">
+              Email service not configured. In production, a verification email would be sent.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const resendBtn = document.getElementById('resend-btn') as HTMLButtonElement;
+  const resendText = document.getElementById('resend-text') as HTMLSpanElement;
+
+  let cooldown = 0;
+
+  resendBtn?.addEventListener('click', async () => {
+    if (cooldown > 0) return;
+
+    resendBtn.disabled = true;
+    resendText.textContent = 'Sending...';
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Show success and start cooldown
+    resendText.textContent = 'Email sent!';
+    cooldown = 60;
+
+    const interval = setInterval(() => {
+      cooldown--;
+      if (cooldown > 0) {
+        resendText.textContent = `Resend in ${cooldown}s`;
+      } else {
+        resendText.textContent = 'Resend verification email';
+        resendBtn.disabled = false;
+        clearInterval(interval);
+      }
+    }, 1000);
+  });
+
+  // Check for verification token in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+
+  if (token) {
+    // Simulate verification
+    setTimeout(() => {
+      document.getElementById('pending-state')?.classList.add('hidden');
+      document.getElementById('verified-state')?.classList.remove('hidden');
+    }, 500);
+  }
+</script>

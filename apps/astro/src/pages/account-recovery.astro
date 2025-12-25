@@ -1,0 +1,224 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/Logo.astro';
+---
+
+<BaseLayout title="Account Recovery">
+  <div class="flex min-h-screen items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+      <div class="mb-8 text-center">
+        <a href="/" class="inline-flex items-center gap-3">
+          <Logo size={40} />
+          <span class="font-display text-2xl font-semibold tracking-tight text-surface-100">
+            FOIA<span class="text-accent-400">Stream</span>
+          </span>
+        </a>
+        <h1 class="mt-6 text-2xl font-bold text-surface-100">Account Recovery</h1>
+        <p class="mt-2 text-sm text-surface-400">
+          Choose a recovery method to regain access to your account
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Recovery with backup code -->
+        <div class="rounded-2xl border border-surface-800 bg-surface-900/50 p-6 transition-all hover:border-surface-700">
+          <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-accent-500/10">
+              <svg class="h-6 w-6 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-lg font-semibold text-surface-100">Use backup code</h2>
+              <p class="mt-1 text-sm text-surface-400">
+                Enter one of your backup codes to bypass two-factor authentication
+              </p>
+              <button
+                id="show-backup-form"
+                class="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
+              >
+                Enter backup code
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recovery via email -->
+        <div class="rounded-2xl border border-surface-800 bg-surface-900/50 p-6 transition-all hover:border-surface-700">
+          <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+              <svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-lg font-semibold text-surface-100">Email verification</h2>
+              <p class="mt-1 text-sm text-surface-400">
+                Verify your identity through your registered email address
+              </p>
+              <a
+                href="/forgot-password"
+                class="mt-4 inline-flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-200 transition-all hover:border-surface-600 hover:bg-surface-700"
+              >
+                Reset via email
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact support -->
+        <div class="rounded-2xl border border-surface-800 bg-surface-900/50 p-6 transition-all hover:border-surface-700">
+          <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-purple-500/10">
+              <svg class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-lg font-semibold text-surface-100">Contact support</h2>
+              <p class="mt-1 text-sm text-surface-400">
+                Can't recover your account? Our support team can help verify your identity
+              </p>
+              <a
+                href="/contact"
+                class="mt-4 inline-flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-200 transition-all hover:border-surface-600 hover:bg-surface-700"
+              >
+                Get help
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup code form (hidden by default) -->
+      <div id="backup-form" class="mt-6 hidden rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-surface-100">Enter backup code</h2>
+          <button id="close-backup-form" class="text-surface-400 hover:text-surface-200">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form id="backup-code-form" class="space-y-4">
+          <div id="backup-error" class="hidden rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          </div>
+
+          <div>
+            <label for="email-backup" class="block text-sm font-medium text-surface-300">
+              Email address
+            </label>
+            <input
+              id="email-backup"
+              name="email"
+              type="email"
+              required
+              class="mt-2 block w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 placeholder-surface-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <label for="backup-code" class="block text-sm font-medium text-surface-300">
+              Backup code
+            </label>
+            <input
+              id="backup-code"
+              name="code"
+              type="text"
+              required
+              class="mt-2 block w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 font-mono text-surface-100 placeholder-surface-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
+              placeholder="XXXX-XXXX"
+            />
+            <p class="mt-2 text-xs text-surface-500">
+              Enter the 8-character backup code you saved when setting up 2FA
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            id="backup-submit"
+            class="flex w-full items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span id="backup-btn-text">Verify backup code</span>
+            <svg id="backup-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <p class="mt-8 text-center text-sm text-surface-400">
+        <a href="/login" class="text-accent-400 hover:text-accent-300">← Back to login</a>
+      </p>
+
+      <!-- Demo notice -->
+      <div class="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+        <div class="flex items-start gap-3">
+          <svg class="h-5 w-5 flex-shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p class="text-sm font-medium text-amber-400">Demo Mode</p>
+            <p class="mt-1 text-xs text-amber-400/70">
+              Email and backup code recovery are placeholders. In production, these would trigger actual recovery flows.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const showBackupBtn = document.getElementById('show-backup-form');
+  const closeBackupBtn = document.getElementById('close-backup-form');
+  const backupForm = document.getElementById('backup-form');
+  const backupCodeForm = document.getElementById('backup-code-form');
+  const backupError = document.getElementById('backup-error');
+  const backupSubmit = document.getElementById('backup-submit');
+  const backupBtnText = document.getElementById('backup-btn-text');
+  const backupSpinner = document.getElementById('backup-spinner');
+
+  showBackupBtn?.addEventListener('click', () => {
+    backupForm?.classList.remove('hidden');
+    backupForm?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  closeBackupBtn?.addEventListener('click', () => {
+    backupForm?.classList.add('hidden');
+  });
+
+  backupCodeForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (backupSubmit) backupSubmit.setAttribute('disabled', 'true');
+    if (backupBtnText) backupBtnText.textContent = 'Verifying...';
+    backupSpinner?.classList.remove('hidden');
+    backupError?.classList.add('hidden');
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Show error (placeholder - in production would verify against API)
+    backupError?.classList.remove('hidden');
+    if (backupError) {
+      backupError.textContent = 'Invalid backup code. Please check and try again.';
+    }
+
+    if (backupSubmit) backupSubmit.removeAttribute('disabled');
+    if (backupBtnText) backupBtnText.textContent = 'Verify backup code';
+    backupSpinner?.classList.add('hidden');
+  });
+</script>

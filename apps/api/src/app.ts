@@ -20,6 +20,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { env } from './config/env';
 import configureOpenAPI from './lib/configure-open-api';
 import createApp from './lib/create-app';
+import { httpsEnforcement, requestId } from './middleware/security.middleware';
 import { agencyRoutes, authRoutes, requestRoutes, templateRoutes } from './routes';
 import agenciesOpenAPIRoute from './routes/agencies';
 import authOpenAPIRoute from './routes/auth';
@@ -41,6 +42,13 @@ const app = createApp();
 // ============================================
 // Additional Global Middleware
 // ============================================
+
+// Request ID for tracing
+app.use('*', requestId());
+
+// HTTPS enforcement (redirects HTTP to HTTPS in production)
+// @compliance NIST 800-53 SC-8 (Transmission Confidentiality)
+app.use('*', httpsEnforcement());
 
 // Security headers
 app.use('*', secureHeaders());

@@ -30,8 +30,22 @@ export const UserRoleSchema = z.enum([
 ]);
 
 /**
+ * Schema for consent data (GDPR/CCPA compliance)
+ * @compliance GDPR Article 7 (Conditions for consent), CCPA
+ */
+export const ConsentDataSchema = z
+  .object({
+    termsAccepted: z.boolean().openapi({ example: true }),
+    privacyAccepted: z.boolean().openapi({ example: true }),
+    dataProcessingAccepted: z.boolean().openapi({ example: true }),
+    consentTimestamp: z.string().datetime().openapi({ example: '2024-12-25T00:00:00.000Z' }),
+  })
+  .openapi('ConsentData');
+
+/**
  * Schema for user registration request body
  * @compliance NIST 800-53 IA-5 (Authenticator Management)
+ * @compliance GDPR Article 7 (Conditions for consent)
  */
 export const CreateUserSchema = z
   .object({
@@ -45,6 +59,9 @@ export const CreateUserSchema = z
     lastName: z.string().min(1, 'Last name is required').openapi({ example: 'Doe' }),
     organization: z.string().optional().openapi({ example: 'ACLU' }),
     isAnonymous: z.boolean().default(false).openapi({ example: false }),
+    consents: ConsentDataSchema.optional().openapi({
+      description: 'User consent data for GDPR/CCPA compliance',
+    }),
   })
   .openapi('CreateUser');
 
@@ -81,6 +98,16 @@ export const ChangePasswordSchema = z
     newPassword: z.string().min(8, 'New password must be at least 8 characters'),
   })
   .openapi('ChangePassword');
+
+/**
+ * Schema for MFA login verification
+ */
+export const MFALoginVerifySchema = z
+  .object({
+    mfaToken: z.string().min(1, 'MFA token is required'),
+    code: z.string().min(6, 'Code must be at least 6 characters'),
+  })
+  .openapi('MFALoginVerify');
 
 /**
  * Schema for MFA setup request (requires password confirmation)
@@ -344,6 +371,59 @@ export const loginRoute = createRoute({
       description: 'Invalid credentials',
     },
     [HttpStatusCodes.UNPROCESSABLE_ENTITY]: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Validation error',
+    },
+  },
+});
+
+/**
+ * POST /auth/login/mfa - Complete login with MFA code
+ * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
+ */
+export const verifyMFALoginRoute = createRoute({
+  path: '/auth/login/mfa',
+  method: 'post',
+  tags,
+  summary: 'Complete login with MFA verification',
+  description:
+    'Verifies the MFA code and completes the login process, returning a full access token.',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: MFALoginVerifySchema,
+        },
+      },
+      required: true,
+      description: 'MFA token from initial login and 6-digit code from authenticator app',
+    },
+  },
+  responses: {
+    [HttpStatusCodes.OK]: {
+      content: {
+        'application/json': {
+          schema: successResponse(
+            z.object({ token: z.string() }),
+            'MFA verification successful'
+          ),
+        },
+      },
+      description: 'MFA verification successful, returns full access token',
+    },
+    [HttpStatusCodes.UNAUTHORIZED]: {
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+      description: 'Invalid MFA code or token',
+    },
+    [HttpStatusCodes.BAD_REQUEST]: {
       content: {
         'application/json': {
           schema: ErrorResponseSchema,
@@ -690,6 +770,47 @@ export const disableMFARoute = createRoute({
     [HttpStatusCodes.BAD_REQUEST]: {
       content: { 'application/json': { schema: ErrorResponseSchema } },
       description: 'Invalid password or code',
+    },
+    [HttpStatusCodes.UNAUTHORIZED]: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Not authenticated',
+    },
+  },
+});
+
+/**
+ * POST /auth/mfa/backup-codes/regenerate - Regenerate backup codes
+ * @compliance NIST 800-53 IA-5 (Authenticator Management)
+ */
+export const regenerateBackupCodesRoute = createRoute({
+  path: '/auth/mfa/backup-codes/regenerate',
+  method: 'post',
+  tags,
+  summary: 'Regenerate MFA backup codes',
+  description: 'Generates new backup codes, invalidating all previous ones. Requires password verification.',
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: { 'application/json': { schema: PasswordConfirmSchema } },
+      required: true,
+      description: 'Current password for verification',
+    },
+  },
+  responses: {
+    [HttpStatusCodes.OK]: {
+      content: {
+        'application/json': {
+          schema: successResponse(
+            z.object({ backupCodes: z.array(z.string()) }),
+            'Backup codes regenerated successfully'
+          ),
+        },
+      },
+      description: 'New backup codes generated',
+    },
+    [HttpStatusCodes.BAD_REQUEST]: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Invalid password or MFA not enabled',
     },
     [HttpStatusCodes.UNAUTHORIZED]: {
       content: { 'application/json': { schema: ErrorResponseSchema } },

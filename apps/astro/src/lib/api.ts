@@ -185,6 +185,7 @@ class ApiClient {
    * @param {string} data.lastName - User last name
    * @param {string} [data.organization] - Optional organization name
    * @param {string} [data.role] - Optional user role
+   * @param {Object} [data.consents] - Consent data for GDPR/CCPA compliance
    * @returns {Promise<ApiResponse<AuthResponse>>} Auth response with token and user
    */
   async register(data: {
@@ -194,6 +195,12 @@ class ApiClient {
     lastName: string;
     organization?: string;
     role?: string;
+    consents?: {
+      termsAccepted: boolean;
+      privacyAccepted: boolean;
+      dataProcessingAccepted: boolean;
+      consentTimestamp: string;
+    };
   }): Promise<ApiResponse<AuthResponse>> {
     return this.request<AuthResponse>('/auth/register', {
       method: 'POST',
@@ -206,12 +213,25 @@ class ApiClient {
    * @param {Object} data - Login credentials
    * @param {string} data.email - User email address
    * @param {string} data.password - User password
-   * @returns {Promise<ApiResponse<AuthResponse>>} Auth response with token and user
+   * @returns {Promise<ApiResponse<AuthResponse & { requiresMFA?: boolean; mfaToken?: string }>>} Auth response with token and user
    */
-  async login(data: { email: string; password: string }): Promise<ApiResponse<AuthResponse>> {
-    return this.request<AuthResponse>('/auth/login', {
+  async login(data: { email: string; password: string }): Promise<ApiResponse<AuthResponse & { requiresMFA?: boolean; mfaToken?: string }>> {
+    return this.request<AuthResponse & { requiresMFA?: boolean; mfaToken?: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Completes login with MFA verification
+   * @param {string} mfaToken - Token from initial login response
+   * @param {string} code - 6-digit code from authenticator app
+   * @returns {Promise<ApiResponse<{token: string}>>} Response with full access token
+   */
+  async verifyMFALogin(mfaToken: string, code: string): Promise<ApiResponse<{ token: string }>> {
+    return this.request<{ token: string }>('/auth/login/mfa', {
+      method: 'POST',
+      body: JSON.stringify({ mfaToken, code }),
     });
   }
 
@@ -470,6 +490,18 @@ class ApiClient {
     return this.request<void>('/auth/mfa/disable', {
       method: 'POST',
       body: JSON.stringify({ password, code }),
+    });
+  }
+
+  /**
+   * Regenerates MFA backup codes
+   * @param {string} password - Current password for verification
+   * @returns {Promise<ApiResponse<{backupCodes: string[]}>>} New backup codes
+   */
+  async regenerateBackupCodes(password: string): Promise<ApiResponse<{ backupCodes: string[] }>> {
+    return this.request<{ backupCodes: string[] }>('/auth/mfa/backup-codes/regenerate', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
     });
   }
 

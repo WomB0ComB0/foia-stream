@@ -1,0 +1,352 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+---
+
+<BaseLayout title="Frequently Asked Questions">
+  <Header />
+
+  <main class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="mb-12 text-center">
+      <h1 class="text-4xl font-bold text-surface-100">Frequently Asked Questions</h1>
+      <p class="mt-4 text-lg text-surface-400">
+        Everything you need to know about FOIA requests and our platform
+      </p>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-8">
+      <div class="relative">
+        <svg class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          id="faq-search"
+          placeholder="Search questions..."
+          class="w-full rounded-xl border border-surface-700 bg-surface-800 py-4 pl-12 pr-4 text-surface-100 placeholder-surface-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
+        />
+      </div>
+    </div>
+
+    <!-- FAQ Categories -->
+    <div class="mb-8 flex flex-wrap gap-2" id="faq-categories">
+      <button class="faq-category active rounded-full border border-accent-500 bg-accent-500/10 px-4 py-2 text-sm font-medium text-accent-400 transition-all" data-category="all">
+        All
+      </button>
+      <button class="faq-category rounded-full border border-surface-700 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-all hover:border-surface-600" data-category="getting-started">
+        Getting Started
+      </button>
+      <button class="faq-category rounded-full border border-surface-700 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-all hover:border-surface-600" data-category="foia-basics">
+        FOIA Basics
+      </button>
+      <button class="faq-category rounded-full border border-surface-700 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-all hover:border-surface-600" data-category="account">
+        Account & Billing
+      </button>
+      <button class="faq-category rounded-full border border-surface-700 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-all hover:border-surface-600" data-category="privacy">
+        Privacy & Security
+      </button>
+    </div>
+
+    <!-- FAQ Items -->
+    <div class="space-y-4" id="faq-list">
+      <!-- Getting Started -->
+      <div class="faq-item" data-category="getting-started">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">How do I submit my first FOIA request?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              Getting started is easy! First, create an account and verify your email. Then, navigate to the Dashboard and click "New Request".
+              You can choose from our pre-made templates or create a custom request. Select the agency you want to send it to,
+              fill in the details, and submit. We'll handle the formatting and submission for you.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="getting-started">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">What types of templates are available?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              We offer templates for the most common FOIA request types including: Police Body Camera Footage, Government Contracts,
+              Personnel Records, Meeting Minutes, Email Communications, Financial Records, Environmental Reports, and more.
+              Each template is professionally crafted to maximize your chances of a successful response.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOIA Basics -->
+      <div class="faq-item" data-category="foia-basics">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">What is the Freedom of Information Act (FOIA)?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              The Freedom of Information Act (FOIA) is a federal law that gives you the right to access information from the federal government.
+              It's often described as the law that keeps citizens "in the know" about their government. Each state also has its own public records
+              laws (sometimes called "sunshine laws" or "open records laws") that apply to state and local agencies.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="foia-basics">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">How long do agencies have to respond?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              Federal agencies generally have 20 business days to respond to a FOIA request. However, they can extend this by 10 additional days
+              in "unusual circumstances." State deadlines vary - some states require responses within 3-5 days, while others allow 10-30 days.
+              FOIA Stream automatically tracks these deadlines and notifies you if an agency is overdue.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="foia-basics">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">What can I request through FOIA?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              You can request any records maintained by a government agency, including: emails, memos, reports, contracts, meeting minutes,
+              policies, statistics, photos, videos (like body camera footage), and more. There are some exemptions for classified information,
+              personal privacy, law enforcement investigations in progress, and trade secrets. If parts of a document are exempt, the agency
+              should provide the rest with redactions.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="foia-basics">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">What if my request is denied?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              You have the right to appeal! Federal agencies must tell you how to appeal and the deadline (usually 90 days).
+              FOIA Stream helps you track appeal deadlines and can help you draft appeal letters. Many initially denied requests
+              are later released after appeal. If the appeal is denied, you can also file a lawsuit in federal court.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account & Billing -->
+      <div class="faq-item" data-category="account">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">Is FOIA Stream free to use?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              Yes! FOIA Stream offers a free tier that allows you to submit requests and track their status. We also offer
+              premium plans for power users and organizations that need additional features like bulk submissions, team collaboration,
+              advanced analytics, and priority support.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="account">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">How do I delete my account?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              You can delete your account from Settings → Danger Zone → Delete Account. This will permanently remove your account
+              and all associated data. If you just want to delete your data but keep your account, you can use the "Delete All Data"
+              option instead. Both actions are irreversible, so please download any documents you need first.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy & Security -->
+      <div class="faq-item" data-category="privacy">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">Is my data secure?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              Absolutely. We use industry-standard AES-256 encryption for data at rest and TLS 1.3 for data in transit.
+              Passwords are hashed using Argon2id. We support two-factor authentication (2FA) and maintain comprehensive
+              audit logs. We're designed with privacy-first principles and never sell your data.
+              See our <a href="/privacy" class="text-accent-400 hover:text-accent-300">Privacy Policy</a> for details.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="privacy">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">Can I submit requests anonymously?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              Under federal FOIA, you don't need to provide a reason for your request, and agencies aren't supposed to ask why.
+              However, most agencies do require a name and mailing address. Some requesters use organizational names or P.O. boxes
+              for additional privacy. FOIA Stream supports anonymous mode where we can serve as an intermediary, though this may
+              affect fee waiver eligibility.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="privacy">
+        <button class="faq-toggle flex w-full items-center justify-between rounded-xl border border-surface-700 bg-surface-800/50 p-5 text-left transition-all hover:border-surface-600 hover:bg-surface-800">
+          <span class="font-medium text-surface-100">How long do you retain my data?</span>
+          <svg class="faq-chevron h-5 w-5 text-surface-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div class="faq-content hidden overflow-hidden">
+          <div class="border-x border-b border-surface-700 bg-surface-900/50 p-5 rounded-b-xl -mt-1">
+            <p class="text-surface-400">
+              Request metadata is retained for 90 days after completion, then automatically purged. Inactive sessions are removed
+              after 30 days. Audit logs are retained for 365 days for security purposes. You can request immediate deletion of
+              your data at any time through Settings. We believe in data minimization and only keep what's necessary.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Still have questions -->
+    <div class="mt-12 rounded-2xl border border-surface-800 bg-surface-900/50 p-8 text-center">
+      <h2 class="text-xl font-semibold text-surface-100">Still have questions?</h2>
+      <p class="mt-2 text-surface-400">
+        Can't find what you're looking for? Our support team is here to help.
+      </p>
+      <a
+        href="/contact"
+        class="mt-6 inline-flex items-center gap-2 rounded-lg bg-accent-500 px-6 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400"
+      >
+        Contact Support
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  // FAQ accordion functionality
+  document.querySelectorAll('.faq-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+      const item = button.parentElement;
+      const content = item?.querySelector('.faq-content');
+      const chevron = button.querySelector('.faq-chevron');
+
+      // Close other open items
+      document.querySelectorAll('.faq-item').forEach(otherItem => {
+        if (otherItem !== item) {
+          otherItem.querySelector('.faq-content')?.classList.add('hidden');
+          otherItem.querySelector('.faq-chevron')?.classList.remove('rotate-180');
+          otherItem.querySelector('.faq-toggle')?.classList.remove('rounded-b-none');
+        }
+      });
+
+      // Toggle current item
+      content?.classList.toggle('hidden');
+      chevron?.classList.toggle('rotate-180');
+      button.classList.toggle('rounded-b-none');
+    });
+  });
+
+  // Category filtering
+  document.querySelectorAll('.faq-category').forEach(button => {
+    button.addEventListener('click', () => {
+      const category = button.getAttribute('data-category');
+
+      // Update active state
+      document.querySelectorAll('.faq-category').forEach(btn => {
+        btn.classList.remove('active', 'border-accent-500', 'bg-accent-500/10', 'text-accent-400');
+        btn.classList.add('border-surface-700', 'bg-surface-800', 'text-surface-300');
+      });
+      button.classList.add('active', 'border-accent-500', 'bg-accent-500/10', 'text-accent-400');
+      button.classList.remove('border-surface-700', 'bg-surface-800', 'text-surface-300');
+
+      // Filter items
+      document.querySelectorAll('.faq-item').forEach(item => {
+        const itemCategory = item.getAttribute('data-category');
+        if (category === 'all' || itemCategory === category) {
+          (item as HTMLElement).style.display = '';
+        } else {
+          (item as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Search functionality
+  const searchInput = document.getElementById('faq-search') as HTMLInputElement;
+  searchInput?.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+
+    document.querySelectorAll('.faq-item').forEach(item => {
+      const text = item.textContent?.toLowerCase() || '';
+      if (text.includes(query)) {
+        (item as HTMLElement).style.display = '';
+      } else {
+        (item as HTMLElement).style.display = 'none';
+      }
+    });
+
+    // Reset category filter to "All" when searching
+    if (query) {
+      document.querySelectorAll('.faq-category').forEach(btn => {
+        btn.classList.remove('active', 'border-accent-500', 'bg-accent-500/10', 'text-accent-400');
+        btn.classList.add('border-surface-700', 'bg-surface-800', 'text-surface-300');
+      });
+      const allBtn = document.querySelector('.faq-category[data-category="all"]');
+      allBtn?.classList.add('active', 'border-accent-500', 'bg-accent-500/10', 'text-accent-400');
+      allBtn?.classList.remove('border-surface-700', 'bg-surface-800', 'text-surface-300');
+    }
+  });
+</script>

@@ -60,13 +60,28 @@ export function initAuth() {
 }
 
 /**
+ * MFA pending state for two-step login
+ */
+interface MFAPendingState {
+  mfaToken: string;
+  user: User;
+}
+
+/**
+ * Store for pending MFA verification during login
+ */
+export const $mfaPending = atom<MFAPendingState | null>(null);
+
+/**
  * Authenticates a user with email and password
  * @param {string} email - User email address
  * @param {string} password - User password
- * @returns {Promise<{success: boolean, error?: string}>} Result object
+ * @returns {Promise<{success: boolean, requiresMFA?: boolean, error?: string}>} Result object
  * @example
  * const result = await login('user@example.com', 'password123');
- * if (result.success) {
+ * if (result.requiresMFA) {
+ *   // Show MFA code input
+ * } else if (result.success) {
  *   window.location.href = '/dashboard';
  * }
  */
@@ -74,7 +89,14 @@ export async function login(email: string, password: string) {
   const response = await api.login({ email, password });
 
   if (response.success && response.data) {
-    const { token, user } = response.data;
+    const { token, user, requiresMFA, mfaToken } = response.data;
+
+    if (requiresMFA && mfaToken) {
+      // Store pending MFA state
+      $mfaPending.set({ mfaToken, user });
+      return { success: false, requiresMFA: true };
+    }
+
     localStorage.setItem('token', token);
     $token.set(token);
     $user.set(user);
@@ -85,6 +107,48 @@ export async function login(email: string, password: string) {
 }
 
 /**
+ * Completes MFA verification during login
+ * @param {string} code - 6-digit TOTP code
+ * @returns {Promise<{success: boolean, error?: string}>} Result object
+ */
+export async function verifyMFALogin(code: string) {
+  const pending = $mfaPending.get();
+  if (!pending) {
+    return { success: false, error: 'No pending MFA verification' };
+  }
+
+  const response = await api.verifyMFALogin(pending.mfaToken, code);
+
+  if (response.success && response.data) {
+    localStorage.setItem('token', response.data.token);
+    $token.set(response.data.token);
+    $user.set(pending.user);
+    $mfaPending.set(null);
+    return { success: true };
+  }
+
+  return { success: false, error: response.error || 'MFA verification failed' };
+}
+
+/**
+ * Cancels pending MFA verification
+ */
+export function cancelMFALogin() {
+  $mfaPending.set(null);
+}
+
+/**
+ * Consent information for GDPR/CCPA compliance
+ * @interface ConsentData
+ */
+interface ConsentData {
+  termsAccepted: boolean;
+  privacyAccepted: boolean;
+  dataProcessingAccepted: boolean;
+  consentTimestamp: string;
+}
+
+/**
  * Registers a new user account
  * @param {Object} data - Registration data
  * @param {string} data.email - User email address
@@ -92,6 +156,7 @@ export async function login(email: string, password: string) {
  * @param {string} data.firstName - User first name
  * @param {string} data.lastName - User last name
  * @param {string} [data.organization] - Optional organization name
+ * @param {ConsentData} [data.consents] - User consent information for compliance
  * @returns {Promise<{success: boolean, error?: string}>} Result object
  */
 export async function register(data: {
@@ -100,6 +165,7 @@ export async function register(data: {
   firstName: string;
   lastName: string;
   organization?: string;
+  consents?: ConsentData;
 }) {
   const response = await api.register(data);
 

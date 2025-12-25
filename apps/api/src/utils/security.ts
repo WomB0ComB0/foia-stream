@@ -173,3 +173,43 @@ export function getEncryptionKey(): string {
   const { env } = require('../config/env');
   return env.DATA_ENCRYPTION_KEY;
 }
+
+/**
+ * Simple encrypt wrapper that uses the default encryption key
+ * @param {string} data - Data to encrypt
+ * @returns {string} Encrypted data (synchronous for convenience)
+ * @compliance NIST 800-53 SC-28 (Protection of Information at Rest)
+ */
+export function encrypt(data: string): string {
+  // For synchronous usage, we use a simpler encryption
+  // In production, prefer encryptData for async AES-256-GCM
+  const key = getEncryptionKey();
+  const iv = randomBytes(IV_LENGTH);
+  const derivedKey = createHash('sha256').update(key).digest();
+
+  const cipher = createCipheriv(ALGORITHM, derivedKey, iv);
+  const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+
+  return Buffer.concat([iv, authTag, encrypted]).toString('base64');
+}
+
+/**
+ * Simple decrypt wrapper that uses the default encryption key
+ * @param {string} encryptedData - Data to decrypt
+ * @returns {string} Decrypted data
+ */
+export function decrypt(encryptedData: string): string {
+  const key = getEncryptionKey();
+  const combined = Buffer.from(encryptedData, 'base64');
+
+  const iv = combined.subarray(0, IV_LENGTH);
+  const authTag = combined.subarray(IV_LENGTH, IV_LENGTH + AUTH_TAG_LENGTH);
+  const ciphertext = combined.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
+
+  const derivedKey = createHash('sha256').update(key).digest();
+  const decipher = createDecipheriv(ALGORITHM, derivedKey, iv);
+  decipher.setAuthTag(authTag);
+
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+}

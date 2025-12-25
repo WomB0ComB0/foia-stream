@@ -1,5 +1,6 @@
 ---
 import '@/styles/global.css';
+import CookieConsent from '@/components/CookieConsent.astro';
 
 interface Props {
   title: string;
@@ -28,5 +29,6 @@ const { title, description = 'Streamline your Freedom of Information Act request
   </head>
   <body class="min-h-screen bg-surface-950 text-surface-100 antialiased">
     <slot />
+    <CookieConsent />
   </body>
 </html>

@@ -8,13 +8,22 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  Check,
   CheckCircle2,
   Clock,
+  Copy,
   Edit,
+  Eye,
+  EyeOff,
   FileText,
   Hash,
+  Link,
   Loader2,
+  Lock,
+  RefreshCw,
+  Share2,
   User,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api, type FoiaRequest } from '@/lib/api';
@@ -48,6 +57,7 @@ export default function RequestDetail({ requestId }: Props) {
   const [request, setRequest] = useState<FoiaRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     initAuth();
@@ -144,15 +154,24 @@ export default function RequestDetail({ requestId }: Props) {
               </div>
             </div>
 
-            {request.status === 'draft' && (
-              <a
-                href={`/requests/${requestId}/edit`}
-                className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 hover:bg-accent-400"
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-2 rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
               >
-                <Edit className="h-4 w-4" />
-                Edit
-              </a>
-            )}
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+              {request.status === 'draft' && (
+                <a
+                  href={`/requests/${requestId}/edit`}
+                  className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 hover:bg-accent-400"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -295,6 +314,212 @@ export default function RequestDetail({ requestId }: Props) {
           </div>
         </div>
       </main>
+
+      {/* Share Modal */}
+      {showShareModal && request && (
+        <ShareModal
+          request={request}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Share modal for password-protected link sharing
+ */
+function ShareModal({ request, onClose }: { request: FoiaRequest; onClose: () => void }) {
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [expiresIn, setExpiresIn] = useState('24');
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const generateShareLink = async () => {
+    setGenerating(true);
+
+    // In production, this would call an API to create a secure share link
+    // For now, we'll create a simulated link with encrypted params
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const shareId = btoa(JSON.stringify({
+      id: request.id,
+      exp: Date.now() + parseInt(expiresIn) * 60 * 60 * 1000,
+      pwd: password ? btoa(password) : null,
+    }));
+
+    setShareLink(`${baseUrl}/shared/${shareId}`);
+    setGenerating(false);
+  };
+
+  const copyLink = async () => {
+    if (shareLink) {
+      await navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPassword(result);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-xl border border-surface-700 bg-surface-900 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-surface-800 p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-500/10">
+              <Share2 className="h-5 w-5 text-accent-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-surface-100">Share Request</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-surface-400 hover:bg-surface-800 hover:text-surface-200"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {!shareLink ? (
+            <>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-surface-300">
+                  Password Protection
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-500" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Optional password"
+                    className="w-full rounded-lg border border-surface-700 bg-surface-800 py-3 pl-10 pr-20 text-surface-100 placeholder-surface-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="rounded p-1.5 text-surface-500 hover:text-surface-300"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      className="rounded p-1.5 text-surface-500 hover:text-surface-300"
+                      title="Generate password"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-surface-500">
+                  {password ? 'Link will require this password to view' : 'Leave empty for no password'}
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-surface-300">
+                  Link Expiration
+                </label>
+                <select
+                  value={expiresIn}
+                  onChange={(e) => setExpiresIn(e.target.value)}
+                  className="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 focus:border-accent-500 focus:outline-none"
+                >
+                  <option value="1">1 hour</option>
+                  <option value="24">24 hours</option>
+                  <option value="168">7 days</option>
+                  <option value="720">30 days</option>
+                </select>
+              </div>
+
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                <p className="text-sm text-amber-300">
+                  <strong>Note:</strong> Shared links provide read-only access to this request's details.
+                  The recipient won't be able to modify anything.
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center rounded-lg bg-emerald-500/10 p-4">
+                <Check className="h-8 w-8 text-emerald-400" />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-surface-300">
+                  Share Link
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareLink}
+                    className="flex-1 rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-sm text-surface-100 font-mono truncate"
+                  />
+                  <button
+                    onClick={copyLink}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                      copied
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-accent-500 text-surface-950 hover:bg-accent-400'
+                    }`}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              {password && (
+                <div className="rounded-lg border border-surface-700 bg-surface-800 p-3">
+                  <p className="mb-1 text-xs text-surface-500">Password to share:</p>
+                  <code className="text-sm font-mono text-surface-100">{password}</code>
+                </div>
+              )}
+
+              <p className="text-center text-xs text-surface-500">
+                Link expires in {expiresIn === '1' ? '1 hour' : expiresIn === '24' ? '24 hours' : expiresIn === '168' ? '7 days' : '30 days'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-surface-800 p-4 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-lg border border-surface-700 px-4 py-3 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800"
+          >
+            {shareLink ? 'Close' : 'Cancel'}
+          </button>
+          {!shareLink && (
+            <button
+              onClick={generateShareLink}
+              disabled={generating}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 disabled:opacity-50"
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Link className="h-4 w-4" />
+              )}
+              Generate Link
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

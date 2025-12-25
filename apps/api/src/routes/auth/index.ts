@@ -19,6 +19,7 @@ const router = createRouter();
 // Public Routes (no middleware)
 router.openapi(routes.registerRoute, handlers.register);
 router.openapi(routes.loginRoute, handlers.login);
+router.openapi(routes.verifyMFALoginRoute, handlers.verifyMFALogin);
 
 // Protected Routes - apply middleware to specific paths
 router.use('/auth/logout', authMiddleware);
@@ -42,6 +43,7 @@ router.openapi(routes.getMFAStatusRoute, handlers.getMFAStatus);
 router.openapi(routes.setupMFARoute, handlers.setupMFA);
 router.openapi(routes.verifyMFARoute, handlers.verifyMFA);
 router.openapi(routes.disableMFARoute, handlers.disableMFA);
+router.openapi(routes.regenerateBackupCodesRoute, handlers.regenerateBackupCodes);
 
 // Session routes
 router.openapi(routes.getSessionsRoute, handlers.getSessions);

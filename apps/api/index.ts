@@ -22,7 +22,7 @@
 
 import app from './src/app';
 import { env } from './src/config/env';
-import { getRetentionStats, runDataRetention } from './src/services/data-retention.service';
+import { dataRetentionService } from './src/services/data-retention.service';
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
@@ -70,8 +70,13 @@ if (env.NODE_ENV === 'production') {
   setInterval(async () => {
     console.log('🗑️  Running scheduled data retention...');
     try {
-      const report = await runDataRetention(false);
-      console.log(`✅ Data retention completed: ${report.totalPurged} items purged`);
+      const report = await dataRetentionService.runRetentionCleanup();
+      console.log(`✅ Data retention completed:`);
+      console.log(`   Request content purged: ${report.requestContentPurged}`);
+      console.log(`   Sessions purged: ${report.sessionsPurged}`);
+      if (report.errors.length > 0) {
+        console.warn(`   Errors: ${report.errors.length}`);
+      }
     } catch (error) {
       console.error('❌ Data retention failed:', error);
     }
@@ -81,13 +86,13 @@ if (env.NODE_ENV === 'production') {
 }
 
 // Log retention stats on startup
-getRetentionStats()
+dataRetentionService
+  .getRetentionStats()
   .then((stats) => {
     console.log(`\n📊 Data Retention Stats:`);
-    console.log(`   Closed requests pending purge: ${stats.closedRequests.expiringCount}`);
-    console.log(`   Inactive users pending purge: ${stats.inactiveUsers.eligibleForPurge}`);
-    console.log(`   Expired sessions: ${stats.sessions.expiredCount}`);
-    console.log(`   Old audit logs: ${stats.auditLogs.oldCount}`);
+    console.log(`   Requests pending purge: ${stats.pendingPurge}`);
+    console.log(`   Already purged requests: ${stats.purgedRequests}`);
+    console.log(`   Expired sessions: ${stats.expiredSessions}`);
   })
   .catch(() => {
     // Silently ignore - database may not be initialized yet

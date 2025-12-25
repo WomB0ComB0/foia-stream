@@ -10,6 +10,7 @@
 import { authService } from '@/services/auth.service';
 import { mfaService } from '@/services/mfa.service';
 import { apiKeyService } from '@/services/api-key.service';
+import { consentService, type ConsentData } from '@/services/consent.service';
 import type { User } from '@/types';
 import type { Context } from 'hono';
 
@@ -42,11 +43,41 @@ const mapUserResponse = (user: Omit<User, 'passwordHash'>) => ({
  * @param {Context} c - Hono context with validated request body
  * @returns {Promise<Response>} JSON response with created user or error
  * @compliance NIST 800-53 AC-2 (Account Management)
+ * @compliance GDPR Article 7 (Conditions for consent)
  */
 export const register = async (c: Context) => {
   try {
-    const data = c.req.valid('json' as never);
-    const user = await authService.createUser(data);
+    const data = c.req.valid('json' as never) as {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      role?: 'civilian' | 'journalist' | 'researcher' | 'attorney' | 'community_advocate' | 'agency_official' | 'admin';
+      organization?: string;
+      isAnonymous?: boolean;
+      consents?: ConsentData;
+    };
+
+    const { consents, ...userData } = data;
+    // Ensure role has a default value
+    const userDataWithDefaults = {
+      ...userData,
+      role: userData.role || 'civilian' as const,
+    };
+    const user = await authService.createUser(userDataWithDefaults);
+
+    // Record consent if provided (GDPR/CCPA compliance)
+    if (consents) {
+      const ipAddress = c.req.header('x-forwarded-for') || c.req.header('x-real-ip');
+      const userAgent = c.req.header('user-agent');
+
+      await consentService.recordRegistrationConsent(
+        user.id,
+        consents,
+        ipAddress,
+        userAgent
+      );
+    }
 
     return c.json(
       {
@@ -90,6 +121,39 @@ export const login = async (c: Context) => {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Login failed';
+    return c.json({ success: false, error: message }, 401);
+  }
+};
+
+/**
+ * Handler for POST /auth/login/mfa
+ *
+ * @param {Context} c - Hono context with MFA token and code
+ * @returns {Promise<Response>} JSON response with full access token or error
+ * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
+ */
+export const verifyMFALogin = async (c: Context) => {
+  try {
+    const { mfaToken, code } = c.req.valid('json' as never);
+
+    const ipAddress = c.req.header('x-forwarded-for') || c.req.header('x-real-ip');
+    const userAgent = c.req.header('user-agent');
+
+    const result = await authService.verifyMFACode(mfaToken, code, {
+      ipAddress,
+      userAgent,
+    });
+
+    return c.json(
+      {
+        success: true,
+        data: { token: result.token },
+        message: 'MFA verification successful',
+      },
+      200,
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'MFA verification failed';
     return c.json({ success: false, error: message }, 401);
   }
 };
@@ -288,16 +352,18 @@ export const verifyMFA = async (c: Context) => {
 
 /**
  * Handler for POST /auth/mfa/disable
+ *
+ * @param {Context} c - Hono context with password and MFA code
+ * @returns {Promise<Response>} JSON response confirming disable or error
+ * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
  */
 export const disableMFA = async (c: Context) => {
   try {
     const { userId } = c.get('user');
     const { password, code } = c.req.valid('json' as never);
 
-    // Verify password
     await authService.verifyPassword(userId, password);
 
-    // Verify MFA code before disabling
     const verifyResult = await mfaService.verifyMFA(userId, code);
     if (!verifyResult.success) {
       return c.json({ success: false, error: 'Invalid MFA code' }, 400);
@@ -311,6 +377,38 @@ export const disableMFA = async (c: Context) => {
     }, 200);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to disable MFA';
+    return c.json({ success: false, error: message }, 400);
+  }
+};
+
+/**
+ * Handler for POST /auth/mfa/backup-codes/regenerate
+ *
+ * @param {Context} c - Hono context with password confirmation
+ * @returns {Promise<Response>} JSON response with new backup codes or error
+ * @compliance NIST 800-53 IA-5 (Authenticator Management)
+ */
+export const regenerateBackupCodes = async (c: Context) => {
+  try {
+    const { userId } = c.get('user');
+    const { password } = c.req.valid('json' as never);
+
+    await authService.verifyPassword(userId, password);
+
+    const status = await mfaService.getMFAStatus(userId);
+    if (!status.enabled) {
+      return c.json({ success: false, error: 'MFA is not enabled' }, 400);
+    }
+
+    const backupCodes = await mfaService.regenerateBackupCodes(userId);
+
+    return c.json({
+      success: true,
+      data: { backupCodes },
+      message: 'Backup codes regenerated successfully',
+    }, 200);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to regenerate backup codes';
     return c.json({ success: false, error: message }, 400);
   }
 };

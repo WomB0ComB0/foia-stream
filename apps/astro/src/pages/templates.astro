@@ -1,0 +1,14 @@
+---
+/**
+ * @file Templates browsing page
+ * @description Browse and use FOIA request templates
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TemplatesPage from '@/components/react/TemplatesPage';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Templates" description="Professional FOIA request templates for various record types">
+  <TemplatesPage client:load />
+</BaseLayout>

@@ -1,0 +1,14 @@
+---
+/**
+ * @file Agencies browsing page
+ * @description Search and browse government agencies that accept FOIA requests
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AgenciesPage from '@/components/react/AgenciesPage';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Agencies" description="Browse government agencies and their FOIA contact information">
+  <AgenciesPage client:load />
+</BaseLayout>

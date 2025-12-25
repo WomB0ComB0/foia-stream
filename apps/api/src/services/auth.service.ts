@@ -20,6 +20,7 @@ import * as jose from 'jose';
 import { nanoid } from 'nanoid';
 import { env } from '../config/env';
 import { db, schema } from '../db';
+import { logger } from '../lib/logger';
 import type { CreateUserDTO, User, UserRole } from '../types';
 import { ConflictError, DatabaseError, NotFoundError, SecurityError } from '../utils/errors';
 import { mfaService } from './mfa.service';
@@ -311,43 +312,48 @@ export class AuthService {
         .sign(JWT_SECRET);
     }
 
-    // Generate JWT (without MFA verified flag if MFA is required)
-    const token = await this.generateToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role as UserRole,
-      mfaVerified: !requiresMFA, // True only if MFA is not required
-    });
+    // Only create session and token if MFA is NOT required
+    // If MFA is required, session will be created after MFA verification
+    let token = '';
 
-    // Create encrypted session
-    const expiresAt = new Date(
-      Date.now() + SECURITY_CONFIG.sessionExpiryDays * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    if (!requiresMFA) {
+      token = await this.generateToken({
+        userId: user.id,
+        email: user.email,
+        role: user.role as UserRole,
+        mfaVerified: true,
+      });
 
-    await secureSessionService.createSession(
-      user.id,
-      token,
-      expiresAt,
-      options?.ipAddress,
-      options?.userAgent,
-    );
+      // Create encrypted session
+      const expiresAt = new Date(
+        Date.now() + SECURITY_CONFIG.sessionExpiryDays * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
-    // Log successful login
-    await securityMonitoring.logSecurityEvent({
-      type: 'successful_login',
-      userId: user.id,
-      severity: 'low',
-      details: { email, mfaRequired: requiresMFA },
-      ipAddress: options?.ipAddress,
-      userAgent: options?.userAgent,
-    });
+      await secureSessionService.createSession(
+        user.id,
+        token,
+        expiresAt,
+        options?.ipAddress,
+        options?.userAgent,
+      );
 
-    // Log audit event
-    await this.logAudit(user.id, 'user_login', 'user', user.id);
+      // Log successful login
+      await securityMonitoring.logSecurityEvent({
+        type: 'successful_login',
+        userId: user.id,
+        severity: 'low',
+        details: { email, mfaRequired: false },
+        ipAddress: options?.ipAddress,
+        userAgent: options?.userAgent,
+      });
+
+      // Log audit event
+      await this.logAudit(user.id, 'user_login', 'user', user.id);
+    }
 
     const { passwordHash: _, ...userWithoutPassword } = user;
     return {
-      token: requiresMFA ? '' : token, // Don't return full token until MFA verified
+      token,
       user: userWithoutPassword as Omit<User, 'passwordHash'>,
       requiresMFA,
       mfaToken,
@@ -355,7 +361,16 @@ export class AuthService {
   }
 
   /**
-   * Verify MFA code and complete login
+   * Verify MFA code and complete login after successful verification
+   *
+   * @param {string} mfaToken - Temporary JWT token from initial login
+   * @param {string} code - 6-digit TOTP code or backup code
+   * @param {Object} [options] - Request metadata
+   * @param {string} [options.ipAddress] - Client IP address
+   * @param {string} [options.userAgent] - Client user agent
+   * @returns {Promise<{token: string}>} Full access token
+   * @throws {SecurityError} If MFA token is invalid/expired or code is incorrect
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
    */
   async verifyMFACode(
     mfaToken: string,
@@ -374,8 +389,9 @@ export class AuthService {
         throw new SecurityError('invalid_token', 'Invalid MFA token');
       }
 
-      // Use the mfaService to verify the code
+      logger.debug({ userId, codeLength: code.length }, 'Verifying MFA code');
       const verifyResult = await mfaService.verifyMFA(userId, code);
+      logger.debug({ userId, success: verifyResult.success, usedBackupCode: verifyResult.usedBackupCode }, 'MFA verification result');
 
       if (!verifyResult.success) {
         await securityMonitoring.logSecurityEvent({
@@ -389,13 +405,14 @@ export class AuthService {
         throw new SecurityError('authentication', 'Invalid MFA code', { userId });
       }
 
+      logger.debug({ userId }, 'MFA verified, fetching user');
       const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
 
       if (!user) {
         throw NotFoundError('User not found', { userId });
       }
 
-      // Generate full access token
+      logger.debug({ userId, email: user.email }, 'User found, generating token');
       const token = await this.generateToken({
         userId: user.id,
         email: user.email,
@@ -403,9 +420,20 @@ export class AuthService {
         mfaVerified: true,
       });
 
-      // Update session with full token
-      await db.update(schema.sessions).set({ token }).where(eq(schema.sessions.userId, userId));
+      logger.debug({ userId }, 'Token generated, creating session');
+      const expiresAt = new Date(
+        Date.now() + SECURITY_CONFIG.sessionExpiryDays * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
+      await secureSessionService.createSession(
+        userId,
+        token,
+        expiresAt,
+        options?.ipAddress,
+        options?.userAgent,
+      );
+
+      logger.debug({ userId }, 'Session updated, logging security event');
       await securityMonitoring.logSecurityEvent({
         type: 'successful_login',
         userId,
@@ -415,8 +443,10 @@ export class AuthService {
         userAgent: options?.userAgent,
       });
 
+      logger.debug({ userId }, 'MFA login completed successfully');
       return { token };
     } catch (error) {
+      logger.error({ error, errorMessage: error instanceof Error ? error.message : 'Unknown error' }, 'MFA verification error');
       if (error instanceof SecurityError) {
         throw error;
       }

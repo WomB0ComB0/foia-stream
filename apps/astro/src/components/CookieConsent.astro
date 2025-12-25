@@ -1,0 +1,243 @@
+---
+/**
+ * Cookie consent banner component
+ * Shows a banner at the bottom of the screen for users to accept or customize cookie preferences
+ * Persists choice in localStorage
+ */
+---
+
+<div id="cookie-consent" class="fixed inset-x-0 bottom-0 z-[9999] hidden p-4 sm:p-6">
+  <div class="mx-auto max-w-4xl">
+    <div class="rounded-2xl border border-surface-700 bg-surface-900/95 p-4 shadow-xl backdrop-blur-xl sm:p-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="flex-1">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-500/10">
+              <svg class="h-5 w-5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-surface-100">Cookie Preferences</h3>
+          </div>
+          <p class="mt-3 text-sm text-surface-400 leading-relaxed">
+            We use cookies to enhance your experience, analyze site traffic, and for personalization.
+            By clicking "Accept All", you consent to our use of cookies. Read our
+            <a href="/privacy" class="text-accent-400 hover:text-accent-300 underline">Privacy Policy</a>
+            to learn more.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center shrink-0">
+          <button
+            id="cookie-customize"
+            class="rounded-lg border border-surface-600 px-4 py-2.5 text-sm font-medium text-surface-300 transition-all hover:border-surface-500 hover:bg-surface-800"
+          >
+            Customize
+          </button>
+          <button
+            id="cookie-reject"
+            class="rounded-lg border border-surface-600 px-4 py-2.5 text-sm font-medium text-surface-300 transition-all hover:border-surface-500 hover:bg-surface-800"
+          >
+            Essential Only
+          </button>
+          <button
+            id="cookie-accept"
+            class="rounded-lg bg-accent-500 px-6 py-2.5 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400"
+          >
+            Accept All
+          </button>
+        </div>
+      </div>
+
+      <!-- Customize panel (hidden by default) -->
+      <div id="cookie-customize-panel" class="mt-4 hidden border-t border-surface-700 pt-4">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-surface-100">Essential</p>
+                <p class="text-xs text-surface-500">Required for the site to function</p>
+              </div>
+              <div class="rounded-lg bg-surface-600 px-2 py-1 text-xs font-medium text-surface-300">
+                Always On
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-surface-100">Analytics</p>
+                <p class="text-xs text-surface-500">Help us improve the site</p>
+              </div>
+              <button
+                id="toggle-analytics"
+                class="relative h-6 w-11 rounded-full bg-surface-600 transition-colors"
+                data-enabled="false"
+              >
+                <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-all"></div>
+              </button>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-surface-100">Functional</p>
+                <p class="text-xs text-surface-500">Enhanced features and preferences</p>
+              </div>
+              <button
+                id="toggle-functional"
+                class="relative h-6 w-11 rounded-full bg-surface-600 transition-colors"
+                data-enabled="false"
+              >
+                <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-all"></div>
+              </button>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-surface-700 bg-surface-800/50 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-medium text-surface-100">Marketing</p>
+                <p class="text-xs text-surface-500">Personalized content and ads</p>
+              </div>
+              <button
+                id="toggle-marketing"
+                class="relative h-6 w-11 rounded-full bg-surface-600 transition-colors"
+                data-enabled="false"
+              >
+                <div class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-all"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <button
+            id="cookie-save-preferences"
+            class="rounded-lg bg-accent-500 px-6 py-2.5 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400"
+          >
+            Save Preferences
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cookie consent logic
+  const COOKIE_CONSENT_KEY = 'foiastream_cookie_consent';
+
+  interface CookiePreferences {
+    essential: boolean;
+    analytics: boolean;
+    functional: boolean;
+    marketing: boolean;
+    timestamp: string;
+  }
+
+  function getStoredConsent(): CookiePreferences | null {
+    try {
+      const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveConsent(preferences: CookiePreferences) {
+    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(preferences));
+  }
+
+  function hideBanner() {
+    const banner = document.getElementById('cookie-consent');
+    banner?.classList.add('hidden');
+  }
+
+  function showBanner() {
+    const banner = document.getElementById('cookie-consent');
+    banner?.classList.remove('hidden');
+  }
+
+  // Check if consent already given
+  const existingConsent = getStoredConsent();
+  if (!existingConsent) {
+    // Show banner after a small delay for better UX
+    setTimeout(showBanner, 1000);
+  }
+
+  // Toggle button functionality
+  function setupToggle(buttonId: string) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    button.addEventListener('click', () => {
+      const enabled = button.getAttribute('data-enabled') === 'true';
+      button.setAttribute('data-enabled', String(!enabled));
+
+      if (!enabled) {
+        button.classList.remove('bg-surface-600');
+        button.classList.add('bg-accent-500');
+        const dot = button.querySelector('div');
+        if (dot) dot.classList.add('translate-x-5');
+      } else {
+        button.classList.add('bg-surface-600');
+        button.classList.remove('bg-accent-500');
+        const dot = button.querySelector('div');
+        if (dot) dot.classList.remove('translate-x-5');
+      }
+    });
+  }
+
+  setupToggle('toggle-analytics');
+  setupToggle('toggle-functional');
+  setupToggle('toggle-marketing');
+
+  // Accept all
+  document.getElementById('cookie-accept')?.addEventListener('click', () => {
+    saveConsent({
+      essential: true,
+      analytics: true,
+      functional: true,
+      marketing: true,
+      timestamp: new Date().toISOString(),
+    });
+    hideBanner();
+  });
+
+  // Essential only
+  document.getElementById('cookie-reject')?.addEventListener('click', () => {
+    saveConsent({
+      essential: true,
+      analytics: false,
+      functional: false,
+      marketing: false,
+      timestamp: new Date().toISOString(),
+    });
+    hideBanner();
+  });
+
+  // Show customize panel
+  document.getElementById('cookie-customize')?.addEventListener('click', () => {
+    const panel = document.getElementById('cookie-customize-panel');
+    panel?.classList.toggle('hidden');
+  });
+
+  // Save preferences
+  document.getElementById('cookie-save-preferences')?.addEventListener('click', () => {
+    const analytics = document.getElementById('toggle-analytics')?.getAttribute('data-enabled') === 'true';
+    const functional = document.getElementById('toggle-functional')?.getAttribute('data-enabled') === 'true';
+    const marketing = document.getElementById('toggle-marketing')?.getAttribute('data-enabled') === 'true';
+
+    saveConsent({
+      essential: true,
+      analytics,
+      functional,
+      marketing,
+      timestamp: new Date().toISOString(),
+    });
+    hideBanner();
+  });
+</script>

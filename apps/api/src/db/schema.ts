@@ -67,6 +67,17 @@ export const users = sqliteTable('users', {
   /** Password management */
   passwordChangedAt: text('password_changed_at'),
   mustChangePassword: integer('must_change_password', { mode: 'boolean' }).notNull().default(false),
+  /**
+   * Consent tracking fields (GDPR/CCPA compliance)
+   * @compliance GDPR Article 7 (Conditions for consent), CCPA
+   */
+  termsAcceptedAt: text('terms_accepted_at'),
+  privacyAcceptedAt: text('privacy_accepted_at'),
+  dataProcessingConsentAt: text('data_processing_consent_at'),
+  /** Marketing consent is optional and separate from required consents */
+  marketingConsentAt: text('marketing_consent_at'),
+  /** Timestamp when consent was last updated/withdrawn */
+  consentUpdatedAt: text('consent_updated_at'),
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -217,6 +228,16 @@ export const foiaRequests = sqliteTable('foia_requests', {
   denialReason: text('denial_reason'),
   /** Public visibility flag for transparency */
   isPublic: integer('is_public', { mode: 'boolean' }).notNull().default(true),
+  /**
+   * Data retention fields
+   * @compliance GDPR Article 5 (Storage limitation), CCPA
+   */
+  /** When the request content should be purged (90 days after completion) */
+  contentPurgeAt: text('content_purge_at'),
+  /** Whether content has been purged (title/description cleared) */
+  contentPurged: integer('content_purged', { mode: 'boolean' }).notNull().default(false),
+  /** Original title stored as hash for reference after purge */
+  titleHash: text('title_hash'),
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -448,8 +469,13 @@ export const auditLogs = sqliteTable('audit_logs', {
       // Data retention
       'retention_delete',
       'retention_archive',
+      'retention_content_purge',
       'backup_created',
       'backup_restored',
+      // Consent events
+      'consent_given',
+      'consent_withdrawn',
+      'consent_updated',
     ],
   }).notNull(),
   resourceType: text('resource_type').notNull(),
@@ -457,6 +483,41 @@ export const auditLogs = sqliteTable('audit_logs', {
   details: text('details', { mode: 'json' }).$type<Record<string, unknown>>(),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+// ============================================
+// Consent History (GDPR/CCPA Compliance)
+// ============================================
+
+/**
+ * Consent History table - tracks all consent changes for compliance
+ *
+ * @table consent_history
+ * @description Immutable audit trail of user consent actions.
+ *              Required for GDPR Article 7 (proof of consent) and CCPA.
+ * @compliance GDPR Article 7, CCPA 1798.100
+ */
+export const consentHistory = sqliteTable('consent_history', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** Type of consent action */
+  consentType: text('consent_type', {
+    enum: ['terms', 'privacy', 'data_processing', 'marketing'],
+  }).notNull(),
+  /** Whether consent was given or withdrawn */
+  action: text('action', {
+    enum: ['given', 'withdrawn'],
+  }).notNull(),
+  /** Version of the policy consented to */
+  policyVersion: text('policy_version'),
+  /** IP address at time of consent (encrypted) */
+  ipAddress: text('ip_address'),
+  /** User agent at time of consent */
+  userAgent: text('user_agent'),
+  /** Timestamp of consent action */
   createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 

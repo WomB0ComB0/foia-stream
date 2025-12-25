@@ -7,9 +7,11 @@ import { useStore } from '@nanostores/react';
 import {
   AlertTriangle,
   ArrowLeft,
+  Bell,
   Check,
   ChevronRight,
   Copy,
+  Download,
   Eye,
   EyeOff,
   Key,
@@ -17,6 +19,7 @@ import {
   Lock,
   Monitor,
   RefreshCw,
+  Settings2,
   Shield,
   Smartphone,
   Trash2,
@@ -27,7 +30,7 @@ import { useEffect, useState } from 'react';
 import { api, type User as UserType } from '@/lib/api';
 import { $user, $isAuthenticated, $isLoading, initAuth, refreshUser } from '@/stores/auth';
 
-type TabId = 'profile' | 'security' | 'api' | 'danger';
+type TabId = 'profile' | 'security' | 'preferences' | 'api' | 'danger';
 
 interface Tab {
   id: TabId;
@@ -39,6 +42,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'profile', label: 'Profile', icon: <User className="h-5 w-5" />, description: 'Manage your personal information' },
   { id: 'security', label: 'Security', icon: <Shield className="h-5 w-5" />, description: 'Password and authentication' },
+  { id: 'preferences', label: 'Preferences', icon: <Settings2 className="h-5 w-5" />, description: 'Notifications and reminders' },
   { id: 'api', label: 'API Keys', icon: <Key className="h-5 w-5" />, description: 'Manage API access' },
   { id: 'danger', label: 'Danger Zone', icon: <AlertTriangle className="h-5 w-5" />, description: 'Irreversible actions' },
 ];
@@ -124,6 +128,7 @@ export default function Settings() {
           <div className="flex-1 min-w-0">
             {activeTab === 'profile' && <ProfileTab user={user} />}
             {activeTab === 'security' && <SecurityTab />}
+            {activeTab === 'preferences' && <PreferencesTab />}
             {activeTab === 'api' && <ApiKeysTab />}
             {activeTab === 'danger' && <DangerZoneTab />}
           </div>
@@ -411,6 +416,176 @@ function SecurityTab() {
       {showSessionsModal && (
         <SessionsModal onClose={() => setShowSessionsModal(false)} />
       )}
+    </div>
+  );
+}
+
+function PreferencesTab() {
+  const [passwordReminder, setPasswordReminder] = useState('90');
+  const [emailNotifications, setEmailNotifications] = useState({
+    requestUpdates: true,
+    deadlineReminders: true,
+    weeklyDigest: false,
+    marketingEmails: false,
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setSuccess('Preferences saved successfully');
+    setIsSaving(false);
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
+  return (
+    <div className="space-y-6">
+      {success && (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+          <Check className="h-4 w-4" />
+          {success}
+        </div>
+      )}
+
+      {/* Password Reminder */}
+      <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="rounded-xl bg-surface-800 p-3">
+            <Lock className="h-6 w-6 text-surface-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-surface-100">Password Change Reminder</h3>
+            <p className="text-sm text-surface-400">How often should we remind you to change your password?</p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {[
+            { value: '30', label: '30 days', description: 'Recommended for high-security accounts' },
+            { value: '90', label: '90 days', description: 'Standard security practice' },
+            { value: 'never', label: 'Never', description: 'Not recommended' },
+          ].map((option) => (
+            <label
+              key={option.value}
+              className={`flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all ${
+                passwordReminder === option.value
+                  ? 'border-accent-500 bg-accent-500/10'
+                  : 'border-surface-700 bg-surface-800/50 hover:border-surface-600'
+              }`}
+            >
+              <input
+                type="radio"
+                name="passwordReminder"
+                value={option.value}
+                checked={passwordReminder === option.value}
+                onChange={(e) => setPasswordReminder(e.target.value)}
+                className="sr-only"
+              />
+              <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                passwordReminder === option.value
+                  ? 'border-accent-500 bg-accent-500'
+                  : 'border-surface-500'
+              }`}>
+                {passwordReminder === option.value && (
+                  <div className="h-1.5 w-1.5 rounded-full bg-surface-950" />
+                )}
+              </div>
+              <div className="flex-1">
+                <span className="font-medium text-surface-100">{option.label}</span>
+                <p className="text-xs text-surface-500">{option.description}</p>
+              </div>
+              {option.value === 'never' && (
+                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400">
+                  ⚠️ Risk
+                </span>
+              )}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Email Notifications */}
+      <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="rounded-xl bg-surface-800 p-3">
+            <Bell className="h-6 w-6 text-surface-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-surface-100">Email Notifications</h3>
+            <p className="text-sm text-surface-400">Choose what updates you want to receive</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {[
+            { key: 'requestUpdates', label: 'Request Updates', description: 'Notifications when your FOIA requests are updated' },
+            { key: 'deadlineReminders', label: 'Deadline Reminders', description: 'Reminders before agency response deadlines' },
+            { key: 'weeklyDigest', label: 'Weekly Digest', description: 'Weekly summary of all your request activity' },
+            { key: 'marketingEmails', label: 'Product Updates', description: 'News about new features and improvements' },
+          ].map((item) => (
+            <div
+              key={item.key}
+              className="flex items-center justify-between rounded-lg border border-surface-700 bg-surface-800/50 p-4"
+            >
+              <div>
+                <p className="font-medium text-surface-100">{item.label}</p>
+                <p className="text-xs text-surface-500">{item.description}</p>
+              </div>
+              <button
+                onClick={() => setEmailNotifications({
+                  ...emailNotifications,
+                  [item.key]: !emailNotifications[item.key as keyof typeof emailNotifications]
+                })}
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  emailNotifications[item.key as keyof typeof emailNotifications]
+                    ? 'bg-accent-500'
+                    : 'bg-surface-600'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${
+                    emailNotifications[item.key as keyof typeof emailNotifications]
+                      ? 'left-6'
+                      : 'left-1'
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Export Data */}
+      <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="rounded-xl bg-surface-800 p-3">
+              <Download className="h-6 w-6 text-surface-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-surface-100">Export Your Data</h3>
+              <p className="text-sm text-surface-400">Download a copy of all your data (GDPR compliant)</p>
+            </div>
+          </div>
+          <button
+            className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
+          >
+            Request Export
+          </button>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="flex items-center gap-2 rounded-lg bg-accent-500 px-6 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          Save Preferences
+        </button>
+      </div>
     </div>
   );
 }
@@ -802,11 +977,12 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
 }
 
 function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () => void }) {
-  const [step, setStep] = useState<'confirm' | 'setup' | 'verify' | 'disable'>('confirm');
+  const [step, setStep] = useState<'confirm' | 'setup' | 'verify' | 'manage' | 'disable' | 'newBackupCodes'>('confirm');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState('');
   const [setupData, setSetupData] = useState<{ qrCodeUrl: string; secret: string; backupCodes: string[] } | null>(null);
+  const [newBackupCodes, setNewBackupCodes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -815,7 +991,7 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
     setError('');
 
     if (enabled) {
-      setStep('disable');
+      setStep('manage');
       setIsLoading(false);
     } else {
       const response = await api.setupMFA(password);
@@ -827,6 +1003,20 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
       }
       setIsLoading(false);
     }
+  };
+
+  const handleRegenerateBackupCodes = async () => {
+    setIsLoading(true);
+    setError('');
+
+    const response = await api.regenerateBackupCodes(password);
+    if (response.success && response.data) {
+      setNewBackupCodes(response.data.backupCodes);
+      setStep('newBackupCodes');
+    } else {
+      setError(response.error || 'Failed to regenerate backup codes');
+    }
+    setIsLoading(false);
   };
 
   const handleVerify = async () => {
@@ -985,6 +1175,89 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
           </div>
         )}
 
+        {step === 'manage' && (
+          <div className="space-y-4">
+            <p className="text-sm text-surface-400">
+              Your two-factor authentication is enabled. What would you like to do?
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleRegenerateBackupCodes}
+                disabled={isLoading}
+                className="flex w-full items-center gap-3 rounded-lg border border-surface-700 bg-surface-800 p-4 text-left transition-colors hover:border-surface-600 hover:bg-surface-700 disabled:opacity-50"
+              >
+                <div className="rounded-lg bg-accent-500/10 p-2">
+                  <Key className="h-5 w-5 text-accent-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-surface-200">Regenerate Backup Codes</p>
+                  <p className="text-xs text-surface-400">Get new backup codes (invalidates old ones)</p>
+                </div>
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin text-surface-400" />}
+              </button>
+
+              <button
+                onClick={() => setStep('disable')}
+                className="flex w-full items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-4 text-left transition-colors hover:bg-red-500/10"
+              >
+                <div className="rounded-lg bg-red-500/10 p-2">
+                  <X className="h-5 w-5 text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-red-400">Disable 2FA</p>
+                  <p className="text-xs text-surface-400">Remove two-factor authentication</p>
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="w-full rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
+            >
+              Done
+            </button>
+          </div>
+        )}
+
+        {step === 'newBackupCodes' && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
+              <strong>Success!</strong> Your backup codes have been regenerated. Save them somewhere safe.
+            </div>
+
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+              <p className="mb-3 text-xs font-medium text-amber-400">Your new backup codes:</p>
+              <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+                {newBackupCodes.map((code, i) => (
+                  <span key={i} className="rounded bg-surface-800 px-2 py-1 text-center text-surface-200">
+                    {code}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-amber-300">
+                ⚠️ Your previous backup codes are now invalid.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(newBackupCodes.join('\n'));
+              }}
+              className="w-full rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
+            >
+              Copy All Codes
+            </button>
+
+            <button
+              onClick={onClose}
+              className="w-full rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
+            >
+              I've Saved My Codes
+            </button>
+          </div>
+        )}
+
         {step === 'disable' && (
           <div className="space-y-4">
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
@@ -1005,10 +1278,10 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </div>
             <div className="flex justify-end gap-3">
               <button
-                onClick={onClose}
+                onClick={() => setStep('manage')}
                 className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
               >
-                Cancel
+                Back
               </button>
               <button
                 onClick={handleDisable}

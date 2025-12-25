@@ -1,192 +1,359 @@
 /**
- * @file API client for FOIA Stream application
- * @module api
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+
+/**
+ * @file API client for FOIA Stream application with Effect Schema validation
+ * @module api
+ * @author FOIA Stream Team
+ * @compliance NIST 800-53 SI-10 (Information Input Validation)
+ */
+
+import { FetchHttpClient, type HttpClient } from '@effect/platform';
+import { del, FetcherError, FetcherValidationError, get, patch, post } from '@foia-stream/shared';
+import { Effect, ParseResult, pipe, Schema as S } from 'effect';
 
 import { API_BASE } from './config';
 
+// ============================================
+// Effect Schema Definitions for API Responses
+// ============================================
+
 /**
- * Standard API response wrapper
- * @interface ApiResponse
- * @template T - The type of data returned in the response
+ * Pagination schema for paginated API responses
+ * @compliance NIST 800-53 SI-10 (Information Input Validation)
  */
-export interface ApiResponse<T = unknown> {
+const PaginationSchema = S.Struct({
+  page: S.Number.pipe(S.int(), S.positive()),
+  limit: S.Number.pipe(S.int(), S.positive()),
+  total: S.Number.pipe(S.int(), S.nonNegative()),
+  totalPages: S.Number.pipe(S.int(), S.nonNegative()),
+});
+
+/**
+ * Generic API response wrapper schema (available for future use)
+ * @template T Schema for the data payload
+ */
+const _ApiResponseSchema = <T, I, R>(dataSchema: S.Schema<T, I, R>) =>
+  S.Struct({
+    success: S.Boolean,
+    data: S.optional(dataSchema),
+    error: S.optional(S.String),
+    message: S.optional(S.String),
+    pagination: S.optional(PaginationSchema),
+  });
+
+/**
+ * User role enum schema
+ */
+const UserRoleSchema = S.Literal(
+  'civilian',
+  'journalist',
+  'researcher',
+  'attorney',
+  'community_advocate',
+  'agency_official',
+  'admin',
+);
+
+/**
+ * User schema for profile responses
+ * @compliance NIST 800-53 IA-2 (Identification and Authentication)
+ */
+const UserSchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  email: S.String.pipe(S.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+  role: UserRoleSchema,
+  firstName: S.String,
+  lastName: S.String,
+  organization: S.NullOr(S.String),
+  isVerified: S.Boolean,
+  isAnonymous: S.Boolean,
+  createdAt: S.String,
+});
+
+/**
+ * Auth response schema (login/register)
+ */
+const AuthResponseSchema = S.Struct({
+  token: S.String.pipe(S.minLength(1)),
+  user: UserSchema,
+});
+
+/**
+ * Jurisdiction level enum schema
+ */
+const JurisdictionLevelSchema = S.Literal('federal', 'state', 'local', 'county');
+
+/**
+ * Agency schema for agency responses
+ */
+const AgencySchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  name: S.String.pipe(S.minLength(1)),
+  abbreviation: S.String,
+  jurisdictionLevel: JurisdictionLevelSchema,
+  state: S.NullOr(S.String),
+  city: S.NullOr(S.String),
+  county: S.NullOr(S.String),
+  foiaEmail: S.NullOr(S.String),
+  foiaUrl: S.NullOr(S.String),
+  foiaPhone: S.NullOr(S.String),
+  foiaPortalUrl: S.NullOr(S.String),
+  description: S.NullOr(S.String),
+  category: S.NullOr(S.String),
+  processingTimeAvg: S.NullOr(S.Number),
+  isActive: S.Boolean,
+  createdAt: S.String,
+  updatedAt: S.String,
+});
+
+/**
+ * Template schema for template responses
+ */
+const TemplateSchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  userId: S.String.pipe(S.minLength(1)),
+  name: S.String.pipe(S.minLength(1)),
+  description: S.NullOr(S.String),
+  category: S.String,
+  content: S.String,
+  tags: S.optional(S.Array(S.String)),
+  isPublic: S.Boolean,
+  usageCount: S.Number.pipe(S.int(), S.nonNegative()),
+  createdAt: S.String,
+  updatedAt: S.String,
+});
+
+/**
+ * Request status enum schema
+ */
+const RequestStatusSchema = S.Literal(
+  'draft',
+  'submitted',
+  'acknowledged',
+  'processing',
+  'fulfilled',
+  'appealed',
+  'closed',
+);
+
+/**
+ * FOIA Request schema
+ * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+ */
+const FoiaRequestSchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  userId: S.String.pipe(S.minLength(1)),
+  agencyId: S.String.pipe(S.minLength(1)),
+  templateId: S.NullOr(S.String),
+  agency: S.optional(AgencySchema),
+  title: S.optional(S.String),
+  subject: S.String,
+  description: S.optional(S.String),
+  requestBody: S.String,
+  category: S.optional(S.String),
+  dateRange: S.optional(S.String),
+  specificIndividuals: S.optional(S.String),
+  trackingNumber: S.optional(S.String),
+  status: RequestStatusSchema,
+  referenceNumber: S.NullOr(S.String),
+  submittedAt: S.NullOr(S.String),
+  acknowledgedAt: S.NullOr(S.String),
+  dueDate: S.NullOr(S.String),
+  closedAt: S.NullOr(S.String),
+  responseDeadline: S.NullOr(S.String),
+  fees: S.NullOr(S.String),
+  estimatedFee: S.NullOr(S.Number),
+  actualFee: S.NullOr(S.Number),
+  feeWaiverRequested: S.optional(S.Boolean),
+  expeditedProcessing: S.optional(S.Boolean),
+  notes: S.NullOr(S.String),
+  attachments: S.optional(S.Array(S.String)),
+  createdAt: S.String,
+  updatedAt: S.String,
+});
+
+/**
+ * Session schema for session management
+ * @compliance NIST 800-53 AC-12 (Session Termination)
+ */
+const SessionSchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  deviceName: S.NullOr(S.String),
+  device: S.optional(S.String),
+  ipAddress: S.NullOr(S.String),
+  lastActiveAt: S.NullOr(S.String),
+  lastActive: S.optional(S.String),
+  createdAt: S.String,
+  isCurrent: S.Boolean,
+});
+
+/**
+ * MFA status schema
+ * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
+ */
+const MFAStatusSchema = S.Struct({
+  enabled: S.Boolean,
+  method: S.optional(S.String),
+});
+
+/**
+ * MFA setup response schema
+ */
+const MFASetupResponseSchema = S.Struct({
+  secret: S.String.pipe(S.minLength(1)),
+  qrCode: S.String.pipe(S.minLength(1)),
+  qrCodeUrl: S.optional(S.String),
+  backupCodes: S.Array(S.String),
+});
+
+/**
+ * API Key schema
+ * @compliance NIST 800-53 IA-5 (Authenticator Management)
+ */
+const ApiKeySchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  key: S.optional(S.String),
+  keyPreview: S.String,
+  name: S.String,
+  createdAt: S.String,
+  lastUsedAt: S.NullOr(S.String),
+});
+
+/**
+ * Simple message response schema
+ */
+const MessageResponseSchema = S.Struct({
+  message: S.String,
+});
+
+// ============================================
+// Type Exports (inferred from schemas)
+// ============================================
+
+export type ApiResponse<T = unknown> = {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+  pagination?: S.Schema.Type<typeof PaginationSchema>;
+};
+
+export type User = S.Schema.Type<typeof UserSchema>;
+export type AuthResponse = S.Schema.Type<typeof AuthResponseSchema>;
+export type Agency = S.Schema.Type<typeof AgencySchema>;
+export type Template = S.Schema.Type<typeof TemplateSchema>;
+export type FoiaRequest = S.Schema.Type<typeof FoiaRequestSchema>;
+export type Session = S.Schema.Type<typeof SessionSchema>;
+export type MFAStatus = S.Schema.Type<typeof MFAStatusSchema>;
+export type MFASetupResponse = S.Schema.Type<typeof MFASetupResponseSchema>;
+export type ApiKey = S.Schema.Type<typeof ApiKeySchema>;
+
+const HttpClientLive = FetchHttpClient.layer;
 
 /**
- * User account information
- * @interface User
+ * Retrieves the authentication token from local storage
+ * @returns The auth token or null if not found
+ * @compliance NIST 800-53 IA-5 (Authenticator Management)
  */
-export interface User {
-  id: string;
-  email: string;
-  role: string;
-  firstName: string;
-  lastName: string;
-  organization?: string | null;
-  isVerified: boolean;
-  isAnonymous: boolean;
-  createdAt: string;
+function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('auth_token');
 }
 
 /**
- * Authentication response containing JWT token and user data
- * @interface AuthResponse
+ * Builds authorization headers with the current token
+ * @returns Headers object with Authorization if token exists
+ * @compliance NIST 800-53 SC-8 (Transmission Confidentiality)
  */
-export interface AuthResponse {
-  token: string;
-  user: User;
+function getAuthHeaders(): Record<string, string> {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 /**
- * Government agency that accepts FOIA requests
- * @interface Agency
+ * Executes an Effect with schema validation and returns an ApiResponse
+ * @template T The expected type of the response data
+ * @param effect The Effect to execute
+ * @param schema Optional Effect Schema for runtime validation
+ * @returns ApiResponse with validated data or error
+ * @compliance NIST 800-53 SI-10 (Information Input Validation)
  */
-export interface Agency {
-  id: string;
-  name: string;
-  abbreviation: string;
-  jurisdictionLevel: 'federal' | 'state' | 'local' | 'county';
-  state?: string | null;
-  city?: string | null;
-  county?: string | null;
-  foiaEmail?: string | null;
-  foiaPortalUrl?: string | null;
-  phoneNumber?: string | null;
-  address?: string | null;
-  responseDeadlineDays?: number | null;
-  appealDeadlineDays?: number | null;
+async function runEffect<T, I = T>(
+  effect: Effect.Effect<T, FetcherError | FetcherValidationError, HttpClient.HttpClient>,
+  schema?: S.Schema<T, I>,
+): Promise<ApiResponse<T>> {
+  const program = pipe(effect, Effect.provide(HttpClientLive));
+  const result = await Effect.runPromiseExit(program);
+
+  if (result._tag === 'Success') {
+    const data = result.value;
+
+    // Validate response data if schema is provided
+    if (schema) {
+      const decoded = S.decodeUnknownEither(schema)(data);
+      if (decoded._tag === 'Left') {
+        const errors = ParseResult.TreeFormatter.formatIssueSync(decoded.left.issue);
+        console.error('[API] Response validation failed:', errors);
+        return {
+          success: false,
+          error: `Response validation failed: ${errors}`,
+        };
+      }
+      return { success: true, data: decoded.right };
+    }
+
+    return { success: true, data };
+  }
+
+  const error = result.cause;
+  let errorMessage = 'An unexpected error occurred';
+
+  if (error._tag === 'Fail') {
+    const failError = error.error;
+    if (failError instanceof FetcherError) {
+      errorMessage = failError.message;
+    } else if (failError instanceof FetcherValidationError) {
+      errorMessage = failError.message;
+    }
+  }
+
+  return { success: false, error: errorMessage };
 }
 
 /**
- * FOIA request submitted by a user
- * @interface FoiaRequest
- */
-export interface FoiaRequest {
-  id: string;
-  userId: string;
-  agencyId: string;
-  title: string;
-  description: string;
-  category: string;
-  status: string;
-  dateRange?: string | null;
-  specificIndividuals?: string | null;
-  submittedAt?: string | null;
-  acknowledgedAt?: string | null;
-  dueDate?: string | null;
-  closedAt?: string | null;
-  trackingNumber?: string | null;
-  expeditedProcessing: boolean;
-  feeWaiverRequested: boolean;
-  estimatedFee?: number | null;
-  actualFee?: number | null;
-  createdAt: string;
-  updatedAt: string;
-  agency?: Agency;
-}
-
-/**
- * Reusable FOIA request template
- * @interface Template
- */
-export interface Template {
-  id: string;
-  name: string;
-  description?: string | null;
-  category: string;
-  content: string;
-  variables: string[];
-  isPublic: boolean;
-}
-
-/**
- * HTTP client for communicating with the FOIA Stream API
- * @class ApiClient
+ * API client class for FOIA Stream application
+ * @compliance NIST 800-53 SC-8 (Transmission Confidentiality)
  */
 class ApiClient {
   private baseUrl: string;
 
-  /**
-   * Creates an instance of ApiClient
-   * @param {string} [baseUrl=API_BASE] - The base URL for API requests
-   */
-  constructor(baseUrl: string = API_BASE) {
-    this.baseUrl = baseUrl;
+  constructor() {
+    this.baseUrl = API_BASE;
   }
 
   /**
-   * Gets authorization headers with JWT token if available
-   * @private
-   * @returns {HeadersInit} Headers object with Authorization if token exists
-   */
-  private getAuthHeaders(): HeadersInit {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
-  /**
-   * Makes an HTTP request to the API
-   * @private
-   * @template T - The expected response data type
-   * @param {string} endpoint - API endpoint path
-   * @param {RequestInit} [options={}] - Fetch options
-   * @returns {Promise<ApiResponse<T>>} API response with typed data
-   */
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`;
-
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...this.getAuthHeaders(),
-      ...options.headers,
-    };
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || data.message || 'Request failed',
-        };
-      }
-
-      return data as ApiResponse<T>;
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network error',
-      };
-    }
-  }
-
-  /**
-   * Registers a new user account
-   * @param {Object} data - Registration data
-   * @param {string} data.email - User email address
-   * @param {string} data.password - User password
-   * @param {string} data.firstName - User first name
-   * @param {string} data.lastName - User last name
-   * @param {string} [data.organization] - Optional organization name
-   * @param {string} [data.role] - Optional user role
-   * @param {Object} [data.consents] - Consent data for GDPR/CCPA compliance
-   * @returns {Promise<ApiResponse<AuthResponse>>} Auth response with token and user
+   * Register a new user account
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
    */
   async register(data: {
     email: string;
@@ -194,427 +361,514 @@ class ApiClient {
     firstName: string;
     lastName: string;
     organization?: string;
-    role?: string;
-    consents?: {
-      termsAccepted: boolean;
-      privacyAccepted: boolean;
-      dataProcessingAccepted: boolean;
-      consentTimestamp: string;
-    };
   }): Promise<ApiResponse<AuthResponse>> {
-    return this.request<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return runEffect(post<AuthResponse>(`${this.baseUrl}/auth/register`, data), AuthResponseSchema);
   }
 
   /**
-   * Authenticates a user and returns a JWT token
-   * @param {Object} data - Login credentials
-   * @param {string} data.email - User email address
-   * @param {string} data.password - User password
-   * @returns {Promise<ApiResponse<AuthResponse & { requiresMFA?: boolean; mfaToken?: string }>>} Auth response with token and user
+   * Login with email and password
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
    */
-  async login(data: { email: string; password: string }): Promise<ApiResponse<AuthResponse & { requiresMFA?: boolean; mfaToken?: string }>> {
-    return this.request<AuthResponse & { requiresMFA?: boolean; mfaToken?: string }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return runEffect(
+      post<AuthResponse>(`${this.baseUrl}/auth/login`, { email, password }),
+      AuthResponseSchema,
+    );
   }
 
   /**
-   * Completes login with MFA verification
-   * @param {string} mfaToken - Token from initial login response
-   * @param {string} code - 6-digit code from authenticator app
-   * @returns {Promise<ApiResponse<{token: string}>>} Response with full access token
+   * Logout and invalidate the current session
+   * @compliance NIST 800-53 AC-12 (Session Termination)
    */
-  async verifyMFALogin(mfaToken: string, code: string): Promise<ApiResponse<{ token: string }>> {
-    return this.request<{ token: string }>('/auth/login/mfa', {
-      method: 'POST',
-      body: JSON.stringify({ mfaToken, code }),
-    });
+  async logout(): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(`${this.baseUrl}/auth/logout`, {}, { headers: getAuthHeaders() }),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Logs out the current user
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
-   */
-  async logout(): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/logout', {
-      method: 'POST',
-    });
-  }
-
-  /**
-   * Gets the current authenticated user's profile
-   * @returns {Promise<ApiResponse<User>>} User profile data
+   * Get the current user's profile
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
    */
   async getProfile(): Promise<ApiResponse<User>> {
-    return this.request<User>('/auth/me');
+    return runEffect(
+      get<User>(`${this.baseUrl}/auth/profile`, { headers: getAuthHeaders() }),
+      UserSchema,
+    );
   }
 
   /**
-   * Searches for agencies with optional filters
-   * @param {Object} [params] - Search parameters
-   * @param {number} [params.page] - Page number for pagination
-   * @param {number} [params.pageSize] - Number of results per page
-   * @param {string} [params.query] - Search query string
-   * @param {string} [params.jurisdictionLevel] - Filter by jurisdiction level
-   * @param {string} [params.state] - Filter by state code
-   * @returns {Promise<ApiResponse<Agency[]>>} List of matching agencies
+   * Refresh the authentication token
+   * @compliance NIST 800-53 IA-5 (Authenticator Management)
    */
-  async getAgencies(params?: {
-    page?: number;
-    pageSize?: number;
-    query?: string;
-    jurisdictionLevel?: string;
-    state?: string;
-  }): Promise<ApiResponse<Agency[]>> {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', params.page.toString());
-    if (params?.pageSize) searchParams.set('pageSize', params.pageSize.toString());
-    if (params?.query) searchParams.set('query', params.query);
-    if (params?.jurisdictionLevel) searchParams.set('jurisdictionLevel', params.jurisdictionLevel);
-    if (params?.state) searchParams.set('state', params.state);
-
-    const queryStr = searchParams.toString();
-    return this.request<Agency[]>(`/agencies${queryStr ? `?${queryStr}` : ''}`);
+  async refreshToken(): Promise<ApiResponse<AuthResponse>> {
+    return runEffect(
+      post<AuthResponse>(`${this.baseUrl}/auth/refresh`, {}, { headers: getAuthHeaders() }),
+      AuthResponseSchema,
+    );
   }
 
   /**
-   * Gets a single agency by ID
-   * @param {string} id - Agency ID
-   * @returns {Promise<ApiResponse<Agency>>} Agency data
-   */
-  async getAgency(id: string): Promise<ApiResponse<Agency>> {
-    return this.request<Agency>(`/agencies/${id}`);
-  }
-
-  /**
-   * Gets list of US states
-   * @returns {Promise<ApiResponse<Array<{code: string, name: string}>>>} List of states
-   */
-  async getStates(): Promise<ApiResponse<{ code: string; name: string }[]>> {
-    return this.request<{ code: string; name: string }[]>('/agencies/states');
-  }
-
-  /**
-   * Searches for FOIA requests with optional filters
-   * @param {Object} [params] - Search parameters
-   * @param {number} [params.page] - Page number for pagination
-   * @param {number} [params.limit] - Number of results per page
-   * @param {string} [params.status] - Filter by request status
-   * @param {string} [params.agencyId] - Filter by agency ID
-   * @param {string} [params.query] - Search query string
-   * @returns {Promise<ApiResponse<FoiaRequest[]>>} List of matching requests
+   * Get FOIA requests with optional filtering
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
    */
   async getRequests(params?: {
     page?: number;
     limit?: number;
     status?: string;
     agencyId?: string;
-    query?: string;
   }): Promise<ApiResponse<FoiaRequest[]>> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
     if (params?.limit) searchParams.set('limit', params.limit.toString());
     if (params?.status) searchParams.set('status', params.status);
     if (params?.agencyId) searchParams.set('agencyId', params.agencyId);
-    if (params?.query) searchParams.set('query', params.query);
 
-    const query = searchParams.toString();
-    return this.request<FoiaRequest[]>(`/requests${query ? `?${query}` : ''}`);
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `${this.baseUrl}/requests?${queryString}`
+      : `${this.baseUrl}/requests`;
+
+    return runEffect(
+      get<FoiaRequest[]>(url, { headers: getAuthHeaders() }),
+      S.mutable(S.Array(FoiaRequestSchema)),
+    );
   }
 
   /**
-   * Gets a single FOIA request by ID
-   * @param {string} id - Request ID
-   * @returns {Promise<ApiResponse<FoiaRequest>>} Request data
+   * Get a single FOIA request by ID
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
    */
   async getRequest(id: string): Promise<ApiResponse<FoiaRequest>> {
-    return this.request<FoiaRequest>(`/requests/${id}`);
+    return runEffect(
+      get<FoiaRequest>(`${this.baseUrl}/requests/${id}`, { headers: getAuthHeaders() }),
+      FoiaRequestSchema,
+    );
   }
 
   /**
-   * Creates a new FOIA request
-   * @param {Object} data - Request data
-   * @param {string} data.agencyId - Target agency ID
-   * @param {string} data.title - Request title
-   * @param {string} data.description - Detailed request description
-   * @param {string} data.category - Request category
-   * @param {string} [data.dateRange] - Optional date range for records
-   * @param {string} [data.specificIndividuals] - Optional names of specific individuals
-   * @param {boolean} [data.expeditedProcessing] - Request expedited processing
-   * @param {boolean} [data.feeWaiverRequested] - Request fee waiver
-   * @returns {Promise<ApiResponse<FoiaRequest>>} Created request data
+   * Create a new FOIA request
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
    */
   async createRequest(data: {
     agencyId: string;
-    title: string;
-    description: string;
-    category: string;
+    subject?: string;
+    requestBody?: string;
+    templateId?: string;
+    title?: string;
+    description?: string;
+    category?: string;
     dateRange?: string;
     specificIndividuals?: string;
     expeditedProcessing?: boolean;
     feeWaiverRequested?: boolean;
   }): Promise<ApiResponse<FoiaRequest>> {
-    return this.request<FoiaRequest>('/requests', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return runEffect(
+      post<FoiaRequest>(`${this.baseUrl}/requests`, data, { headers: getAuthHeaders() }),
+      FoiaRequestSchema,
+    );
   }
 
   /**
-   * Updates an existing FOIA request
-   * @param {string} id - Request ID to update
-   * @param {Object} data - Fields to update
-   * @param {string} [data.title] - Updated title
-   * @param {string} [data.description] - Updated description
-   * @param {string} [data.status] - Updated status
-   * @returns {Promise<ApiResponse<FoiaRequest>>} Updated request data
+   * Update an existing FOIA request
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
    */
   async updateRequest(
     id: string,
     data: Partial<{
-      title: string;
-      description: string;
-      status: string;
+      subject: string;
+      requestBody: string;
+      status: FoiaRequest['status'];
+      notes: string;
     }>,
   ): Promise<ApiResponse<FoiaRequest>> {
-    return this.request<FoiaRequest>(`/requests/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
+    return runEffect(
+      patch<FoiaRequest>(`${this.baseUrl}/requests/${id}`, data, { headers: getAuthHeaders() }),
+      FoiaRequestSchema,
+    );
   }
 
   /**
-   * Searches for templates with optional category filter
-   * @param {Object} [params] - Search parameters
-   * @param {string} [params.category] - Filter by category
-   * @returns {Promise<ApiResponse<Template[]>>} List of matching templates
+   * Delete a FOIA request
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
    */
-  async getTemplates(params?: { category?: string }): Promise<ApiResponse<Template[]>> {
-    const searchParams = new URLSearchParams();
-    if (params?.category) searchParams.set('category', params.category);
-
-    const query = searchParams.toString();
-    return this.request<Template[]>(`/templates${query ? `?${query}` : ''}`);
+  async deleteRequest(id: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      del<{ message: string }>(`${this.baseUrl}/requests/${id}`, { headers: getAuthHeaders() }),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Gets a single template by ID
-   * @param {string} id - Template ID
-   * @returns {Promise<ApiResponse<Template>>} Template data
+   * Submit a FOIA request to the agency
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+   */
+  async submitRequest(id: string): Promise<ApiResponse<FoiaRequest>> {
+    return runEffect(
+      post<FoiaRequest>(`${this.baseUrl}/requests/${id}/submit`, {}, { headers: getAuthHeaders() }),
+      FoiaRequestSchema,
+    );
+  }
+
+  /**
+   * Get agencies with optional filtering
+   */
+  async getAgencies(params?: {
+    page?: number;
+    limit?: number;
+    jurisdictionLevel?: string;
+    state?: string;
+    search?: string;
+  }): Promise<ApiResponse<Agency[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.jurisdictionLevel) searchParams.set('jurisdictionLevel', params.jurisdictionLevel);
+    if (params?.state) searchParams.set('state', params.state);
+    if (params?.search) searchParams.set('search', params.search);
+
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `${this.baseUrl}/agencies?${queryString}`
+      : `${this.baseUrl}/agencies`;
+
+    return runEffect(
+      get<Agency[]>(url, { headers: getAuthHeaders() }),
+      S.mutable(S.Array(AgencySchema)),
+    );
+  }
+
+  /**
+   * Get a single agency by ID
+   */
+  async getAgency(id: string): Promise<ApiResponse<Agency>> {
+    return runEffect(
+      get<Agency>(`${this.baseUrl}/agencies/${id}`, { headers: getAuthHeaders() }),
+      AgencySchema,
+    );
+  }
+
+  /**
+   * Search agencies by query string
+   */
+  async searchAgencies(query: string): Promise<ApiResponse<Agency[]>> {
+    return runEffect(
+      get<Agency[]>(`${this.baseUrl}/agencies?search=${encodeURIComponent(query)}`, {
+        headers: getAuthHeaders(),
+      }),
+      S.mutable(S.Array(AgencySchema)),
+    );
+  }
+
+  /**
+   * Get templates with optional filtering
+   */
+  async getTemplates(params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    isPublic?: boolean;
+  }): Promise<ApiResponse<Template[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.category) searchParams.set('category', params.category);
+    if (params?.isPublic !== undefined) searchParams.set('isPublic', params.isPublic.toString());
+
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `${this.baseUrl}/templates?${queryString}`
+      : `${this.baseUrl}/templates`;
+
+    return runEffect(
+      get<Template[]>(url, { headers: getAuthHeaders() }),
+      S.mutable(S.Array(TemplateSchema)),
+    );
+  }
+
+  /**
+   * Get a single template by ID
    */
   async getTemplate(id: string): Promise<ApiResponse<Template>> {
-    return this.request<Template>(`/templates/${id}`);
+    return runEffect(
+      get<Template>(`${this.baseUrl}/templates/${id}`, { headers: getAuthHeaders() }),
+      TemplateSchema,
+    );
   }
 
   /**
-   * Updates the current user's profile
-   * @param {Object} data - Profile fields to update
-   * @param {string} [data.firstName] - Updated first name
-   * @param {string} [data.lastName] - Updated last name
-   * @param {string} [data.organization] - Updated organization
-   * @param {boolean} [data.isAnonymous] - Whether to hide identity
-   * @returns {Promise<ApiResponse<User>>} Updated user data
+   * Create a new template
+   */
+  async createTemplate(data: {
+    name: string;
+    description?: string;
+    category: string;
+    content: string;
+    tags?: string[];
+    isPublic?: boolean;
+  }): Promise<ApiResponse<Template>> {
+    return runEffect(
+      post<Template>(`${this.baseUrl}/templates`, data, { headers: getAuthHeaders() }),
+      TemplateSchema,
+    );
+  }
+
+  /**
+   * Update an existing template
+   */
+  async updateTemplate(
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      category: string;
+      content: string;
+      tags: string[];
+      isPublic: boolean;
+    }>,
+  ): Promise<ApiResponse<Template>> {
+    return runEffect(
+      patch<Template>(`${this.baseUrl}/templates/${id}`, data, { headers: getAuthHeaders() }),
+      TemplateSchema,
+    );
+  }
+
+  /**
+   * Delete a template
+   */
+  async deleteTemplate(id: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      del<{ message: string }>(`${this.baseUrl}/templates/${id}`, { headers: getAuthHeaders() }),
+      MessageResponseSchema,
+    );
+  }
+
+  /**
+   * Update user profile
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
    */
   async updateProfile(data: {
     firstName?: string;
     lastName?: string;
     organization?: string;
-    isAnonymous?: boolean;
   }): Promise<ApiResponse<User>> {
-    return this.request<User>('/auth/me', {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
+    return runEffect(
+      patch<User>(`${this.baseUrl}/auth/profile`, data, { headers: getAuthHeaders() }),
+      UserSchema,
+    );
   }
 
   /**
-   * Changes the current user's password
-   * @param {string} currentPassword - Current account password
-   * @param {string} newPassword - New password to set
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
+   * Change user password
+   * @compliance NIST 800-53 IA-5 (Authenticator Management)
    */
-  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-  }
-
-  // ============================================
-  // MFA Methods
-  // ============================================
-
-  /**
-   * Gets the current MFA status
-   * @returns {Promise<ApiResponse<{enabled: boolean, backupCodesRemaining?: number}>>} MFA status
-   */
-  async getMFAStatus(): Promise<ApiResponse<{ enabled: boolean; backupCodesRemaining?: number }>> {
-    return this.request<{ enabled: boolean; backupCodesRemaining?: number }>('/auth/mfa/status');
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(
+        `${this.baseUrl}/auth/change-password`,
+        { currentPassword, newPassword },
+        { headers: getAuthHeaders() },
+      ),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Initiates MFA setup
-   * @param {string} password - Account password for verification
-   * @returns {Promise<ApiResponse<{qrCodeUrl: string, secret: string, backupCodes: string[]}>>} Setup data
+   * Request password reset email
+   * @compliance NIST 800-53 IA-5 (Authenticator Management)
    */
-  async setupMFA(password: string): Promise<ApiResponse<{ qrCodeUrl: string; secret: string; backupCodes: string[] }>> {
-    return this.request<{ qrCodeUrl: string; secret: string; backupCodes: string[] }>('/auth/mfa/setup', {
-      method: 'POST',
-      body: JSON.stringify({ password }),
-    });
+  async requestPasswordReset(email: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(`${this.baseUrl}/auth/forgot-password`, { email }),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Verifies and enables MFA
-   * @param {string} code - 6-digit TOTP code
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
+   * Reset password with token
+   * @compliance NIST 800-53 IA-5 (Authenticator Management)
    */
-  async verifyMFA(code: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/mfa/verify', {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    });
+  async resetPassword(data: {
+    token: string;
+    newPassword: string;
+  }): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(`${this.baseUrl}/auth/reset-password`, data),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Disables MFA
-   * @param {string} password - Account password
-   * @param {string} code - Current TOTP code
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
+   * Verify email address
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
    */
-  async disableMFA(password: string, code: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/mfa/disable', {
-      method: 'POST',
-      body: JSON.stringify({ password, code }),
-    });
+  async verifyEmail(token: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(`${this.baseUrl}/auth/verify-email`, { token }),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Regenerates MFA backup codes
-   * @param {string} password - Current password for verification
-   * @returns {Promise<ApiResponse<{backupCodes: string[]}>>} New backup codes
+   * Resend verification email
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
    */
-  async regenerateBackupCodes(password: string): Promise<ApiResponse<{ backupCodes: string[] }>> {
-    return this.request<{ backupCodes: string[] }>('/auth/mfa/backup-codes/regenerate', {
-      method: 'POST',
-      body: JSON.stringify({ password }),
-    });
-  }
-
-  // ============================================
-  // Session Methods
-  // ============================================
-
-  /**
-   * Gets all active sessions
-   * @returns {Promise<ApiResponse<Session[]>>} List of sessions
-   */
-  async getSessions(): Promise<ApiResponse<Array<{
-    id: string;
-    deviceName: string | null;
-    ipAddress: string | null;
-    lastActiveAt: string | null;
-    createdAt: string;
-    isCurrent: boolean;
-  }>>> {
-    return this.request('/auth/sessions');
+  async resendVerificationEmail(): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(
+        `${this.baseUrl}/auth/resend-verification`,
+        {},
+        { headers: getAuthHeaders() },
+      ),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Revokes a specific session
-   * @param {string} sessionId - Session ID to revoke
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
+   * Get MFA status
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
    */
-  async revokeSession(sessionId: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/auth/sessions/${sessionId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // ============================================
-  // API Key Methods
-  // ============================================
-
-  /**
-   * Gets the current API key info (not the full key)
-   * @returns {Promise<ApiResponse<ApiKeyInfo | null>>} API key info
-   */
-  async getApiKey(): Promise<ApiResponse<{
-    id: string;
-    keyPreview: string;
-    name: string;
-    createdAt: string;
-    lastUsedAt: string | null;
-  } | null>> {
-    return this.request('/auth/api-key');
+  async getMFAStatus(): Promise<ApiResponse<MFAStatus>> {
+    return runEffect(
+      get<MFAStatus>(`${this.baseUrl}/auth/mfa/status`, { headers: getAuthHeaders() }),
+      MFAStatusSchema,
+    );
   }
 
   /**
-   * Generates a new API key (replaces existing)
-   * @param {string} password - Account password
-   * @param {string} [twoFactorCode] - 2FA code if enabled
-   * @returns {Promise<ApiResponse<{id: string, key: string, name: string, createdAt: string}>>} New API key
+   * Setup MFA for the account
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
    */
-  async createApiKey(password: string, twoFactorCode?: string): Promise<ApiResponse<{
-    id: string;
-    key: string;
-    name: string;
-    createdAt: string;
-  }>> {
-    return this.request('/auth/api-key', {
-      method: 'POST',
-      body: JSON.stringify({ password, twoFactorCode }),
-    });
+  async setupMFA(password: string): Promise<ApiResponse<MFASetupResponse>> {
+    return runEffect(
+      post<MFASetupResponse>(
+        `${this.baseUrl}/auth/mfa/setup`,
+        { password },
+        { headers: getAuthHeaders() },
+      ),
+      MFASetupResponseSchema,
+    );
   }
 
   /**
-   * Revokes the current API key
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
+   * Verify MFA code
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
    */
-  async deleteApiKey(): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/api-key', {
-      method: 'DELETE',
-    });
-  }
-
-  // ============================================
-  // Account Deletion Methods
-  // ============================================
-
-  /**
-   * Deletes all user data but keeps the account
-   * @param {string} password - Account password
-   * @param {string} [twoFactorCode] - 2FA code if enabled
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
-   */
-  async deleteUserData(password: string, twoFactorCode?: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/data', {
-      method: 'DELETE',
-      body: JSON.stringify({ password, twoFactorCode }),
-    });
+  async verifyMFA(code: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(
+        `${this.baseUrl}/auth/mfa/verify`,
+        { code },
+        { headers: getAuthHeaders() },
+      ),
+      MessageResponseSchema,
+    );
   }
 
   /**
-   * Permanently deletes the account and all data
-   * @param {string} password - Account password
-   * @param {string} [twoFactorCode] - 2FA code if enabled
-   * @returns {Promise<ApiResponse<void>>} Empty response on success
+   * Disable MFA for the account
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
    */
-  async deleteAccount(password: string, twoFactorCode?: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/auth/account', {
-      method: 'DELETE',
-      body: JSON.stringify({ password, twoFactorCode }),
-    });
+  async disableMFA(password: string, code: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(
+        `${this.baseUrl}/auth/mfa/disable`,
+        { password, code },
+        { headers: getAuthHeaders() },
+      ),
+      MessageResponseSchema,
+    );
+  }
+
+  /**
+   * Get all active sessions
+   * @compliance NIST 800-53 AC-12 (Session Termination)
+   */
+  async getSessions(): Promise<ApiResponse<Session[]>> {
+    return runEffect(
+      get<Session[]>(`${this.baseUrl}/auth/sessions`, { headers: getAuthHeaders() }),
+      S.mutable(S.Array(SessionSchema)),
+    );
+  }
+
+  /**
+   * Revoke a specific session
+   * @compliance NIST 800-53 AC-12 (Session Termination)
+   */
+  async revokeSession(sessionId: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      del<{ message: string }>(`${this.baseUrl}/auth/sessions/${sessionId}`, {
+        headers: getAuthHeaders(),
+      }),
+      MessageResponseSchema,
+    );
+  }
+
+  /**
+   * Get the current API key
+   * @compliance NIST 800-53 IA-5 (Authenticator Management)
+   */
+  async getApiKey(): Promise<ApiResponse<ApiKey | null>> {
+    return runEffect(
+      get<ApiKey | null>(`${this.baseUrl}/auth/api-key`, { headers: getAuthHeaders() }),
+      S.NullOr(ApiKeySchema),
+    );
+  }
+
+  /**
+   * Create a new API key
+   * @compliance NIST 800-53 IA-5 (Authenticator Management)
+   */
+  async createApiKey(password: string, twoFactorCode?: string): Promise<ApiResponse<ApiKey>> {
+    return runEffect(
+      post<ApiKey>(
+        `${this.baseUrl}/auth/api-key`,
+        { password, twoFactorCode },
+        { headers: getAuthHeaders() },
+      ),
+      ApiKeySchema,
+    );
+  }
+
+  /**
+   * Delete user account
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+   */
+  async deleteAccount(
+    password: string,
+    twoFactorCode?: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(
+        `${this.baseUrl}/auth/delete-account`,
+        { password, twoFactorCode },
+        { headers: getAuthHeaders() },
+      ),
+      MessageResponseSchema,
+    );
+  }
+
+  /**
+   * Delete all user data (GDPR compliance)
+   * @compliance GDPR Article 17 (Right to Erasure)
+   */
+  async deleteUserData(
+    password: string,
+    twoFactorCode?: string,
+  ): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      post<{ message: string }>(
+        `${this.baseUrl}/auth/delete-data`,
+        { password, twoFactorCode },
+        { headers: getAuthHeaders() },
+      ),
+      MessageResponseSchema,
+    );
   }
 }
 
-/**
- * Singleton API client instance
- * @constant
- * @type {ApiClient}
- */
 export const api = new ApiClient();

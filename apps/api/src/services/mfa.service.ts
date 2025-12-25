@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Multi-Factor Authentication Service
  * @module services/mfa
  * @author FOIA Stream Team
@@ -13,13 +35,13 @@
 // FOIA Stream - Multi-Factor Authentication Service
 // ============================================
 
+import { BadRequestError, NotFoundError, SecurityError } from '@foia-stream/shared';
 import { eq } from 'drizzle-orm';
 import { Schema as S } from 'effect';
 import { nanoid } from 'nanoid';
 import { createHmac, randomBytes } from 'node:crypto';
 import { db, schema } from '../db';
 import { logger } from '../lib/logger';
-import { BadRequestError, NotFoundError, SecurityError } from '../utils/errors';
 import { decryptData, encryptData, getEncryptionKey } from '../utils/security';
 
 // ============================================
@@ -248,7 +270,7 @@ export class MFAService {
     const secret = generateSecret();
     const backupCodes = generateBackupCodes();
 
-    const encryptionKey = getEncryptionKey();
+    const encryptionKey = await getEncryptionKey();
     const encryptedSecret = await encryptData(secret, encryptionKey);
     const encryptedBackupCodes = await encryptData(JSON.stringify(backupCodes), encryptionKey);
 
@@ -290,7 +312,7 @@ export class MFAService {
       throw BadRequestError('MFA is already enabled');
     }
 
-    const encryptionKey = getEncryptionKey();
+    const encryptionKey = await getEncryptionKey();
     const secret = await decryptData(secretData.secret, encryptionKey);
     const expectedCode = generateTOTP(secret, Date.now());
 
@@ -341,7 +363,7 @@ export class MFAService {
     const secretData = JSON.parse(user.twoFactorSecret as string) as EncryptedSecretData;
     logger.debug({ userId, pending: secretData.pending }, 'MFA login verification - secret data status');
 
-    const encryptionKey = getEncryptionKey();
+    const encryptionKey = await getEncryptionKey();
     const secret = await decryptData(secretData.secret, encryptionKey);
     const expectedCode = generateTOTP(secret, Date.now());
 
@@ -423,7 +445,7 @@ export class MFAService {
     }
 
     const secretData = JSON.parse(user.twoFactorSecret as string) as EncryptedSecretData;
-    const encryptionKey = getEncryptionKey();
+    const encryptionKey = await getEncryptionKey();
 
     const newBackupCodes = generateBackupCodes();
     const encryptedBackupCodes = await encryptData(JSON.stringify(newBackupCodes), encryptionKey);
@@ -486,7 +508,7 @@ export class MFAService {
       return { enabled: false, hasPendingSetup: true };
     }
 
-    const encryptionKey = getEncryptionKey();
+    const encryptionKey = await getEncryptionKey();
     const backupCodes: string[] = JSON.parse(
       await decryptData(secretData.backupCodes, encryptionKey),
     );

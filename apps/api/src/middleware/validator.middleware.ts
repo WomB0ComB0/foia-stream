@@ -1,10 +1,32 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Effect Schema Validator Middleware
  * @module middleware/validator
  * @author FOIA Stream Team
  * @description Provides Hono middleware for validating request data using Effect Schema.
  *              Similar to @hono/zod-validator but uses Effect Schema for validation.
- *              Integrates with structured error handling from utils/errors.
+ *              Integrates with structured error handling from @foia-stream/shared.
  * @compliance NIST 800-53 SI-10 (Information Input Validation)
  */
 
@@ -12,9 +34,9 @@
 // FOIA Stream - Effect Schema Validator Middleware
 // ============================================
 
+import { ValidationError } from '@foia-stream/shared';
 import { ParseResult, Schema as S } from 'effect';
 import { validator } from 'hono/validator';
-import { ValidationError } from '../utils/errors';
 
 /** Supported validation targets for request data */
 type ValidationTarget = 'json' | 'query' | 'param' | 'header' | 'form';
@@ -182,4 +204,9 @@ export function formValidator<T, I>(schema: S.Schema<T, I>) {
 export type InferSchema<T> = T extends S.Schema<infer A, unknown> ? A : never;
 
 // Re-export error utilities for convenience
-export { BadRequestError, fromParseError, toHttpResponse, ValidationError } from '../utils/errors';
+export {
+  BadRequestError,
+  fromParseError,
+  toHttpResponse,
+  ValidationError,
+} from '@foia-stream/shared';

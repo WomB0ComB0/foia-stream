@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Security Utilities
  * @module utils/security
  * @author FOIA Stream Team
@@ -168,9 +190,9 @@ export function sanitizeForLogging<T extends Record<string, unknown>>(
 }
 
 // Export encryption key getter (uses validated env config)
-export function getEncryptionKey(): string {
+export async function getEncryptionKey(): Promise<string> {
   // Import here to avoid circular dependency
-  const { env } = require('../config/env');
+  const { env } = await import('../config/env').then((module) => module);
   return env.DATA_ENCRYPTION_KEY;
 }
 

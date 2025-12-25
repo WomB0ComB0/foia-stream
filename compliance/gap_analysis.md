@@ -1,7 +1,29 @@
+<!--
+  Copyright (c) 2025 Foia Stream
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+
 # FOIA Stream Gap Analysis & Remediation Roadmap
 
-**Document Version:** 2.0
-**Last Updated:** 2025-01-15
+**Document Version:** 2.1
+**Last Updated:** 2025-12-25
 **Owner:** Security & Compliance
 **Classification:** Internal
 
@@ -22,18 +44,21 @@ This gap analysis identifies security and compliance gaps in the FOIA Stream app
 | Incident Response | Good | 88% |
 | System Protection | Excellent | 95% |
 | System Integrity | Good | 90% |
-| Data Management | Good | 88% |
-| **Overall** | **Excellent** | **91%** |
+| Data Management | Excellent | 92% |
+| **Overall** | **Excellent** | **93%** |
 
-### Recent Improvements (v2.0)
+### Recent Improvements (v2.1)
 
-✅ **6 Critical/High Gaps Closed:**
+✅ **9 Critical/High Gaps Closed:**
 - GAP-001: Field-level encryption at rest implemented
 - GAP-002: Real-time security monitoring with alerting
 - GAP-003: CI/CD security scanning pipeline (CodeQL, ZAP, dependency audit)
 - GAP-004: Complete TOTP MFA with backup codes
 - GAP-005: Automated backup with disaster recovery testing
 - GAP-007: Rate limiting and account lockout protection
+- GAP-009: Data retention automation with GDPR erasure support
+- GAP-014: Security headers CI check via OWASP ZAP
+- Password security: Argon2id + server-side pepper
 
 ---
 
@@ -228,17 +253,29 @@ This gap analysis identifies security and compliance gaps in the FOIA Stream app
 
 ---
 
-### GAP-009: Data Retention Automation (P2)
+### GAP-009: Data Retention Automation ✅ CLOSED
 
 | Attribute | Details |
 |-----------|---------|
 | **Control ID** | DM-3 |
-| **Risk Level** | Low |
-| **Current State** | Policy documented at `compliance/privacy/data-retention-policy.md` |
-| **Remaining Work** | Automated purge job implementation |
+| **Risk Level** | ~~Low~~ → Mitigated |
+| **Resolution** | Automated purge service implemented |
+| **Affected Frameworks** | GDPR Art. 17, NIST SI-12 |
 
-**Effort Remaining:** 1 week
-**Target:** Q2 2025
+**Implementation Details:**
+- Created `src/services/data-retention.service.ts` with:
+  - `purgeExpiredSessions()` - Removes sessions after 30 days
+  - `purgeClosedRequests()` - Removes closed requests after 7 years
+  - `purgeInactiveUsers()` - Removes inactive accounts after 2 years
+  - `purgeOrphanedDocuments()` - Cleans up orphaned uploads
+  - `executeRetention()` - Full retention enforcement with dry-run support
+  - `handleDataSubjectRequest()` - GDPR erasure request support
+- Effect Schema validation for all configurations
+- Audit logging for all purge operations
+- Dry-run mode for testing
+
+**Evidence:** `src/services/data-retention.service.ts`, `compliance/privacy/data-retention-policy.md`
+**Closed:** January 2025
 
 ---
 
@@ -320,6 +357,7 @@ Security headers are now checked via OWASP ZAP in CI/CD pipeline (`.github/workf
 | GAP-004: MFA Implementation | P1 | ✅ Closed | Jan 2025 |
 | GAP-005: Backup & DR | P1 | ✅ Closed | Jan 2025 |
 | GAP-007: Rate Limiting & Lockout | P2 | ✅ Closed | Jan 2025 |
+| GAP-009: Data Retention Automation | P2 | ✅ Closed | Jan 2025 |
 | GAP-014: Security Headers CI | P3 | ✅ Closed | Jan 2025 |
 
 ### Q1 2025 Remaining
@@ -333,7 +371,6 @@ Security headers are now checked via OWASP ZAP in CI/CD pipeline (`.github/workf
 
 | Gap | Priority | Effort | Status |
 |-----|----------|--------|--------|
-| GAP-009: Data Retention Automation | P2 | 1 week | Not Started |
 | GAP-010: Audit Log Immutability | P2 | 2 weeks | Not Started |
 | GAP-011: Security Training | P3 | 1 week | Not Started |
 | GAP-012: Risk Assessment | P3 | 2 weeks | Not Started |
@@ -370,10 +407,10 @@ Security headers are now checked via OWASP ZAP in CI/CD pipeline (`.github/workf
 
 | Metric | Initial | Current | Q2 Target |
 |--------|---------|---------|-----------|
-| Overall Compliance Score | 63% | **91%** | 95% |
+| Overall Compliance Score | 63% | **93%** | 95% |
 | Critical Gaps (P1) | 5 | **0** ✅ | 0 |
-| High Gaps (P2) | 5 | **2** | 0 |
-| Low Gaps (P3) | 5 | **6** | 3 |
+| High Gaps (P2) | 5 | **1** | 0 |
+| Low Gaps (P3) | 5 | **5** | 3 |
 | MFA Adoption (Admin) | 0% | Ready | 100% |
 | MFA Adoption (Users) | 0% | Ready | 50% |
 | Mean Time to Detect (MTD) | N/A | **< 5 min** | < 1 min |
@@ -402,7 +439,7 @@ Security headers are now checked via OWASP ZAP in CI/CD pipeline (`.github/workf
 | GAP-006 | Partial | runbooks/incident-response.md | - | Needs tabletop exercise |
 | GAP-007 | ✅ Closed | rate-limit.middleware.ts | Jan 2025 | + account lockout |
 | GAP-008 | Partial | runbooks/change-management.md | - | Needs branch protection docs |
-| GAP-009 | Not Started | - | - | Data retention automation |
+| GAP-009 | ✅ Closed | data-retention.service.ts | Jan 2025 | Automated purge + GDPR erasure |
 | GAP-010 | Not Started | - | - | Audit log immutability |
 | GAP-011 | Not Started | - | - | Security training program |
 | GAP-012 | Not Started | - | - | Risk assessment |

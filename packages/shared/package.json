@@ -17,10 +17,12 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@effect/platform": "^0.82.8",
     "effect": "^3.19.13"
   },
   "devDependencies": {
     "@foia-stream/typescript-config": "workspace:*",
+    "@types/node": "^22.15.30",
     "typescript": "^5.8.3"
   }
 }

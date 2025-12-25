@@ -1,15 +1,37 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file New FOIA request creation form component
  * @module components/react/NewRequestForm
  */
 
-import { useStore } from '@nanostores/react';
-import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { api, type Agency, type Template } from '@/lib/api';
+import { type Agency, api, type Template } from '@/lib/api';
 import { CATEGORIES } from '@/lib/utils';
 import { $isAuthenticated, $isLoading, initAuth } from '@/stores/auth';
-import AgencySearch from './AgencySearch';
+import { useStore } from '@nanostores/react';
+import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import AgencySearch from './agency-search';
 
 /**
  * Form component for creating new FOIA requests
@@ -54,19 +76,13 @@ export default function NewRequestForm() {
     }
   }, [authLoading, isAuth]);
 
-  useEffect(() => {
-    if (isAuth) {
-      fetchData();
-    }
-  }, [isAuth]);
-
   /**
    * Fetches agencies and templates data
    */
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setAgenciesLoading(true);
     const [agenciesRes, templatesRes] = await Promise.all([
-      api.getAgencies({ pageSize: 1000 }),
+      api.getAgencies({ limit: 1000 }),
       api.getTemplates(),
     ]);
     if (agenciesRes.success && agenciesRes.data) {
@@ -76,7 +92,13 @@ export default function NewRequestForm() {
       setTemplates(templatesRes.data);
     }
     setAgenciesLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuth) {
+      fetchData();
+    }
+  }, [isAuth, fetchData]);
 
   /**
    * Handles input field changes
@@ -199,9 +221,9 @@ export default function NewRequestForm() {
             <h2 className="mb-4 text-lg font-semibold text-surface-100">Select Agency</h2>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">
+              <span className="mb-2 block text-sm font-medium text-surface-300">
                 Search for an agency
-              </label>
+              </span>
               <AgencySearch
                 agencies={agencies}
                 selectedAgency={selectedAgency}
@@ -210,7 +232,8 @@ export default function NewRequestForm() {
                 placeholder="Type to search... (e.g., FBI, *police*, CA sheriff)"
               />
               <p className="mt-2 text-xs text-surface-500">
-                Search {agencies.length} agencies by name, abbreviation, or location. Use <code className="rounded bg-surface-800 px-1">*</code> as wildcard.
+                Search {agencies.length} agencies by name, abbreviation, or location. Use{' '}
+                <code className="rounded bg-surface-800 px-1">*</code> as wildcard.
               </p>
             </div>
           </div>
@@ -235,7 +258,10 @@ export default function NewRequestForm() {
               </div>
 
               <div>
-                <label htmlFor="category" className="mb-2 block text-sm font-medium text-surface-300">
+                <label
+                  htmlFor="category"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
                   Category
                 </label>
                 <select
@@ -255,7 +281,10 @@ export default function NewRequestForm() {
 
               {templates.length > 0 && (
                 <div>
-                  <label htmlFor="template" className="mb-2 block text-sm font-medium text-surface-300">
+                  <label
+                    htmlFor="template"
+                    className="mb-2 block text-sm font-medium text-surface-300"
+                  >
                     Use Template <span className="text-surface-500">(optional)</span>
                   </label>
                   <select
@@ -275,7 +304,10 @@ export default function NewRequestForm() {
               )}
 
               <div>
-                <label htmlFor="description" className="mb-2 block text-sm font-medium text-surface-300">
+                <label
+                  htmlFor="description"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
                   Request Description
                 </label>
                 <textarea
@@ -290,7 +322,10 @@ export default function NewRequestForm() {
               </div>
 
               <div>
-                <label htmlFor="dateRange" className="mb-2 block text-sm font-medium text-surface-300">
+                <label
+                  htmlFor="dateRange"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
                   Date Range <span className="text-surface-500">(optional)</span>
                 </label>
                 <input
@@ -305,7 +340,10 @@ export default function NewRequestForm() {
               </div>
 
               <div>
-                <label htmlFor="specificIndividuals" className="mb-2 block text-sm font-medium text-surface-300">
+                <label
+                  htmlFor="specificIndividuals"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
                   Specific Individuals <span className="text-surface-500">(optional)</span>
                 </label>
                 <input

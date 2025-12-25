@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file FOIA Request Route Definitions
  * @module routes/requests/routes
  * @author FOIA Stream Team
@@ -126,13 +148,10 @@ const CreateRequestSchema = z
       .min(1)
       .max(200)
       .openapi({ example: 'Body camera footage from incident on Main St' }),
-    description: z
-      .string()
-      .min(1)
-      .openapi({
-        example:
-          'Requesting all body camera footage from officers responding to incident #12345 on January 15, 2024',
-      }),
+    description: z.string().min(1).openapi({
+      example:
+        'Requesting all body camera footage from officers responding to incident #12345 on January 15, 2024',
+    }),
     dateRangeStart: z.string().optional().openapi({ example: '2024-01-15' }),
     dateRangeEnd: z.string().optional().openapi({ example: '2024-01-15' }),
     templateId: z.string().optional(),

@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Authentication Service
  * @module services/auth
  * @author FOIA Stream Team
@@ -14,7 +36,7 @@
 // FOIA Stream - Authentication Service
 // ============================================
 
-import * as argon2 from 'argon2';
+import { ConflictError, DatabaseError, NotFoundError, SecurityError } from '@foia-stream/shared';
 import { eq } from 'drizzle-orm';
 import * as jose from 'jose';
 import { nanoid } from 'nanoid';
@@ -22,8 +44,8 @@ import { env } from '../config/env';
 import { db, schema } from '../db';
 import { logger } from '../lib/logger';
 import type { CreateUserDTO, User, UserRole } from '../types';
-import { ConflictError, DatabaseError, NotFoundError, SecurityError } from '../utils/errors';
 import { mfaService } from './mfa.service';
+import { passwordService } from './password.service';
 import { secureSessionService } from './secure-session.service';
 import { securityMonitoring } from './security-monitoring.service';
 
@@ -216,13 +238,8 @@ export class AuthService {
       throw ConflictError('Email already registered', { email: data.email });
     }
 
-    // Hash password
-    const passwordHash = await argon2.hash(data.password, {
-      type: argon2.argon2id,
-      memoryCost: 65536,
-      timeCost: 3,
-      parallelism: 4,
-    });
+    // Hash password with Argon2id + server-side pepper
+    const passwordHash = await passwordService.hashPassword(data.password);
 
     const id = nanoid();
     const now = new Date().toISOString();
@@ -290,7 +307,7 @@ export class AuthService {
       );
     }
 
-    const isValid = await argon2.verify(user.passwordHash, password);
+    const isValid = await passwordService.verifyPassword(password, user.passwordHash);
     if (!isValid) {
       await this.recordFailedLogin(user.id, email, options?.ipAddress, options?.userAgent);
       throw new SecurityError('authentication', 'Invalid credentials', { email });
@@ -479,7 +496,7 @@ export class AuthService {
     }
 
     // Verify password before disabling MFA
-    const isValid = await argon2.verify(user.passwordHash, password);
+    const isValid = await passwordService.verifyPassword(password, user.passwordHash);
     if (!isValid) {
       throw new SecurityError('authentication', 'Invalid password', { userId });
     }
@@ -560,17 +577,12 @@ export class AuthService {
       throw NotFoundError('User not found', { userId: id });
     }
 
-    const isValid = await argon2.verify(user.passwordHash, currentPassword);
+    const isValid = await passwordService.verifyPassword(currentPassword, user.passwordHash);
     if (!isValid) {
       throw new SecurityError('authentication', 'Current password is incorrect', { userId: id });
     }
 
-    const newHash = await argon2.hash(newPassword, {
-      type: argon2.argon2id,
-      memoryCost: 65536,
-      timeCost: 3,
-      parallelism: 4,
-    });
+    const newHash = await passwordService.hashPassword(newPassword);
 
     await db
       .update(schema.users)
@@ -594,7 +606,7 @@ export class AuthService {
       throw NotFoundError('User not found', { userId });
     }
 
-    const isValid = await argon2.verify(user.passwordHash, password);
+    const isValid = await passwordService.verifyPassword(password, user.passwordHash);
     if (!isValid) {
       throw new SecurityError('authentication', 'Invalid password', { userId });
     }
@@ -624,7 +636,10 @@ export class AuthService {
     }
 
     if (session.userId !== userId) {
-      throw new SecurityError('authorization', 'Cannot revoke another user\'s session', { userId, sessionId });
+      throw new SecurityError('authorization', "Cannot revoke another user's session", {
+        userId,
+        sessionId,
+      });
     }
 
     await db.delete(schema.sessions).where(eq(schema.sessions.id, sessionId));

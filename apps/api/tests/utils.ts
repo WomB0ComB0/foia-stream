@@ -1,3 +1,25 @@
+/**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 // ============================================
 // FOIA Stream - Test Utilities
 // ============================================
@@ -84,6 +106,21 @@ export function applyMigrations(db: ReturnType<typeof drizzle>) {
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       token TEXT NOT NULL UNIQUE,
       expires_at TEXT NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      device_name TEXT,
+      last_active_at TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      key_hash TEXT NOT NULL,
+      key_preview TEXT NOT NULL,
+      name TEXT DEFAULT 'Default' NOT NULL,
+      last_used_at TEXT,
+      expires_at TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
 
@@ -113,7 +150,7 @@ export function applyMigrations(db: ReturnType<typeof drizzle>) {
       jurisdiction_level TEXT,
       created_by TEXT REFERENCES users(id),
       is_official INTEGER DEFAULT 0 NOT NULL,
-      use_count INTEGER DEFAULT 0,
+      usage_count INTEGER DEFAULT 0 NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
@@ -144,16 +181,20 @@ export function applyMigrations(db: ReturnType<typeof drizzle>) {
 
     CREATE TABLE IF NOT EXISTS documents (
       id TEXT PRIMARY KEY NOT NULL,
-      request_id TEXT NOT NULL REFERENCES foia_requests(id) ON DELETE CASCADE,
+      request_id TEXT REFERENCES foia_requests(id),
+      agency_id TEXT NOT NULL REFERENCES agencies(id),
+      uploaded_by TEXT NOT NULL REFERENCES users(id),
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
       file_name TEXT NOT NULL,
       file_path TEXT NOT NULL,
       file_size INTEGER NOT NULL,
       mime_type TEXT NOT NULL,
-      document_type TEXT NOT NULL,
       is_redacted INTEGER DEFAULT 0 NOT NULL,
-      redaction_reason TEXT,
+      is_public INTEGER DEFAULT 0 NOT NULL,
+      transcript TEXT,
       metadata TEXT,
-      uploaded_by TEXT NOT NULL REFERENCES users(id),
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
@@ -219,17 +260,46 @@ export function applyMigrations(db: ReturnType<typeof drizzle>) {
       last_updated TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS notifications (
+    CREATE TABLE IF NOT EXISTS use_of_force_stats (
       id TEXT PRIMARY KEY NOT NULL,
-      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      type TEXT NOT NULL,
-      title TEXT NOT NULL,
-      message TEXT NOT NULL,
-      is_read INTEGER DEFAULT 0 NOT NULL,
-      related_entity_type TEXT,
-      related_entity_id TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+      agency_id TEXT NOT NULL REFERENCES agencies(id),
+      year INTEGER NOT NULL,
+      total_incidents INTEGER DEFAULT 0 NOT NULL,
+      by_type TEXT,
+      by_outcome TEXT,
+      officer_involved_shootings INTEGER DEFAULT 0 NOT NULL,
+      complaints INTEGER DEFAULT 0 NOT NULL,
+      sustained_complaints INTEGER DEFAULT 0 NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS knowledge_articles (
+      id TEXT PRIMARY KEY NOT NULL,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      category TEXT NOT NULL,
+      content TEXT NOT NULL,
+      summary TEXT,
+      state TEXT,
+      is_published INTEGER DEFAULT 0 NOT NULL,
+      view_count INTEGER DEFAULT 0 NOT NULL,
+      created_by TEXT REFERENCES users(id),
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
+    );
+
+    -- Performance indexes for common query patterns
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_foia_requests_user_id ON foia_requests(user_id);
+    CREATE INDEX IF NOT EXISTS idx_foia_requests_agency_id ON foia_requests(agency_id);
+    CREATE INDEX IF NOT EXISTS idx_foia_requests_status ON foia_requests(status);
+    CREATE INDEX IF NOT EXISTS idx_documents_request_id ON documents(request_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_document_id ON comments(document_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
   `);
 }
 
@@ -259,7 +329,8 @@ export function cleanupTestDb(sqlite: Database, dbPath = './data/test.db') {
  */
 export function clearTestData(sqlite: Database) {
   sqlite.exec(`
-    DELETE FROM notifications;
+    DELETE FROM knowledge_articles;
+    DELETE FROM use_of_force_stats;
     DELETE FROM audit_logs;
     DELETE FROM agency_stats;
     DELETE FROM comment_votes;
@@ -268,6 +339,7 @@ export function clearTestData(sqlite: Database) {
     DELETE FROM appeals;
     DELETE FROM foia_requests;
     DELETE FROM sessions;
+    DELETE FROM api_keys;
     DELETE FROM request_templates;
     DELETE FROM agencies;
     DELETE FROM users;

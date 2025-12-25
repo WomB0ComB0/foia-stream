@@ -1,8 +1,33 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file FOIA request detail view component
  * @module components/react/RequestDetail
  */
 
+import { api, type FoiaRequest } from '@/lib/api';
+import { formatDate, formatDateTime, getStatusColor } from '@/lib/utils';
+import { $isAuthenticated, $isLoading, initAuth } from '@/stores/auth';
 import { useStore } from '@nanostores/react';
 import {
   ArrowLeft,
@@ -25,10 +50,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { api, type FoiaRequest } from '@/lib/api';
-import { formatDate, formatDateTime, getStatusColor } from '@/lib/utils';
-import { $isAuthenticated, $isLoading, initAuth } from '@/stores/auth';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Props for the RequestDetail component
@@ -69,16 +91,10 @@ export default function RequestDetail({ requestId }: Props) {
     }
   }, [authLoading, isAuth]);
 
-  useEffect(() => {
-    if (isAuth) {
-      fetchRequest();
-    }
-  }, [isAuth]);
-
   /**
    * Fetches request data from the API
    */
-  const fetchRequest = async () => {
+  const fetchRequest = useCallback(async () => {
     setLoading(true);
     const response = await api.getRequest(requestId);
     if (response.success && response.data) {
@@ -87,7 +103,13 @@ export default function RequestDetail({ requestId }: Props) {
       setError(true);
     }
     setLoading(false);
-  };
+  }, [requestId]);
+
+  useEffect(() => {
+    if (isAuth) {
+      fetchRequest();
+    }
+  }, [isAuth, fetchRequest]);
 
   if (authLoading || loading) {
     return (
@@ -212,7 +234,9 @@ export default function RequestDetail({ requestId }: Props) {
                     <p className="text-sm text-surface-400">({request.agency.abbreviation})</p>
                   )}
                   {request.agency.foiaEmail && (
-                    <p className="font-display text-sm text-accent-400">{request.agency.foiaEmail}</p>
+                    <p className="font-display text-sm text-accent-400">
+                      {request.agency.foiaEmail}
+                    </p>
                   )}
                 </div>
               ) : (
@@ -231,7 +255,10 @@ export default function RequestDetail({ requestId }: Props) {
                   <TimelineItem label="Submitted" value={formatDateTime(request.submittedAt)} />
                 )}
                 {request.acknowledgedAt && (
-                  <TimelineItem label="Acknowledged" value={formatDateTime(request.acknowledgedAt)} />
+                  <TimelineItem
+                    label="Acknowledged"
+                    value={formatDateTime(request.acknowledgedAt)}
+                  />
                 )}
                 {request.dueDate && (
                   <TimelineItem label="Due Date" value={formatDate(request.dueDate)} highlight />
@@ -277,12 +304,12 @@ export default function RequestDetail({ requestId }: Props) {
             <h2 className="mb-4 text-lg font-semibold text-surface-100">Request Options</h2>
             <div className="flex flex-wrap gap-4">
               <OptionBadge
-                active={request.expeditedProcessing}
+                active={request.expeditedProcessing ?? false}
                 label={`Expedited Processing: ${request.expeditedProcessing ? 'Yes' : 'No'}`}
                 activeColor="bg-accent-500/20 text-accent-300"
               />
               <OptionBadge
-                active={request.feeWaiverRequested}
+                active={request.feeWaiverRequested ?? false}
                 label={`Fee Waiver: ${request.feeWaiverRequested ? 'Requested' : 'Not Requested'}`}
                 activeColor="bg-emerald-500/20 text-emerald-300"
               />
@@ -546,7 +573,9 @@ function TimelineItem({
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="text-surface-400">{label}</span>
-      <span className={highlight ? 'font-medium text-accent-400' : 'text-surface-100'}>{value}</span>
+      <span className={highlight ? 'font-medium text-accent-400' : 'text-surface-100'}>
+        {value}
+      </span>
     </div>
   );
 }

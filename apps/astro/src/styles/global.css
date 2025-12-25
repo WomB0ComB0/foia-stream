@@ -1,3 +1,25 @@
+/**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @import "tailwindcss";
 
@@ -245,7 +267,7 @@ input::placeholder, textarea::placeholder {
 
 [data-reveal].revealed {
   opacity: 1;
-  transform: translate(0, 0) scale(1) !important;
+  transform: translate(0, 0) scale(1);
 }
 
 /* Reveal from bottom */
@@ -435,7 +457,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .card-reveal:hover {
-  transform: translateY(-8px) !important;
+  transform: translateY(-8px);
   box-shadow: 0 20px 40px -12px rgba(20, 184, 166, 0.15);
 }
 
@@ -497,10 +519,10 @@ html {
   .word-animate > span,
   .particle,
   .gradient-animate {
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
+    animation: none;
+    transition: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

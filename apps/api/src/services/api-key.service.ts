@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file API Key Service
  * @module services/api-key
  * @author FOIA Stream Team
@@ -6,10 +28,10 @@
  * @compliance NIST 800-53 IA-5 (Authenticator Management)
  */
 
+import { randomBytes } from 'node:crypto';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { randomBytes } from 'node:crypto';
 import { db, schema } from '../db';
 
 /**
@@ -50,7 +72,9 @@ export class ApiKeyService {
   /**
    * Create a new API key for a user (replaces existing if any)
    */
-  async createApiKey(userId: string): Promise<{ id: string; key: string; name: string; createdAt: string }> {
+  async createApiKey(
+    userId: string,
+  ): Promise<{ id: string; key: string; name: string; createdAt: string }> {
     // Delete existing key if any
     await db.delete(schema.apiKeys).where(eq(schema.apiKeys.userId, userId));
 

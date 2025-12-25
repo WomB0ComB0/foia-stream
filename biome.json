@@ -1,7 +1,15 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/dist", "!**/build", "!**/.next", "!**/coverage"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.next",
+      "!**/coverage",
+      "!**/.astro"
+    ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
@@ -19,6 +27,19 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2,

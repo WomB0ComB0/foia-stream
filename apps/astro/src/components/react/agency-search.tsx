@@ -1,11 +1,33 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Searchable agency selection component with wildcard support
  * @module components/react/AgencySearch
  */
 
+import type { Agency } from '@/lib/api';
 import { Building2, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Loader2, MapPin, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Agency } from '@/lib/api';
 
 /**
  * Props for the AgencySearch component
@@ -55,12 +77,13 @@ function highlightMatch(text: string, pattern: string): React.ReactNode {
     <>
       {parts.map((part, i) => {
         const isMatch = searchTerms.some(term => part.toLowerCase() === term.toLowerCase());
+        const key = `${part}-${i}`;
         return isMatch ? (
-          <mark key={i} className="bg-accent-500/30 text-accent-300 rounded px-0.5">
+          <mark key={key} className="bg-accent-500/30 text-accent-300 rounded px-0.5">
             {part}
           </mark>
         ) : (
-          <span key={i}>{part}</span>
+          <span key={key}>{part}</span>
         );
       })}
     </>
@@ -196,7 +219,7 @@ export default function AgencySearch({
 
   useEffect(() => {
     setFocusedIndex(0);
-  }, [searchQuery]);
+  }, []);
 
   useEffect(() => {
     if (isOpen && listRef.current) {

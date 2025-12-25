@@ -1,10 +1,11 @@
 ---
+/** biome-ignore-all lint/correctness/noUnusedImports: <explanation></explanation> */
+import DashboardComponent from '@/components/react/dashboard';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import Dashboard from '@/components/react/Dashboard';
 
 export const prerender = true;
 ---
 
 <BaseLayout title="Dashboard">
-  <Dashboard client:load />
+  <DashboardComponent client:load />
 </BaseLayout>

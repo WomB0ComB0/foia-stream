@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Auth Route Handlers
  * @module routes/auth/auth.handlers
  * @author FOIA Stream Team
@@ -7,12 +29,12 @@
  * @compliance NIST 800-53 AC-2 (Account Management)
  */
 
-import { authService } from '@/services/auth.service';
-import { mfaService } from '@/services/mfa.service';
-import { apiKeyService } from '@/services/api-key.service';
-import { consentService, type ConsentData } from '@/services/consent.service';
-import type { User } from '@/types';
 import type { Context } from 'hono';
+import { apiKeyService } from '@/services/api-key.service';
+import { authService } from '@/services/auth.service';
+import { consentService, type ConsentData } from '@/services/consent.service';
+import { mfaService } from '@/services/mfa.service';
+import type { User } from '@/types';
 
 /**
  * Maps user object to API response format (excludes passwordHash)
@@ -284,14 +306,17 @@ export const getMFAStatus = async (c: Context) => {
     const { userId } = c.get('user');
     const status = await mfaService.getMFAStatus(userId);
 
-    return c.json({
-      success: true,
-      data: {
-        enabled: status.enabled,
-        backupCodesRemaining: status.backupCodesRemaining,
+    return c.json(
+      {
+        success: true,
+        data: {
+          enabled: status.enabled,
+          backupCodesRemaining: status.backupCodesRemaining,
+        },
+        message: '',
       },
-      message: '',
-    }, 200);
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get MFA status';
     return c.json({ success: false, error: message }, 400);
@@ -311,15 +336,18 @@ export const setupMFA = async (c: Context) => {
 
     const result = await mfaService.setupMFA(userId);
 
-    return c.json({
-      success: true,
-      data: {
-        qrCodeUrl: result.qrCodeUrl,
-        secret: result.secret,
-        backupCodes: [...result.backupCodes],
+    return c.json(
+      {
+        success: true,
+        data: {
+          qrCodeUrl: result.qrCodeUrl,
+          secret: result.secret,
+          backupCodes: [...result.backupCodes],
+        },
+        message: '',
       },
-      message: '',
-    }, 200);
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to setup MFA';
     return c.json({ success: false, error: message }, 400);
@@ -340,10 +368,13 @@ export const verifyMFA = async (c: Context) => {
       return c.json({ success: false, error: 'Invalid verification code' }, 400);
     }
 
-    return c.json({
-      success: true,
-      message: 'MFA enabled successfully',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        message: 'MFA enabled successfully',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to verify MFA';
     return c.json({ success: false, error: message }, 400);
@@ -371,10 +402,13 @@ export const disableMFA = async (c: Context) => {
 
     await mfaService.disableMFA(userId);
 
-    return c.json({
-      success: true,
-      message: 'MFA disabled successfully',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        message: 'MFA disabled successfully',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to disable MFA';
     return c.json({ success: false, error: message }, 400);
@@ -428,11 +462,14 @@ export const getSessions = async (c: Context) => {
 
     const sessions = await authService.getUserSessions(userId, currentToken);
 
-    return c.json({
-      success: true,
-      data: sessions,
-      message: '',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        data: sessions,
+        message: '',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get sessions';
     return c.json({ success: false, error: message }, 400);
@@ -449,10 +486,13 @@ export const revokeSession = async (c: Context) => {
 
     await authService.revokeSession(userId, id);
 
-    return c.json({
-      success: true,
-      message: 'Session revoked successfully',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        message: 'Session revoked successfully',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to revoke session';
     if (message.includes('not found')) {
@@ -474,11 +514,14 @@ export const getApiKey = async (c: Context) => {
     const { userId } = c.get('user');
     const apiKey = await apiKeyService.getApiKey(userId);
 
-    return c.json({
-      success: true,
-      data: apiKey,
-      message: '',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        data: apiKey,
+        message: '',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get API key';
     return c.json({ success: false, error: message }, 400);
@@ -510,11 +553,14 @@ export const createApiKey = async (c: Context) => {
 
     const result = await apiKeyService.createApiKey(userId);
 
-    return c.json({
-      success: true,
-      data: result,
-      message: 'API key generated. Save it now - it won\'t be shown again.',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        data: result,
+        message: "API key generated. Save it now - it won't be shown again.",
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create API key';
     return c.json({ success: false, error: message }, 400);
@@ -529,10 +575,13 @@ export const deleteApiKey = async (c: Context) => {
     const { userId } = c.get('user');
     await apiKeyService.deleteApiKey(userId);
 
-    return c.json({
-      success: true,
-      message: 'API key revoked successfully',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        message: 'API key revoked successfully',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete API key';
     return c.json({ success: false, error: message }, 400);
@@ -568,10 +617,13 @@ export const deleteUserData = async (c: Context) => {
 
     await authService.deleteUserData(userId);
 
-    return c.json({
-      success: true,
-      message: 'All data deleted successfully. Your account remains active.',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        message: 'All data deleted successfully. Your account remains active.',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete data';
     return c.json({ success: false, error: message }, 400);
@@ -603,10 +655,13 @@ export const deleteAccount = async (c: Context) => {
 
     await authService.deleteAccount(userId);
 
-    return c.json({
-      success: true,
-      message: 'Account deleted successfully',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        message: 'Account deleted successfully',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete account';
     return c.json({ success: false, error: message }, 400);

@@ -117,10 +117,7 @@ export async function purgeExpiredRequestContent(): Promise<{
   try {
     // Find requests with expired content that haven't been purged
     const expiredRequests = await db.query.foiaRequests.findMany({
-      where: and(
-        eq(foiaRequests.contentPurged, false),
-        lt(foiaRequests.contentPurgeAt, now)
-      ),
+      where: and(eq(foiaRequests.contentPurged, false), lt(foiaRequests.contentPurgeAt, now)),
     });
 
     for (const request of expiredRequests) {
@@ -133,7 +130,8 @@ export async function purgeExpiredRequestContent(): Promise<{
           .update(foiaRequests)
           .set({
             title: '[Content purged per data retention policy]',
-            description: '[Content purged per data retention policy - retained for 90 days after completion]',
+            description:
+              '[Content purged per data retention policy - retained for 90 days after completion]',
             titleHash,
             contentPurged: true,
             updatedAt: new Date().toISOString(),
@@ -186,19 +184,17 @@ export async function purgeInactiveSessions(): Promise<{ purgedCount: number }> 
     .from(sessions)
     .where(
       sql`${sessions.expiresAt} < ${now} OR
-          (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffISO})`
+          (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffISO})`,
     );
 
   const purgedCount = countResult[0]?.count ?? 0;
 
   // Delete sessions where lastActiveAt is older than cutoff or expired
   if (purgedCount > 0) {
-    await db
-      .delete(sessions)
-      .where(
-        sql`${sessions.expiresAt} < ${now} OR
-            (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffISO})`
-      );
+    await db.delete(sessions).where(
+      sql`${sessions.expiresAt} < ${now} OR
+            (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffISO})`,
+    );
   }
 
   return { purgedCount };
@@ -220,12 +216,7 @@ export async function getRetentionStats(): Promise<{
   const pendingPurgeResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(foiaRequests)
-    .where(
-      and(
-        eq(foiaRequests.contentPurged, false),
-        lt(foiaRequests.contentPurgeAt, now)
-      )
-    );
+    .where(and(eq(foiaRequests.contentPurged, false), lt(foiaRequests.contentPurgeAt, now)));
 
   // Count already purged requests
   const purgedResult = await db

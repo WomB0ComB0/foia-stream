@@ -1,12 +1,41 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Login form component for user authentication with 2FA support
  * @module components/react/LoginForm
  */
 
 import { useStore } from '@nanostores/react';
-import { Eye, EyeOff, Loader2, Shield, ArrowLeft, Key } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import { login, verifyMFALogin, cancelMFALogin, $isAuthenticated, $isLoading, $mfaPending } from '@/stores/auth';
+import { ArrowLeft, Eye, EyeOff, Key, Loader2, Shield } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  $isAuthenticated,
+  $isLoading,
+  $mfaPending,
+  cancelMFALogin,
+  login,
+  verifyMFALogin,
+} from '@/stores/auth';
 
 /**
  * Login form component that handles user authentication with 2FA support
@@ -130,9 +159,10 @@ export default function LoginForm() {
   const handleBackupCodeChange = (value: string) => {
     let cleaned = value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
     const withoutDash = cleaned.replace(/-/g, '');
-    cleaned = withoutDash.length > 4
-      ? `${withoutDash.slice(0, 4)}-${withoutDash.slice(4, 8)}`
-      : withoutDash;
+    cleaned =
+      withoutDash.length > 4
+        ? `${withoutDash.slice(0, 4)}-${withoutDash.slice(4, 8)}`
+        : withoutDash;
     setBackupCode(cleaned);
   };
 
@@ -196,8 +226,7 @@ export default function LoginForm() {
           <p className="mt-2 text-sm text-surface-400">
             {useBackupCode
               ? 'Enter one of your backup codes (format: XXXX-XXXX)'
-              : 'Enter the 6-digit code from your authenticator app'
-            }
+              : 'Enter the 6-digit code from your authenticator app'}
           </p>
         </div>
 
@@ -356,11 +385,7 @@ export default function LoginForm() {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 transition-colors hover:text-surface-300"
           >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
       </div>

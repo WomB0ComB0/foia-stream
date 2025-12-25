@@ -24,10 +24,10 @@
 // FOIA Stream - Test Utilities
 // ============================================
 
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import type { Database } from 'better-sqlite3';
 import BetterSqlite3 from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import * as schema from '../src/db/schema';
 
 // Type for accessing internal drizzle session

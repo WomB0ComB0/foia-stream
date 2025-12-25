@@ -35,11 +35,11 @@
 // FOIA Stream - Multi-Factor Authentication Service
 // ============================================
 
+import { createHmac, randomBytes } from 'node:crypto';
 import { BadRequestError, NotFoundError, SecurityError } from '@foia-stream/shared';
 import { eq } from 'drizzle-orm';
 import { Schema as S } from 'effect';
 import { nanoid } from 'nanoid';
-import { createHmac, randomBytes } from 'node:crypto';
 import { db, schema } from '../db';
 import { logger } from '../lib/logger';
 import { decryptData, encryptData, getEncryptionKey } from '../utils/security';
@@ -316,7 +316,10 @@ export class MFAService {
     const secret = await decryptData(secretData.secret, encryptionKey);
     const expectedCode = generateTOTP(secret, Date.now());
 
-    logger.debug({ inputCode: code, expectedCode, secretLength: secret.length }, 'MFA setup verification attempt');
+    logger.debug(
+      { inputCode: code, expectedCode, secretLength: secret.length },
+      'MFA setup verification attempt',
+    );
 
     if (!verifyTOTP(secret, code)) {
       logger.debug({ userId }, 'MFA setup TOTP verification failed');
@@ -351,23 +354,32 @@ export class MFAService {
     const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
 
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
-      logger.debug({
-        userId,
-        hasUser: !!user,
-        twoFactorEnabled: user?.twoFactorEnabled,
-        hasTwoFactorSecret: !!user?.twoFactorSecret
-      }, 'MFA login verification - user or 2FA not enabled');
+      logger.debug(
+        {
+          userId,
+          hasUser: !!user,
+          twoFactorEnabled: user?.twoFactorEnabled,
+          hasTwoFactorSecret: !!user?.twoFactorSecret,
+        },
+        'MFA login verification - user or 2FA not enabled',
+      );
       throw BadRequestError('MFA is not enabled for this user');
     }
 
     const secretData = JSON.parse(user.twoFactorSecret as string) as EncryptedSecretData;
-    logger.debug({ userId, pending: secretData.pending }, 'MFA login verification - secret data status');
+    logger.debug(
+      { userId, pending: secretData.pending },
+      'MFA login verification - secret data status',
+    );
 
     const encryptionKey = await getEncryptionKey();
     const secret = await decryptData(secretData.secret, encryptionKey);
     const expectedCode = generateTOTP(secret, Date.now());
 
-    logger.debug({ inputCode: code, expectedCode, secretLength: secret.length }, 'MFA login TOTP verification attempt');
+    logger.debug(
+      { inputCode: code, expectedCode, secretLength: secret.length },
+      'MFA login TOTP verification attempt',
+    );
 
     if (verifyTOTP(secret, code)) {
       logger.debug({ userId }, 'MFA login TOTP verification succeeded');

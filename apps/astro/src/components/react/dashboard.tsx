@@ -1,15 +1,53 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Dashboard component displaying user's FOIA requests overview
  * @module components/react/Dashboard
  */
 
 import { useStore } from '@nanostores/react';
-import { Building2, Check, ChevronDown, Clock, FileText, LayoutDashboard, Loader2, LogOut, Plus, RefreshCw, Settings, Shield, Square, Trash2, User, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import {
+  Building2,
+  Check,
+  ChevronDown,
+  Clock,
+  FileText,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Settings,
+  Shield,
+  Square,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, type FoiaRequest } from '@/lib/api';
 import { formatDate, getStatusColor } from '@/lib/utils';
-import { $user, $isAuthenticated, $isLoading, logout, initAuth } from '@/stores/auth';
-import Onboarding from './Onboarding';
+import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
 
 /**
  * Main dashboard component showing request statistics and list
@@ -53,23 +91,23 @@ export default function Dashboard() {
     }
   }, [authLoading, isAuth]);
 
-  useEffect(() => {
-    if (isAuth) {
-      fetchRequests();
-    }
-  }, [isAuth]);
-
   /**
    * Fetches user's FOIA requests from the API
    */
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setRequestsLoading(true);
     const response = await api.getRequests();
     if (response.success && response.data) {
       setRequests(response.data);
     }
     setRequestsLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuth) {
+      fetchRequests();
+    }
+  }, [isAuth, fetchRequests]);
 
   /**
    * Handles user logout and redirect
@@ -83,7 +121,7 @@ export default function Dashboard() {
    * Toggle request selection for bulk actions
    */
   const toggleSelection = (id: string) => {
-    setSelectedRequests(prev => {
+    setSelectedRequests((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -101,7 +139,7 @@ export default function Dashboard() {
     if (selectedRequests.size === requests.length) {
       setSelectedRequests(new Set());
     } else {
-      setSelectedRequests(new Set(requests.map(r => r.id)));
+      setSelectedRequests(new Set(requests.map((r) => r.id)));
     }
   };
 
@@ -120,10 +158,10 @@ export default function Dashboard() {
 
     setBulkActionLoading(true);
     // In production, this would call an API to delete multiple requests
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Simulate deletion by removing from local state
-    setRequests(prev => prev.filter(r => !selectedRequests.has(r.id)));
+    setRequests((prev) => prev.filter((r) => !selectedRequests.has(r.id)));
     setSelectedRequests(new Set());
     setBulkActionLoading(false);
   };
@@ -140,13 +178,16 @@ export default function Dashboard() {
     return null;
   }
 
-  const pendingCount = requests.filter((r) => r.status === 'pending' || r.status === 'processing').length;
-  const completedCount = requests.filter((r) => r.status === 'completed').length;
+  const pendingCount = requests.filter(
+    (r) => r.status === 'submitted' || r.status === 'processing' || r.status === 'acknowledged',
+  ).length;
+  const completedCount = requests.filter(
+    (r) => r.status === 'fulfilled' || r.status === 'closed',
+  ).length;
   const uniqueAgencies = new Set(requests.map((r) => r.agencyId)).size;
 
   return (
     <div className="min-h-screen bg-surface-950">
-      <Onboarding />
       <header className="sticky top-0 z-50 border-b border-surface-800 bg-surface-950/80 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -190,14 +231,18 @@ export default function Dashboard() {
               >
                 <User className="h-4 w-4 text-surface-400" />
                 <span className="hidden sm:inline">{user.firstName}</span>
-                <ChevronDown className={`h-4 w-4 text-surface-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`h-4 w-4 text-surface-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                />
               </button>
 
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-xl shadow-black/20">
                   {/* User Info */}
                   <div className="border-b border-surface-800 px-3 py-2 mb-1.5">
-                    <p className="text-sm font-medium text-surface-200">{user.firstName} {user.lastName}</p>
+                    <p className="text-sm font-medium text-surface-200">
+                      {user.firstName} {user.lastName}
+                    </p>
                     <p className="text-xs text-surface-500 truncate">{user.email}</p>
                   </div>
 
@@ -257,9 +302,7 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-surface-100">
-            Welcome back, {user.firstName}!
-          </h1>
+          <h1 className="text-2xl font-bold text-surface-100">Welcome back, {user.firstName}!</h1>
           <p className="text-surface-400">Manage your FOIA requests and track their progress.</p>
         </div>
 
@@ -296,6 +339,7 @@ export default function Dashboard() {
               <h2 className="text-lg font-semibold text-surface-100">Your Requests</h2>
               {requests.length > 0 && (
                 <button
+                  type="button"
                   onClick={selectAll}
                   className="flex items-center gap-2 rounded-lg border border-surface-700 px-3 py-1.5 text-xs font-medium text-surface-400 transition-colors hover:border-surface-600 hover:bg-surface-800"
                 >
@@ -316,10 +360,9 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               {selectedRequests.size > 0 && (
                 <div className="flex items-center gap-2 mr-2">
-                  <span className="text-sm text-surface-400">
-                    {selectedRequests.size} selected
-                  </span>
+                  <span className="text-sm text-surface-400">{selectedRequests.size} selected</span>
                   <button
+                    type="button"
                     onClick={handleBulkDelete}
                     disabled={bulkActionLoading}
                     className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
@@ -332,6 +375,7 @@ export default function Dashboard() {
                     Delete
                   </button>
                   <button
+                    type="button"
                     onClick={clearSelection}
                     className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
                     title="Clear selection"
@@ -366,7 +410,9 @@ export default function Dashboard() {
             <div className="p-8 text-center">
               <FileText className="mx-auto mb-4 h-12 w-12 text-surface-700" />
               <h3 className="mb-2 text-lg font-medium text-surface-100">No requests yet</h3>
-              <p className="mb-4 text-surface-400">Create your first FOIA request to get started.</p>
+              <p className="mb-4 text-surface-400">
+                Create your first FOIA request to get started.
+              </p>
               <a
                 href="/requests/new"
                 className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
@@ -385,6 +431,7 @@ export default function Dashboard() {
                   }`}
                 >
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       toggleSelection(request.id);
@@ -397,10 +444,7 @@ export default function Dashboard() {
                   >
                     {selectedRequests.has(request.id) && <Check className="h-3 w-3" />}
                   </button>
-                  <a
-                    href={`/requests/${request.id}`}
-                    className="flex-1 min-w-0"
-                  >
+                  <a href={`/requests/${request.id}`} className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-sm font-medium text-surface-100">

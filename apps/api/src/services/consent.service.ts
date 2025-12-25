@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Consent Service
  * @module services/consent
  * @description Manages user consent tracking for GDPR/CCPA compliance.
@@ -58,10 +80,10 @@ async function recordConsentAction(
   consentType: ConsentType,
   action: ConsentAction,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
 ): Promise<void> {
   // Encrypt IP address for privacy
-  const encryptedIp = ipAddress ? encrypt(ipAddress) : null;
+  const encryptedIp = ipAddress ? await encrypt(ipAddress) : null;
 
   await db.insert(consentHistory).values({
     id: crypto.randomUUID(),
@@ -102,7 +124,7 @@ export async function recordRegistrationConsent(
   userId: string,
   consents: ConsentData,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
 ): Promise<void> {
   const timestamp = consents.consentTimestamp || new Date().toISOString();
 
@@ -143,7 +165,7 @@ export async function withdrawConsent(
   userId: string,
   consentType: ConsentType,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
 ): Promise<{ success: boolean; message: string }> {
   const now = new Date().toISOString();
 
@@ -192,7 +214,7 @@ export async function updateMarketingConsent(
   userId: string,
   consent: boolean,
   ipAddress?: string,
-  userAgent?: string
+  userAgent?: string,
 ): Promise<void> {
   const now = new Date().toISOString();
 
@@ -210,7 +232,7 @@ export async function updateMarketingConsent(
     'marketing',
     consent ? 'given' : 'withdrawn',
     ipAddress,
-    userAgent
+    userAgent,
   );
 }
 

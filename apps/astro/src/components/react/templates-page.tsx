@@ -1,13 +1,35 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Templates browsing page component
  * @module components/react/TemplatesPage
  */
 
+import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
 import { useStore } from '@nanostores/react';
 import {
   AlertCircle,
   Bookmark,
-  Building2,
   Camera,
   Check,
   ChevronDown,
@@ -30,7 +52,6 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { $user, $isAuthenticated, $isLoading, logout, initAuth } from '@/stores/auth';
 
 const SAVED_TEMPLATES_KEY = 'foiastream_saved_templates';
 
@@ -97,7 +118,13 @@ Respectfully,
     description: 'Request contract documents, bids, and procurement records',
     icon: <DollarSign className="h-6 w-6" />,
     iconBg: 'bg-emerald-500/20 text-emerald-400',
-    variables: ['YOUR_NAME', 'CONTRACT_NUMBER', 'CONTRACTOR_NAME', 'DATE_RANGE', 'PROJECT_DESCRIPTION'],
+    variables: [
+      'YOUR_NAME',
+      'CONTRACT_NUMBER',
+      'CONTRACTOR_NAME',
+      'DATE_RANGE',
+      'PROJECT_DESCRIPTION',
+    ],
     tips: [
       'Contract numbers help narrow down your request',
       'Include a date range to limit the scope',
@@ -222,7 +249,13 @@ Sincerely,
     description: 'Request police reports, accident investigations, and incident documentation',
     icon: <AlertCircle className="h-6 w-6" />,
     iconBg: 'bg-amber-500/20 text-amber-400',
-    variables: ['YOUR_NAME', 'INCIDENT_DATE', 'INCIDENT_LOCATION', 'REPORT_NUMBER', 'PARTIES_INVOLVED'],
+    variables: [
+      'YOUR_NAME',
+      'INCIDENT_DATE',
+      'INCIDENT_LOCATION',
+      'REPORT_NUMBER',
+      'PARTIES_INVOLVED',
+    ],
     tips: [
       'Report numbers expedite the search process',
       'Include your relationship to the incident if applicable',
@@ -308,7 +341,13 @@ Sincerely,
     description: 'Request records of complaints, investigations, and disciplinary proceedings',
     icon: <Gavel className="h-6 w-6" />,
     iconBg: 'bg-rose-500/20 text-rose-400',
-    variables: ['YOUR_NAME', 'SUBJECT_OF_COMPLAINT', 'AGENCY_DIVISION', 'DATE_RANGE', 'COMPLAINT_TYPE'],
+    variables: [
+      'YOUR_NAME',
+      'SUBJECT_OF_COMPLAINT',
+      'AGENCY_DIVISION',
+      'DATE_RANGE',
+      'COMPLAINT_TYPE',
+    ],
     tips: [
       'Closed investigations are more likely to be released',
       'Aggregate statistics may be available if individual records are protected',
@@ -451,13 +490,13 @@ export default function TemplatesPage() {
   }, []);
 
   const saveTemplate = (template: SavedTemplate) => {
-    const updated = [...savedTemplates.filter(t => t.id !== template.id), template];
+    const updated = [...savedTemplates.filter((t) => t.id !== template.id), template];
     setSavedTemplates(updated);
     localStorage.setItem(SAVED_TEMPLATES_KEY, JSON.stringify(updated));
   };
 
   const deleteTemplate = (id: string) => {
-    const updated = savedTemplates.filter(t => t.id !== id);
+    const updated = savedTemplates.filter((t) => t.id !== id);
     setSavedTemplates(updated);
     localStorage.setItem(SAVED_TEMPLATES_KEY, JSON.stringify(updated));
   };
@@ -468,7 +507,8 @@ export default function TemplatesPage() {
   };
 
   const filteredTemplates = TEMPLATES.filter((template) => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || template.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -502,13 +542,22 @@ export default function TemplatesPage() {
             </a>
 
             <nav className="hidden items-center gap-6 md:flex">
-              <a href="/dashboard" className="text-sm text-surface-400 transition-colors hover:text-surface-100">
+              <a
+                href="/dashboard"
+                className="text-sm text-surface-400 transition-colors hover:text-surface-100"
+              >
                 Dashboard
               </a>
-              <a href="/agencies" className="text-sm text-surface-400 transition-colors hover:text-surface-100">
+              <a
+                href="/agencies"
+                className="text-sm text-surface-400 transition-colors hover:text-surface-100"
+              >
                 Agencies
               </a>
-              <a href="/templates" className="flex items-center gap-1.5 text-sm font-medium text-accent-400">
+              <a
+                href="/templates"
+                className="flex items-center gap-1.5 text-sm font-medium text-accent-400"
+              >
                 <ClipboardCopy className="h-4 w-4" />
                 Templates
               </a>
@@ -517,42 +566,58 @@ export default function TemplatesPage() {
             {isAuth && user ? (
               <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
                   type="button"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 rounded-lg border border-surface-700 px-3 py-2 text-sm text-surface-200 transition-colors hover:border-surface-600 hover:bg-surface-800"
                 >
                   <User className="h-4 w-4 text-surface-400" />
                   <span className="hidden sm:inline">{user.firstName}</span>
-                  <ChevronDown className={`h-4 w-4 text-surface-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 text-surface-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                  />
                 </button>
 
                 {showUserMenu && (
                   <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-xl shadow-black/20">
                     <div className="border-b border-surface-800 px-3 py-2 mb-1.5">
-                      <p className="text-sm font-medium text-surface-200">{user.firstName} {user.lastName}</p>
+                      <p className="text-sm font-medium text-surface-200">
+                        {user.firstName} {user.lastName}
+                      </p>
                       <p className="text-xs text-surface-500 truncate">{user.email}</p>
                     </div>
-                    <a href="/dashboard" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100">
+                    <a
+                      href="/dashboard"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                    >
                       <LayoutDashboard className="h-4 w-4 text-surface-500" />
                       Dashboard
                     </a>
-                    <a href="/settings" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100">
+                    <a
+                      href="/settings"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                    >
                       <Settings className="h-4 w-4 text-surface-500" />
                       Settings
                     </a>
                     <div className="my-1.5 border-t border-surface-800" />
-                    <a href="/terms" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300">
+                    <a
+                      href="/terms"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300"
+                    >
                       <FileText className="h-4 w-4 text-surface-500" />
                       Terms of Service
                     </a>
-                    <a href="/privacy" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300">
+                    <a
+                      href="/privacy"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300"
+                    >
                       <Shield className="h-4 w-4 text-surface-500" />
                       Privacy Policy
                     </a>
                     <div className="my-1.5 border-t border-surface-800" />
                     <button
-                      onClick={handleLogout}
                       type="button"
+                      onClick={handleLogout}
                       className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10"
                     >
                       <LogOut className="h-4 w-4" />
@@ -563,10 +628,16 @@ export default function TemplatesPage() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <a href="/login" className="text-sm text-surface-300 transition-colors hover:text-surface-100">
+                <a
+                  href="/login"
+                  className="text-sm text-surface-300 transition-colors hover:text-surface-100"
+                >
                   Sign In
                 </a>
-                <a href="/register" className="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400">
+                <a
+                  href="/register"
+                  className="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
+                >
                   Get Started
                 </a>
               </div>
@@ -579,7 +650,9 @@ export default function TemplatesPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-surface-100">Request Templates</h1>
-          <p className="text-surface-400">Professional FOIA request templates for various record types</p>
+          <p className="text-surface-400">
+            Professional FOIA request templates for various record types
+          </p>
         </div>
 
         {/* Search and Filter */}
@@ -600,10 +673,13 @@ export default function TemplatesPage() {
             className="rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 focus:border-accent-500 focus:outline-none"
           >
             {CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
             ))}
           </select>
           <button
+            type="button"
             onClick={() => setShowSavedOnly(!showSavedOnly)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
               showSavedOnly
@@ -614,15 +690,20 @@ export default function TemplatesPage() {
             <Bookmark className={`h-4 w-4 ${showSavedOnly ? 'fill-current' : ''}`} />
             My Templates
             {savedTemplates.length > 0 && (
-              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-                showSavedOnly ? 'bg-amber-500 text-surface-950' : 'bg-surface-700 text-surface-300'
-              }`}>
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
+                  showSavedOnly
+                    ? 'bg-amber-500 text-surface-950'
+                    : 'bg-surface-700 text-surface-300'
+                }`}
+              >
                 {savedTemplates.length}
               </span>
             )}
           </button>
           {isAuth && (
             <button
+              type="button"
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
             >
@@ -641,6 +722,7 @@ export default function TemplatesPage() {
                 <p className="mt-4 text-lg font-medium text-surface-300">No saved templates yet</p>
                 <p className="mt-1 text-surface-500">Create a custom template to get started</p>
                 <button
+                  type="button"
                   onClick={() => setShowCreateModal(true)}
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
                 >
@@ -668,6 +750,7 @@ export default function TemplatesPage() {
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => deleteTemplate(template.id)}
                         className="rounded-lg p-1.5 text-surface-500 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
                       >
@@ -681,12 +764,14 @@ export default function TemplatesPage() {
 
                     <div className="mt-4 flex gap-2">
                       <button
+                        type="button"
                         onClick={() => setEditingTemplate(template)}
                         className="flex-1 rounded-lg border border-surface-700 px-3 py-2 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
                       >
                         Edit
                       </button>
                       <button
+                        type="button"
                         onClick={async () => {
                           await navigator.clipboard.writeText(template.content);
                           setCopiedId(template.id);
@@ -716,57 +801,59 @@ export default function TemplatesPage() {
 
         {/* Templates Grid */}
         {!showSavedOnly && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTemplates.map((template) => (
-            <div
-              key={template.id}
-              className="group rounded-xl border border-surface-800 bg-surface-900/50 p-5 transition-all hover:border-surface-700 hover:bg-surface-900"
-            >
-              <div className="flex items-start gap-4">
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${template.iconBg}`}>
-                  {template.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium text-surface-100">{template.name}</h3>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filteredTemplates.map((template) => (
+              <div
+                key={template.id}
+                className="group rounded-xl border border-surface-800 bg-surface-900/50 p-5 transition-all hover:border-surface-700 hover:bg-surface-900"
+              >
+                <div className="flex items-start gap-4">
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${template.iconBg}`}
+                  >
+                    {template.icon}
                   </div>
-                  <span className="inline-block mt-1 rounded-full bg-surface-800 px-2 py-0.5 text-xs text-surface-400">
-                    {template.category}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-medium text-surface-100">{template.name}</h3>
+                    </div>
+                    <span className="inline-block mt-1 rounded-full bg-surface-800 px-2 py-0.5 text-xs text-surface-400">
+                      {template.category}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-sm text-surface-400 line-clamp-2">{template.description}</p>
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTemplate(template)}
+                    className="flex-1 rounded-lg border border-surface-700 px-3 py-2 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyTemplate(template)}
+                    className="flex items-center justify-center gap-1.5 rounded-lg bg-accent-500/10 px-3 py-2 text-sm font-medium text-accent-400 transition-colors hover:bg-accent-500/20"
+                  >
+                    {copiedId === template.id ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-
-              <p className="mt-3 text-sm text-surface-400 line-clamp-2">
-                {template.description}
-              </p>
-
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => setSelectedTemplate(template)}
-                  className="flex-1 rounded-lg border border-surface-700 px-3 py-2 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                >
-                  Preview
-                </button>
-                <button
-                  onClick={() => copyTemplate(template)}
-                  className="flex items-center justify-center gap-1.5 rounded-lg bg-accent-500/10 px-3 py-2 text-sm font-medium text-accent-400 transition-colors hover:bg-accent-500/20"
-                >
-                  {copiedId === template.id ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      Copy
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         )}
 
         {!showSavedOnly && filteredTemplates.length === 0 && (
@@ -784,22 +871,22 @@ export default function TemplatesPage() {
             <div>
               <h3 className="font-medium text-surface-200 mb-2">1. Choose a Template</h3>
               <p className="text-sm text-surface-400">
-                Select the template that best matches the type of records you're seeking.
-                Each template includes proper legal citations and formatting.
+                Select the template that best matches the type of records you're seeking. Each
+                template includes proper legal citations and formatting.
               </p>
             </div>
             <div>
               <h3 className="font-medium text-surface-200 mb-2">2. Customize Your Request</h3>
               <p className="text-sm text-surface-400">
-                Replace the bracketed placeholders with your specific information.
-                Be as detailed as possible to help the agency locate your records.
+                Replace the bracketed placeholders with your specific information. Be as detailed as
+                possible to help the agency locate your records.
               </p>
             </div>
             <div>
               <h3 className="font-medium text-surface-200 mb-2">3. Submit Your Request</h3>
               <p className="text-sm text-surface-400">
-                Create a new request in FOIA Stream using your customized template,
-                or submit directly to the agency via their preferred method.
+                Create a new request in FOIA Stream using your customized template, or submit
+                directly to the agency via their preferred method.
               </p>
             </div>
           </div>
@@ -813,17 +900,22 @@ export default function TemplatesPage() {
             {/* Header */}
             <div className="flex items-start justify-between border-b border-surface-800 p-6">
               <div className="flex items-start gap-4">
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${selectedTemplate.iconBg}`}>
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${selectedTemplate.iconBg}`}
+                >
                   {selectedTemplate.icon}
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-surface-100">{selectedTemplate.name}</h2>
+                  <h2 className="text-xl font-semibold text-surface-100">
+                    {selectedTemplate.name}
+                  </h2>
                   <span className="inline-block mt-1 rounded-full bg-surface-800 px-2 py-0.5 text-xs text-surface-400">
                     {selectedTemplate.category}
                   </span>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedTemplate(null)}
                 className="rounded-lg p-2 text-surface-400 hover:bg-surface-800 hover:text-surface-200"
               >
@@ -852,8 +944,8 @@ export default function TemplatesPage() {
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-surface-300 mb-2">Tips</h3>
                 <ul className="space-y-1">
-                  {selectedTemplate.tips.map((tip, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-surface-400">
+                  {selectedTemplate.tips.map((tip) => (
+                    <li key={tip} className="flex items-start gap-2 text-sm text-surface-400">
                       <Check className="h-4 w-4 text-accent-400 shrink-0 mt-0.5" />
                       {tip}
                     </li>
@@ -873,12 +965,14 @@ export default function TemplatesPage() {
             {/* Footer */}
             <div className="border-t border-surface-800 p-4 flex gap-3">
               <button
+                type="button"
                 onClick={() => setSelectedTemplate(null)}
                 className="flex-1 rounded-lg border border-surface-700 px-4 py-3 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800"
               >
                 Close
               </button>
               <button
+                type="button"
                 onClick={() => {
                   copyTemplate(selectedTemplate);
                 }}
@@ -955,6 +1049,7 @@ function CreateTemplateModal({
             {template ? 'Edit Template' : 'Create Custom Template'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg p-2 text-surface-400 hover:bg-surface-800 hover:text-surface-200"
           >
@@ -964,10 +1059,14 @@ function CreateTemplateModal({
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-2">
+            <label
+              htmlFor="template-name"
+              className="block text-sm font-medium text-surface-300 mb-2"
+            >
               Template Name <span className="text-red-400">*</span>
             </label>
             <input
+              id="template-name"
               type="text"
               required
               value={name}
@@ -978,10 +1077,14 @@ function CreateTemplateModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-2">
+            <label
+              htmlFor="template-category"
+              className="block text-sm font-medium text-surface-300 mb-2"
+            >
               Category
             </label>
             <select
+              id="template-category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 focus:border-accent-500 focus:outline-none"
@@ -997,10 +1100,14 @@ function CreateTemplateModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-surface-300 mb-2">
+            <label
+              htmlFor="template-content"
+              className="block text-sm font-medium text-surface-300 mb-2"
+            >
               Template Content <span className="text-red-400">*</span>
             </label>
             <textarea
+              id="template-content"
               required
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -1030,6 +1137,7 @@ Respectfully,
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={!name || !content}
             className="flex-1 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1040,12 +1148,4 @@ Respectfully,
       </div>
     </div>
   );
-}
-
-interface SavedTemplate {
-  id: string;
-  name: string;
-  content: string;
-  category: string;
-  createdAt: string;
 }

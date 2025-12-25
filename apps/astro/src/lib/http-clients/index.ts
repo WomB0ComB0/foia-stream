@@ -32,21 +32,21 @@
 
 // Re-export fetcher utilities from shared package
 export {
-  FetcherError,
-  FetcherValidationError as ValidationError,
   createApiResponseSchema,
   createPaginatedSchema,
   del,
+  FetcherError,
+  type FetcherHeaders,
+  type FetcherOptions,
+  FetcherValidationError as ValidationError,
   fetcher,
   get,
+  type HttpMethod,
   head,
   options,
   patch,
   post,
   put,
-  type FetcherHeaders,
-  type FetcherOptions,
-  type HttpMethod,
   type QueryParams,
   type RequestBody,
 } from '@foia-stream/shared';

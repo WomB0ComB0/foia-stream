@@ -706,8 +706,8 @@ export {
   KeyedThrottle,
   LeakyBucketLimiter,
   SlidingWindowCounter,
-  throttle,
   TokenBucketLimiter,
+  throttle,
 } from '@foia-stream/shared';
 // Re-export banlist functions for convenience
 export {

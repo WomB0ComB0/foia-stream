@@ -1,19 +1,37 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Skeleton loading components for better UX
  * @module components/react/Skeleton
  */
 
-import React from 'react';
+import type React from 'react';
 
 /**
  * Base skeleton component
  */
 export function Skeleton({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded bg-surface-800 ${className}`}
-    />
-  );
+  return <div className={`animate-pulse rounded bg-surface-800 ${className}`} />;
 }
 
 /**
@@ -29,10 +47,8 @@ export function SkeletonText({
   return (
     <div className={`space-y-2 ${className}`}>
       {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton
-          key={i}
-          className={`h-4 ${i === lines - 1 && lines > 1 ? 'w-3/4' : 'w-full'}`}
-        />
+        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton placeholders don't reorder
+        <Skeleton key={i} className={`h-4 ${i === lines - 1 && lines > 1 ? 'w-3/4' : 'w-full'}`} />
       ))}
     </div>
   );
@@ -43,9 +59,7 @@ export function SkeletonText({
  */
 export function SkeletonCard({ className = '' }: { className?: string }) {
   return (
-    <div
-      className={`rounded-xl border border-surface-800 bg-surface-900/50 p-5 ${className}`}
-    >
+    <div className={`rounded-xl border border-surface-800 bg-surface-900/50 p-5 ${className}`}>
       <div className="flex items-start gap-4">
         <Skeleton className="h-12 w-12 rounded-lg" />
         <div className="flex-1">
@@ -88,9 +102,7 @@ export function SkeletonRequestItem({ className = '' }: { className?: string }) 
  */
 export function SkeletonStatCard({ className = '' }: { className?: string }) {
   return (
-    <div
-      className={`rounded-xl border border-surface-800 bg-surface-900/50 p-4 ${className}`}
-    >
+    <div className={`rounded-xl border border-surface-800 bg-surface-900/50 p-4 ${className}`}>
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-lg" />
         <div>
@@ -107,9 +119,7 @@ export function SkeletonStatCard({ className = '' }: { className?: string }) {
  */
 export function SkeletonAgencyCard({ className = '' }: { className?: string }) {
   return (
-    <div
-      className={`rounded-xl border border-surface-800 bg-surface-900/50 p-5 ${className}`}
-    >
+    <div className={`rounded-xl border border-surface-800 bg-surface-900/50 p-5 ${className}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <Skeleton className="h-5 w-3/4 mb-2" />
@@ -140,9 +150,7 @@ export function SkeletonAgencyCard({ className = '' }: { className?: string }) {
  */
 export function SkeletonTemplateCard({ className = '' }: { className?: string }) {
   return (
-    <div
-      className={`rounded-xl border border-surface-800 bg-surface-900/50 p-5 ${className}`}
-    >
+    <div className={`rounded-xl border border-surface-800 bg-surface-900/50 p-5 ${className}`}>
       <div className="flex items-start gap-4">
         <Skeleton className="h-12 w-12 rounded-xl" />
         <div className="flex-1">
@@ -177,6 +185,7 @@ export function SkeletonGrid({
   return (
     <div className={`grid gap-4 md:grid-cols-2 lg:grid-cols-3 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton grid doesn't reorder
         <Card key={i} />
       ))}
     </div>

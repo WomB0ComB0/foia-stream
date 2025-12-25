@@ -96,6 +96,15 @@ const UserSchema = S.Struct({
 const AuthResponseSchema = S.Struct({
   token: S.String.pipe(S.minLength(1)),
   user: UserSchema,
+  requiresMFA: S.optional(S.Boolean),
+  mfaToken: S.optional(S.String),
+});
+
+/**
+ * MFA token response schema
+ */
+const MFATokenResponseSchema = S.Struct({
+  token: S.String.pipe(S.minLength(1)),
 });
 
 /**
@@ -373,6 +382,17 @@ class ApiClient {
     return runEffect(
       post<AuthResponse>(`${this.baseUrl}/auth/login`, { email, password }),
       AuthResponseSchema,
+    );
+  }
+
+  /**
+   * Verify MFA code during login
+   * @compliance NIST 800-53 IA-2 (Identification and Authentication)
+   */
+  async verifyMFALogin(mfaToken: string, code: string): Promise<ApiResponse<{ token: string }>> {
+    return runEffect(
+      post<{ token: string }>(`${this.baseUrl}/auth/login/mfa`, { mfaToken, code }),
+      MFATokenResponseSchema,
     );
   }
 
@@ -781,6 +801,24 @@ class ApiClient {
         { headers: getAuthHeaders() },
       ),
       MessageResponseSchema,
+    );
+  }
+
+  /**
+   * Regenerate MFA backup codes
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
+   */
+  async regenerateBackupCodes(
+    password: string,
+    code: string,
+  ): Promise<ApiResponse<{ backupCodes: string[] }>> {
+    return runEffect(
+      post<{ backupCodes: string[] }>(
+        `${this.baseUrl}/auth/mfa/backup-codes/regenerate`,
+        { password, code },
+        { headers: getAuthHeaders() },
+      ),
+      S.Struct({ backupCodes: S.mutable(S.Array(S.String)) }),
     );
   }
 

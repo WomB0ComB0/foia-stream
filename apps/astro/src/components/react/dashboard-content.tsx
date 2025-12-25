@@ -26,10 +26,6 @@
  * @author FOIA Stream Team
  */
 
-import type { FoiaRequest } from '@/lib/api';
-import { API_BASE } from '@/lib/config';
-import { formatDate, getStatusColor } from '@/lib/utils';
-import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
 import { useStore } from '@nanostores/react';
 import {
   Building2,
@@ -44,6 +40,10 @@ import {
   User,
 } from 'lucide-react';
 import { Suspense, useEffect, useRef, useState } from 'react';
+import type { FoiaRequest } from '@/lib/api';
+import { API_BASE } from '@/lib/config';
+import { formatDate, getStatusColor } from '@/lib/utils';
+import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
 import { useDataLoader } from './effect-data-loader';
 
 interface RequestsResponse {

@@ -42,4 +42,7 @@ export {
   type QueryParams,
   type RequestBody,
 } from './fetcher';
+// Redaction and sanitization utilities
+export * from './redacted';
+export * from './sanitize';
 export * from './throttle.utils';

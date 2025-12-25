@@ -32,7 +32,7 @@
 import type { Context } from 'hono';
 import { apiKeyService } from '@/services/api-key.service';
 import { authService } from '@/services/auth.service';
-import { consentService, type ConsentData } from '@/services/consent.service';
+import { type ConsentData, consentService } from '@/services/consent.service';
 import { mfaService } from '@/services/mfa.service';
 import type { User } from '@/types';
 
@@ -74,7 +74,14 @@ export const register = async (c: Context) => {
       password: string;
       firstName: string;
       lastName: string;
-      role?: 'civilian' | 'journalist' | 'researcher' | 'attorney' | 'community_advocate' | 'agency_official' | 'admin';
+      role?:
+        | 'civilian'
+        | 'journalist'
+        | 'researcher'
+        | 'attorney'
+        | 'community_advocate'
+        | 'agency_official'
+        | 'admin';
       organization?: string;
       isAnonymous?: boolean;
       consents?: ConsentData;
@@ -84,7 +91,7 @@ export const register = async (c: Context) => {
     // Ensure role has a default value
     const userDataWithDefaults = {
       ...userData,
-      role: userData.role || 'civilian' as const,
+      role: userData.role || ('civilian' as const),
     };
     const user = await authService.createUser(userDataWithDefaults);
 
@@ -93,12 +100,7 @@ export const register = async (c: Context) => {
       const ipAddress = c.req.header('x-forwarded-for') || c.req.header('x-real-ip');
       const userAgent = c.req.header('user-agent');
 
-      await consentService.recordRegistrationConsent(
-        user.id,
-        consents,
-        ipAddress,
-        userAgent
-      );
+      await consentService.recordRegistrationConsent(user.id, consents, ipAddress, userAgent);
     }
 
     return c.json(
@@ -436,11 +438,14 @@ export const regenerateBackupCodes = async (c: Context) => {
 
     const backupCodes = await mfaService.regenerateBackupCodes(userId);
 
-    return c.json({
-      success: true,
-      data: { backupCodes },
-      message: 'Backup codes regenerated successfully',
-    }, 200);
+    return c.json(
+      {
+        success: true,
+        data: { backupCodes },
+        message: 'Backup codes regenerated successfully',
+      },
+      200,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to regenerate backup codes';
     return c.json({ success: false, error: message }, 400);

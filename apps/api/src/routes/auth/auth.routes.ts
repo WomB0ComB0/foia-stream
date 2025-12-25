@@ -429,10 +429,7 @@ export const verifyMFALoginRoute = createRoute({
     [HttpStatusCodes.OK]: {
       content: {
         'application/json': {
-          schema: successResponse(
-            z.object({ token: z.string() }),
-            'MFA verification successful'
-          ),
+          schema: successResponse(z.object({ token: z.string() }), 'MFA verification successful'),
         },
       },
       description: 'MFA verification successful, returns full access token',
@@ -809,7 +806,8 @@ export const regenerateBackupCodesRoute = createRoute({
   method: 'post',
   tags,
   summary: 'Regenerate MFA backup codes',
-  description: 'Generates new backup codes, invalidating all previous ones. Requires password verification.',
+  description:
+    'Generates new backup codes, invalidating all previous ones. Requires password verification.',
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -824,7 +822,7 @@ export const regenerateBackupCodesRoute = createRoute({
         'application/json': {
           schema: successResponse(
             z.object({ backupCodes: z.array(z.string()) }),
-            'Backup codes regenerated successfully'
+            'Backup codes regenerated successfully',
           ),
         },
       },

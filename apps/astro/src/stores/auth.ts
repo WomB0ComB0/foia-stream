@@ -25,8 +25,8 @@
  * @module stores/auth
  */
 
-import { api, type User } from '@/lib/api';
 import { atom, computed } from 'nanostores';
+import { api, type User } from '@/lib/api';
 
 /**
  * Reactive store for the current authenticated user

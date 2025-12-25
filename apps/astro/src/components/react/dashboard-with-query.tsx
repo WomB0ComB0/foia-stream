@@ -26,8 +26,8 @@
  * @author FOIA Stream Team
  */
 
-import { QueryProvider } from './query-provider';
 import DashboardContent from './dashboard-content';
+import { QueryProvider } from './query-provider';
 
 /**
  * Dashboard component wrapped with QueryProvider for TanStack Query support.

@@ -27,6 +27,16 @@
  * @compliance NIST 800-53 SI-10 (Information Input Validation)
  */
 
+import { FetchHttpClient } from '@effect/platform';
+import type { QueryKey } from '@tanstack/react-query';
+import {
+  type UseSuspenseQueryOptions,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
+import { Effect, pipe, Schema } from 'effect';
+import type React from 'react';
+import { Suspense, useCallback, useMemo } from 'react';
 import { ClientError, Loader } from '@/components/client';
 import {
   FetcherError,
@@ -36,16 +46,6 @@ import {
   requestQueue,
   ValidationError,
 } from '@/lib/http-clients';
-import { FetchHttpClient } from '@effect/platform';
-import type { QueryKey } from '@tanstack/react-query';
-import {
-  useQueryClient,
-  useSuspenseQuery,
-  type UseSuspenseQueryOptions,
-} from '@tanstack/react-query';
-import { Effect, pipe, Schema } from 'effect';
-import type React from 'react';
-import { Suspense, useCallback, useMemo } from 'react';
 
 /**
  * Enhanced render props with query state and actions.

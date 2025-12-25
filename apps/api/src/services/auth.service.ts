@@ -408,7 +408,10 @@ export class AuthService {
 
       logger.debug({ userId, codeLength: code.length }, 'Verifying MFA code');
       const verifyResult = await mfaService.verifyMFA(userId, code);
-      logger.debug({ userId, success: verifyResult.success, usedBackupCode: verifyResult.usedBackupCode }, 'MFA verification result');
+      logger.debug(
+        { userId, success: verifyResult.success, usedBackupCode: verifyResult.usedBackupCode },
+        'MFA verification result',
+      );
 
       if (!verifyResult.success) {
         await securityMonitoring.logSecurityEvent({
@@ -463,7 +466,10 @@ export class AuthService {
       logger.debug({ userId }, 'MFA login completed successfully');
       return { token };
     } catch (error) {
-      logger.error({ error, errorMessage: error instanceof Error ? error.message : 'Unknown error' }, 'MFA verification error');
+      logger.error(
+        { error, errorMessage: error instanceof Error ? error.message : 'Unknown error' },
+        'MFA verification error',
+      );
       if (error instanceof SecurityError) {
         throw error;
       }

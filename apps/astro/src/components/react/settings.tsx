@@ -1,8 +1,32 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file User settings and account management component
  * @module components/react/Settings
  */
 
+import { api, type User as UserType } from '@/lib/api';
+import { $isAuthenticated, $isLoading, $user, initAuth, refreshUser } from '@/stores/auth';
 import { useStore } from '@nanostores/react';
 import {
   AlertTriangle,
@@ -26,9 +50,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { api, type User as UserType } from '@/lib/api';
-import { $user, $isAuthenticated, $isLoading, initAuth, refreshUser } from '@/stores/auth';
+import { useCallback, useEffect, useState } from 'react';
 
 type TabId = 'profile' | 'security' | 'preferences' | 'api' | 'danger';
 
@@ -40,11 +62,36 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: 'profile', label: 'Profile', icon: <User className="h-5 w-5" />, description: 'Manage your personal information' },
-  { id: 'security', label: 'Security', icon: <Shield className="h-5 w-5" />, description: 'Password and authentication' },
-  { id: 'preferences', label: 'Preferences', icon: <Settings2 className="h-5 w-5" />, description: 'Notifications and reminders' },
-  { id: 'api', label: 'API Keys', icon: <Key className="h-5 w-5" />, description: 'Manage API access' },
-  { id: 'danger', label: 'Danger Zone', icon: <AlertTriangle className="h-5 w-5" />, description: 'Irreversible actions' },
+  {
+    id: 'profile',
+    label: 'Profile',
+    icon: <User className="h-5 w-5" />,
+    description: 'Manage your personal information',
+  },
+  {
+    id: 'security',
+    label: 'Security',
+    icon: <Shield className="h-5 w-5" />,
+    description: 'Password and authentication',
+  },
+  {
+    id: 'preferences',
+    label: 'Preferences',
+    icon: <Settings2 className="h-5 w-5" />,
+    description: 'Notifications and reminders',
+  },
+  {
+    id: 'api',
+    label: 'API Keys',
+    icon: <Key className="h-5 w-5" />,
+    description: 'Manage API access',
+  },
+  {
+    id: 'danger',
+    label: 'Danger Zone',
+    icon: <AlertTriangle className="h-5 w-5" />,
+    description: 'Irreversible actions',
+  },
 ];
 
 /**
@@ -104,6 +151,7 @@ export default function Settings() {
             <div className="sticky top-24 space-y-1">
               {TABS.map((tab) => (
                 <button
+                  type="button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
@@ -181,6 +229,7 @@ function ProfileTab({ user }: { user: UserType }) {
           <h2 className="text-xl font-semibold text-surface-100">Profile Information</h2>
           {!isEditing && (
             <button
+              type="button"
               onClick={() => setIsEditing(true)}
               className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
             >
@@ -205,8 +254,14 @@ function ProfileTab({ user }: { user: UserType }) {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">First Name</label>
+              <label
+                htmlFor="settings-first-name"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                First Name
+              </label>
               <input
+                id="settings-first-name"
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -215,8 +270,14 @@ function ProfileTab({ user }: { user: UserType }) {
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">Last Name</label>
+              <label
+                htmlFor="settings-last-name"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                Last Name
+              </label>
               <input
+                id="settings-last-name"
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
@@ -227,8 +288,14 @@ function ProfileTab({ user }: { user: UserType }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-surface-300">Email Address</label>
+            <label
+              htmlFor="settings-email"
+              className="mb-2 block text-sm font-medium text-surface-300"
+            >
+              Email Address
+            </label>
             <input
+              id="settings-email"
               type="email"
               value={formData.email}
               disabled
@@ -238,8 +305,14 @@ function ProfileTab({ user }: { user: UserType }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-surface-300">Organization</label>
+            <label
+              htmlFor="settings-organization"
+              className="mb-2 block text-sm font-medium text-surface-300"
+            >
+              Organization
+            </label>
             <input
+              id="settings-organization"
               type="text"
               value={formData.organization}
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
@@ -250,7 +323,7 @@ function ProfileTab({ user }: { user: UserType }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-surface-300">Role</label>
+            <span className="mb-2 block text-sm font-medium text-surface-300">Role</span>
             <div className="flex items-center gap-2">
               <span className="inline-flex rounded-lg bg-accent-500/10 px-3 py-1.5 text-sm font-medium text-accent-400 capitalize">
                 {user.role.replace('_', ' ')}
@@ -259,7 +332,7 @@ function ProfileTab({ user }: { user: UserType }) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-surface-300">Member Since</label>
+            <span className="mb-2 block text-sm font-medium text-surface-300">Member Since</span>
             <p className="text-surface-100">
               {new Date(user.createdAt).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -273,6 +346,7 @@ function ProfileTab({ user }: { user: UserType }) {
         {isEditing && (
           <div className="mt-6 flex justify-end gap-3">
             <button
+              type="button"
               onClick={() => {
                 setIsEditing(false);
                 setFormData({
@@ -287,11 +361,16 @@ function ProfileTab({ user }: { user: UserType }) {
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={isSaving}
               className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               Save Changes
             </button>
           </div>
@@ -305,21 +384,24 @@ function SecurityTab() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [showSessionsModal, setShowSessionsModal] = useState(false);
-  const [mfaStatus, setMfaStatus] = useState<{ enabled: boolean; backupCodesRemaining?: number } | null>(null);
+  const [mfaStatus, setMfaStatus] = useState<{
+    enabled: boolean;
+    backupCodesRemaining?: number;
+  } | null>(null);
   const [loadingMFA, setLoadingMFA] = useState(true);
 
-  useEffect(() => {
-    loadMFAStatus();
-  }, []);
-
-  const loadMFAStatus = async () => {
+  const loadMFAStatus = useCallback(async () => {
     setLoadingMFA(true);
     const response = await api.getMFAStatus();
     if (response.success && response.data) {
       setMfaStatus(response.data);
     }
     setLoadingMFA(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadMFAStatus();
+  }, [loadMFAStatus]);
 
   return (
     <div className="space-y-6">
@@ -335,6 +417,7 @@ function SecurityTab() {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setShowPasswordModal(true)}
             className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
           >
@@ -352,20 +435,27 @@ function SecurityTab() {
             <div>
               <h3 className="font-semibold text-surface-100">Two-Factor Authentication</h3>
               <p className="text-sm text-surface-400">
-                {loadingMFA ? 'Loading...' : mfaStatus?.enabled ? 'Your account is protected with 2FA' : 'Add an extra layer of security'}
+                {loadingMFA
+                  ? 'Loading...'
+                  : mfaStatus?.enabled
+                    ? 'Your account is protected with 2FA'
+                    : 'Add an extra layer of security'}
               </p>
               {mfaStatus?.enabled && (
                 <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
                   <Check className="h-3 w-3" />
                   Enabled
                   {mfaStatus.backupCodesRemaining !== undefined && (
-                    <span className="ml-1 text-surface-500">({mfaStatus.backupCodesRemaining} backup codes left)</span>
+                    <span className="ml-1 text-surface-500">
+                      ({mfaStatus.backupCodesRemaining} backup codes left)
+                    </span>
                   )}
                 </span>
               )}
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setShow2FAModal(true)}
             disabled={loadingMFA}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
@@ -391,6 +481,7 @@ function SecurityTab() {
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setShowSessionsModal(true)}
             className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
           >
@@ -399,9 +490,7 @@ function SecurityTab() {
         </div>
       </div>
 
-      {showPasswordModal && (
-        <PasswordChangeModal onClose={() => setShowPasswordModal(false)} />
-      )}
+      {showPasswordModal && <PasswordChangeModal onClose={() => setShowPasswordModal(false)} />}
 
       {show2FAModal && (
         <TwoFactorModal
@@ -413,9 +502,7 @@ function SecurityTab() {
         />
       )}
 
-      {showSessionsModal && (
-        <SessionsModal onClose={() => setShowSessionsModal(false)} />
-      )}
+      {showSessionsModal && <SessionsModal onClose={() => setShowSessionsModal(false)} />}
     </div>
   );
 }
@@ -433,7 +520,7 @@ function PreferencesTab() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setSuccess('Preferences saved successfully');
     setIsSaving(false);
     setTimeout(() => setSuccess(''), 3000);
@@ -456,13 +543,19 @@ function PreferencesTab() {
           </div>
           <div>
             <h3 className="font-semibold text-surface-100">Password Change Reminder</h3>
-            <p className="text-sm text-surface-400">How often should we remind you to change your password?</p>
+            <p className="text-sm text-surface-400">
+              How often should we remind you to change your password?
+            </p>
           </div>
         </div>
 
         <div className="space-y-2">
           {[
-            { value: '30', label: '30 days', description: 'Recommended for high-security accounts' },
+            {
+              value: '30',
+              label: '30 days',
+              description: 'Recommended for high-security accounts',
+            },
             { value: '90', label: '90 days', description: 'Standard security practice' },
             { value: 'never', label: 'Never', description: 'Not recommended' },
           ].map((option) => (
@@ -482,11 +575,13 @@ function PreferencesTab() {
                 onChange={(e) => setPasswordReminder(e.target.value)}
                 className="sr-only"
               />
-              <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                passwordReminder === option.value
-                  ? 'border-accent-500 bg-accent-500'
-                  : 'border-surface-500'
-              }`}>
+              <div
+                className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                  passwordReminder === option.value
+                    ? 'border-accent-500 bg-accent-500'
+                    : 'border-surface-500'
+                }`}
+              >
                 {passwordReminder === option.value && (
                   <div className="h-1.5 w-1.5 rounded-full bg-surface-950" />
                 )}
@@ -519,10 +614,26 @@ function PreferencesTab() {
 
         <div className="space-y-4">
           {[
-            { key: 'requestUpdates', label: 'Request Updates', description: 'Notifications when your FOIA requests are updated' },
-            { key: 'deadlineReminders', label: 'Deadline Reminders', description: 'Reminders before agency response deadlines' },
-            { key: 'weeklyDigest', label: 'Weekly Digest', description: 'Weekly summary of all your request activity' },
-            { key: 'marketingEmails', label: 'Product Updates', description: 'News about new features and improvements' },
+            {
+              key: 'requestUpdates',
+              label: 'Request Updates',
+              description: 'Notifications when your FOIA requests are updated',
+            },
+            {
+              key: 'deadlineReminders',
+              label: 'Deadline Reminders',
+              description: 'Reminders before agency response deadlines',
+            },
+            {
+              key: 'weeklyDigest',
+              label: 'Weekly Digest',
+              description: 'Weekly summary of all your request activity',
+            },
+            {
+              key: 'marketingEmails',
+              label: 'Product Updates',
+              description: 'News about new features and improvements',
+            },
           ].map((item) => (
             <div
               key={item.key}
@@ -533,10 +644,13 @@ function PreferencesTab() {
                 <p className="text-xs text-surface-500">{item.description}</p>
               </div>
               <button
-                onClick={() => setEmailNotifications({
-                  ...emailNotifications,
-                  [item.key]: !emailNotifications[item.key as keyof typeof emailNotifications]
-                })}
+                type="button"
+                onClick={() =>
+                  setEmailNotifications({
+                    ...emailNotifications,
+                    [item.key]: !emailNotifications[item.key as keyof typeof emailNotifications],
+                  })
+                }
                 className={`relative h-6 w-11 rounded-full transition-colors ${
                   emailNotifications[item.key as keyof typeof emailNotifications]
                     ? 'bg-accent-500'
@@ -565,10 +679,13 @@ function PreferencesTab() {
             </div>
             <div>
               <h3 className="font-semibold text-surface-100">Export Your Data</h3>
-              <p className="text-sm text-surface-400">Download a copy of all your data (GDPR compliant)</p>
+              <p className="text-sm text-surface-400">
+                Download a copy of all your data (GDPR compliant)
+              </p>
             </div>
           </div>
           <button
+            type="button"
             className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
           >
             Request Export
@@ -578,6 +695,7 @@ function PreferencesTab() {
 
       <div className="flex justify-end">
         <button
+          type="button"
           onClick={handleSave}
           disabled={isSaving}
           className="flex items-center gap-2 rounded-lg bg-accent-500 px-6 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -603,23 +721,23 @@ function ApiKeysTab() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    loadApiKey();
-  }, []);
-
-  const loadApiKey = async () => {
+  const loadApiKey = useCallback(async () => {
     setLoading(true);
     const response = await api.getApiKey();
     if (response.success) {
       setApiKey(response.data ?? null);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadApiKey();
+  }, [loadApiKey]);
 
   const handleCreateKey = async (password: string, twoFactorCode?: string) => {
     const response = await api.createApiKey(password, twoFactorCode);
     if (response.success && response.data) {
-      setNewKey(response.data.key);
+      setNewKey(response.data.key ?? null);
       await loadApiKey();
       return true;
     }
@@ -664,10 +782,15 @@ function ApiKeysTab() {
                 {newKey}
               </code>
               <button
+                type="button"
                 onClick={copyToClipboard}
                 className="shrink-0 rounded-lg border border-surface-700 p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
               >
-                {copied ? <Check className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
+                {copied ? (
+                  <Check className="h-5 w-5 text-emerald-400" />
+                ) : (
+                  <Copy className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -681,12 +804,14 @@ function ApiKeysTab() {
                 <p className="font-mono text-sm text-surface-400">{apiKey.keyPreview}</p>
                 <p className="mt-1 text-xs text-surface-500">
                   Created {new Date(apiKey.createdAt).toLocaleDateString()}
-                  {apiKey.lastUsedAt && ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
+                  {apiKey.lastUsedAt &&
+                    ` • Last used ${new Date(apiKey.lastUsedAt).toLocaleDateString()}`}
                 </p>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={() => setShowConfirm(true)}
               className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 transition-colors hover:bg-amber-500/20"
             >
@@ -694,7 +819,8 @@ function ApiKeysTab() {
               Regenerate Key
             </button>
             <p className="text-xs text-surface-500">
-              Regenerating will invalidate the current key. All applications using the old key will stop working.
+              Regenerating will invalidate the current key. All applications using the old key will
+              stop working.
             </p>
           </div>
         ) : (
@@ -702,6 +828,7 @@ function ApiKeysTab() {
             <Key className="mx-auto mb-4 h-12 w-12 text-surface-600" />
             <p className="mb-4 text-surface-400">No API key generated yet</p>
             <button
+              type="button"
               onClick={() => setShowConfirm(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
             >
@@ -717,8 +844,10 @@ function ApiKeysTab() {
         <div className="rounded-lg bg-surface-800 p-4 font-mono text-sm overflow-x-auto">
           <pre className="text-surface-300">
             <span className="text-purple-400">curl</span> -X GET \{'\n'}
-            {'  '}-H <span className="text-emerald-400">"Authorization: Bearer YOUR_API_KEY"</span> \{'\n'}
-            {'  '}<span className="text-accent-400">https://api.foiastream.com/v1/requests</span>
+            {'  '}-H <span className="text-emerald-400">"Authorization: Bearer YOUR_API_KEY"</span>{' '}
+            \{'\n'}
+            {'  '}
+            <span className="text-accent-400">https://api.foiastream.com/v1/requests</span>
           </pre>
         </div>
       </div>
@@ -761,15 +890,16 @@ function DangerZoneTab() {
               <div>
                 <h3 className="font-semibold text-surface-100">Delete All Data</h3>
                 <p className="mt-1 text-sm text-surface-400">
-                  Permanently delete all your FOIA requests, templates, and associated data.
-                  Your account will remain active.
+                  Permanently delete all your FOIA requests, templates, and associated data. Your
+                  account will remain active.
                 </p>
                 <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-300">
-                  <strong>Warning:</strong> This will delete all your requests, documents, and saved templates.
-                  This action cannot be undone.
+                  <strong>Warning:</strong> This will delete all your requests, documents, and saved
+                  templates. This action cannot be undone.
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowDeleteData(true)}
                 className="shrink-0 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium text-amber-400 transition-colors hover:bg-amber-500/20"
               >
@@ -783,8 +913,8 @@ function DangerZoneTab() {
               <div>
                 <h3 className="font-semibold text-surface-100">Delete Account</h3>
                 <p className="mt-1 text-sm text-surface-400">
-                  Permanently delete your account and all associated data.
-                  You will be logged out immediately.
+                  Permanently delete your account and all associated data. You will be logged out
+                  immediately.
                 </p>
                 <div className="mt-3 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs text-red-300">
                   <strong>Warning:</strong> This will permanently delete your account, all requests,
@@ -792,6 +922,7 @@ function DangerZoneTab() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowDeleteAccount(true)}
                 className="shrink-0 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20"
               >
@@ -803,17 +934,11 @@ function DangerZoneTab() {
       </div>
 
       {showDeleteData && (
-        <DeleteConfirmationModal
-          type="data"
-          onClose={() => setShowDeleteData(false)}
-        />
+        <DeleteConfirmationModal type="data" onClose={() => setShowDeleteData(false)} />
       )}
 
       {showDeleteAccount && (
-        <DeleteConfirmationModal
-          type="account"
-          onClose={() => setShowDeleteAccount(false)}
-        />
+        <DeleteConfirmationModal type="account" onClose={() => setShowDeleteAccount(false)} />
       )}
     </div>
   );
@@ -867,7 +992,11 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
       <div className="mx-4 w-full max-w-md rounded-2xl border border-surface-800 bg-surface-900 p-6 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-surface-100">Change Password</h3>
-          <button onClick={onClose} className="text-surface-400 hover:text-surface-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-surface-400 hover:text-surface-200"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -889,14 +1018,20 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
             )}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">Current Password</label>
+              <label
+                htmlFor="current-password"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                Current Password
+              </label>
               <div className="relative">
                 <input
+                  id="current-password"
                   type={showCurrentPassword ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  className={inputClass + ' pr-12'}
+                  className={`${inputClass} pr-12`}
                   placeholder="••••••••"
                 />
                 <button
@@ -904,20 +1039,30 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-200 transition-colors"
                 >
-                  {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">New Password</label>
+              <label
+                htmlFor="new-password"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                New Password
+              </label>
               <div className="relative">
                 <input
+                  id="new-password"
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className={inputClass + ' pr-12'}
+                  className={`${inputClass} pr-12`}
                   placeholder="••••••••"
                 />
                 <button
@@ -932,14 +1077,20 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">Confirm New Password</label>
+              <label
+                htmlFor="confirm-password"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                Confirm New Password
+              </label>
               <div className="relative">
                 <input
+                  id="confirm-password"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className={inputClass + ' pr-12'}
+                  className={`${inputClass} pr-12`}
                   placeholder="••••••••"
                 />
                 <button
@@ -947,7 +1098,11 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-200 transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -977,11 +1132,18 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
 }
 
 function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () => void }) {
-  const [step, setStep] = useState<'confirm' | 'setup' | 'verify' | 'manage' | 'disable' | 'newBackupCodes'>('confirm');
+  const [step, setStep] = useState<
+    'confirm' | 'setup' | 'verify' | 'manage' | 'disable' | 'newBackupCodes'
+  >('confirm');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState('');
-  const [setupData, setSetupData] = useState<{ qrCodeUrl: string; secret: string; backupCodes: string[] } | null>(null);
+  const [setupData, setSetupData] = useState<{
+    qrCode: string;
+    qrCodeUrl?: string;
+    secret: string;
+    backupCodes: readonly string[];
+  } | null>(null);
   const [newBackupCodes, setNewBackupCodes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -1009,7 +1171,7 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
     setIsLoading(true);
     setError('');
 
-    const response = await api.regenerateBackupCodes(password);
+    const response = await api.regenerateBackupCodes(password, code);
     if (response.success && response.data) {
       setNewBackupCodes(response.data.backupCodes);
       setStep('newBackupCodes');
@@ -1055,7 +1217,11 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
           <h3 className="text-xl font-semibold text-surface-100">
             {enabled ? 'Manage Two-Factor Auth' : 'Enable Two-Factor Auth'}
           </h3>
-          <button onClick={onClose} className="text-surface-400 hover:text-surface-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-surface-400 hover:text-surface-200"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -1074,13 +1240,19 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
                 : 'Enter your password to set up two-factor authentication.'}
             </p>
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">Password</label>
+              <label
+                htmlFor="mfa-password"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                Password
+              </label>
               <div className="relative">
                 <input
+                  id="mfa-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={inputClass + ' pr-12'}
+                  className={`${inputClass} pr-12`}
                   placeholder="••••••••"
                 />
                 <button
@@ -1094,12 +1266,14 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </div>
             <div className="flex justify-end gap-3">
               <button
+                type="button"
                 onClick={onClose}
                 className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handlePasswordConfirm}
                 disabled={isLoading || !password}
                 className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1117,21 +1291,32 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
               Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
             </p>
             <div className="flex justify-center rounded-lg bg-white p-4">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(setupData.qrCodeUrl)}`} alt="2FA QR Code" className="h-48 w-48" />
+              <img
+                src={
+                  setupData.qrCode.startsWith('data:')
+                    ? setupData.qrCode
+                    : `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(setupData.qrCode)}`
+                }
+                alt="2FA QR Code"
+                className="h-48 w-48"
+              />
             </div>
             <div className="rounded-lg border border-surface-700 bg-surface-800 p-3">
               <p className="mb-1 text-xs text-surface-500">Or enter this code manually:</p>
-              <code className="font-mono text-sm text-accent-400 break-all">{setupData.secret}</code>
+              <code className="font-mono text-sm text-accent-400 break-all">
+                {setupData.secret}
+              </code>
             </div>
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               <p className="mb-2 text-xs font-medium text-amber-400">Backup Codes (save these!):</p>
               <div className="grid grid-cols-2 gap-1 font-mono text-xs text-surface-300">
-                {setupData.backupCodes.map((code, i) => (
-                  <span key={i}>{code}</span>
+                {setupData.backupCodes.map((code) => (
+                  <span key={code}>{code}</span>
                 ))}
               </div>
             </div>
             <button
+              type="button"
               onClick={() => setStep('verify')}
               className="w-full rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
             >
@@ -1146,8 +1331,14 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
               Enter the 6-digit code from your authenticator app to verify setup.
             </p>
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">Verification Code</label>
+              <label
+                htmlFor="mfa-verification-code"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                Verification Code
+              </label>
               <input
+                id="mfa-verification-code"
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -1158,12 +1349,14 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </div>
             <div className="flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setStep('setup')}
                 className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
               >
                 Back
               </button>
               <button
+                type="button"
                 onClick={handleVerify}
                 disabled={isLoading || code.length !== 6}
                 className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1183,6 +1376,7 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
 
             <div className="space-y-3">
               <button
+                type="button"
                 onClick={handleRegenerateBackupCodes}
                 disabled={isLoading}
                 className="flex w-full items-center gap-3 rounded-lg border border-surface-700 bg-surface-800 p-4 text-left transition-colors hover:border-surface-600 hover:bg-surface-700 disabled:opacity-50"
@@ -1192,12 +1386,15 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-surface-200">Regenerate Backup Codes</p>
-                  <p className="text-xs text-surface-400">Get new backup codes (invalidates old ones)</p>
+                  <p className="text-xs text-surface-400">
+                    Get new backup codes (invalidates old ones)
+                  </p>
                 </div>
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin text-surface-400" />}
               </button>
 
               <button
+                type="button"
                 onClick={() => setStep('disable')}
                 className="flex w-full items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-4 text-left transition-colors hover:bg-red-500/10"
               >
@@ -1212,6 +1409,7 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </div>
 
             <button
+              type="button"
               onClick={onClose}
               className="w-full rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
             >
@@ -1223,14 +1421,18 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
         {step === 'newBackupCodes' && (
           <div className="space-y-4">
             <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
-              <strong>Success!</strong> Your backup codes have been regenerated. Save them somewhere safe.
+              <strong>Success!</strong> Your backup codes have been regenerated. Save them somewhere
+              safe.
             </div>
 
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
               <p className="mb-3 text-xs font-medium text-amber-400">Your new backup codes:</p>
               <div className="grid grid-cols-2 gap-2 font-mono text-sm">
-                {newBackupCodes.map((code, i) => (
-                  <span key={i} className="rounded bg-surface-800 px-2 py-1 text-center text-surface-200">
+                {newBackupCodes.map((code) => (
+                  <span
+                    key={code}
+                    className="rounded bg-surface-800 px-2 py-1 text-center text-surface-200"
+                  >
                     {code}
                   </span>
                 ))}
@@ -1241,6 +1443,7 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </div>
 
             <button
+              type="button"
               onClick={() => {
                 navigator.clipboard.writeText(newBackupCodes.join('\n'));
               }}
@@ -1250,6 +1453,7 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </button>
 
             <button
+              type="button"
               onClick={onClose}
               className="w-full rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
             >
@@ -1264,10 +1468,14 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
               <strong>Warning:</strong> Disabling 2FA will make your account less secure.
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">
+              <label
+                htmlFor="mfa-disable-code"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
                 Enter 2FA Code to Disable
               </label>
               <input
+                id="mfa-disable-code"
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -1278,12 +1486,14 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
             </div>
             <div className="flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setStep('manage')}
                 className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
               >
                 Back
               </button>
               <button
+                type="button"
                 onClick={handleDisable}
                 disabled={isLoading || code.length !== 6}
                 className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1300,35 +1510,37 @@ function TwoFactorModal({ enabled, onClose }: { enabled: boolean; onClose: () =>
 }
 
 function SessionsModal({ onClose }: { onClose: () => void }) {
-  const [sessions, setSessions] = useState<Array<{
-    id: string;
-    deviceName: string | null;
-    ipAddress: string | null;
-    lastActiveAt: string | null;
-    createdAt: string;
-    isCurrent: boolean;
-  }>>([]);
+  const [sessions, setSessions] = useState<
+    Array<{
+      id: string;
+      deviceName: string | null;
+      ipAddress: string | null;
+      lastActiveAt: string | null;
+      createdAt: string;
+      isCurrent: boolean;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     setLoading(true);
     const response = await api.getSessions();
     if (response.success && response.data) {
       setSessions(response.data);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
 
   const handleRevoke = async (sessionId: string) => {
     setRevoking(sessionId);
     const response = await api.revokeSession(sessionId);
     if (response.success) {
-      setSessions(sessions.filter(s => s.id !== sessionId));
+      setSessions(sessions.filter((s) => s.id !== sessionId));
     }
     setRevoking(null);
   };
@@ -1338,7 +1550,11 @@ function SessionsModal({ onClose }: { onClose: () => void }) {
       <div className="mx-4 w-full max-w-lg rounded-2xl border border-surface-800 bg-surface-900 p-6 shadow-xl max-h-[80vh] overflow-y-auto">
         <div className="mb-6 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-surface-100">Active Sessions</h3>
-          <button onClick={onClose} className="text-surface-400 hover:text-surface-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-surface-400 hover:text-surface-200"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -1378,16 +1594,22 @@ function SessionsModal({ onClose }: { onClose: () => void }) {
                     </p>
                     <p className="text-xs text-surface-500">
                       Created {new Date(session.createdAt).toLocaleDateString()}
-                      {session.lastActiveAt && ` • Active ${new Date(session.lastActiveAt).toLocaleDateString()}`}
+                      {session.lastActiveAt &&
+                        ` • Active ${new Date(session.lastActiveAt).toLocaleDateString()}`}
                     </p>
                   </div>
                   {!session.isCurrent && (
                     <button
+                      type="button"
                       onClick={() => handleRevoke(session.id)}
                       disabled={revoking === session.id}
                       className="rounded-lg border border-red-500/30 px-3 py-1 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
                     >
-                      {revoking === session.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Revoke'}
+                      {revoking === session.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        'Revoke'
+                      )}
                     </button>
                   )}
                 </div>
@@ -1398,6 +1620,7 @@ function SessionsModal({ onClose }: { onClose: () => void }) {
 
         <div className="mt-6 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
           >
@@ -1461,7 +1684,11 @@ function ConfirmPasswordModal({
       <div className="mx-4 w-full max-w-md rounded-2xl border border-surface-800 bg-surface-900 p-6 shadow-xl">
         <div className="mb-6 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-surface-100">{title}</h3>
-          <button onClick={onClose} className="text-surface-400 hover:text-surface-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-surface-400 hover:text-surface-200"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -1481,13 +1708,19 @@ function ConfirmPasswordModal({
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-surface-300">Password</label>
+              <label
+                htmlFor="api-key-password"
+                className="mb-2 block text-sm font-medium text-surface-300"
+              >
+                Password
+              </label>
               <div className="relative">
                 <input
+                  id="api-key-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={inputClass + ' pr-12'}
+                  className={`${inputClass} pr-12`}
                   placeholder="••••••••"
                 />
                 <button
@@ -1502,10 +1735,14 @@ function ConfirmPasswordModal({
 
             {mfaEnabled && (
               <div>
-                <label className="mb-2 block text-sm font-medium text-surface-300">
+                <label
+                  htmlFor="api-key-2fa-code"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
                   2FA Code
                 </label>
                 <input
+                  id="api-key-2fa-code"
                   type="text"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -1520,14 +1757,18 @@ function ConfirmPasswordModal({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
-            disabled={loading || checkingMfa || !password || (mfaEnabled && twoFactorCode.length !== 6)}
+            disabled={
+              loading || checkingMfa || !password || (mfaEnabled && twoFactorCode.length !== 6)
+            }
             className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -1616,11 +1857,13 @@ function DeleteConfirmationModal({
               </h3>
             </div>
 
-            <div className={`mb-6 rounded-lg border p-4 ${
-              isAccount
-                ? 'border-red-500/30 bg-red-500/10 text-red-300'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-            }`}>
+            <div
+              className={`mb-6 rounded-lg border p-4 ${
+                isAccount
+                  ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+              }`}
+            >
               <p className="font-medium mb-2">This action is permanent!</p>
               <ul className="space-y-1 text-sm">
                 {isAccount ? (
@@ -1644,12 +1887,14 @@ function DeleteConfirmationModal({
 
             <div className="flex justify-end gap-3">
               <button
+                type="button"
                 onClick={onClose}
                 className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => setStep('confirm')}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   isAccount
@@ -1667,7 +1912,11 @@ function DeleteConfirmationModal({
           <>
             <div className="mb-6 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-surface-100">Confirm Deletion</h3>
-              <button onClick={onClose} className="text-surface-400 hover:text-surface-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-surface-400 hover:text-surface-200"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1680,13 +1929,19 @@ function DeleteConfirmationModal({
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-surface-300">Password</label>
+                <label
+                  htmlFor="delete-password"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
+                  Password
+                </label>
                 <div className="relative">
                   <input
+                    id="delete-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={inputClass + ' pr-12'}
+                    className={`${inputClass} pr-12`}
                     placeholder="••••••••"
                   />
                   <button
@@ -1701,13 +1956,19 @@ function DeleteConfirmationModal({
 
               {mfaEnabled && (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-surface-300">
+                  <label
+                    htmlFor="delete-2fa-code"
+                    className="mb-2 block text-sm font-medium text-surface-300"
+                  >
                     2FA Code
                   </label>
                   <input
+                    id="delete-2fa-code"
                     type="text"
                     value={twoFactorCode}
-                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onChange={(e) =>
+                      setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                    }
                     className={`${inputClass} font-mono text-center text-xl tracking-widest`}
                     placeholder="000000"
                     maxLength={6}
@@ -1716,10 +1977,18 @@ function DeleteConfirmationModal({
               )}
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-surface-300">
-                  Type <span className={isAccount ? 'text-red-400' : 'text-amber-400'}>"{confirmPhrase}"</span> to confirm
+                <label
+                  htmlFor="delete-confirm-text"
+                  className="mb-2 block text-sm font-medium text-surface-300"
+                >
+                  Type{' '}
+                  <span className={isAccount ? 'text-red-400' : 'text-amber-400'}>
+                    "{confirmPhrase}"
+                  </span>{' '}
+                  to confirm
                 </label>
                 <input
+                  id="delete-confirm-text"
                   type="text"
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
@@ -1730,14 +1999,21 @@ function DeleteConfirmationModal({
 
               <div className="flex justify-end gap-3 pt-2">
                 <button
+                  type="button"
                   onClick={() => setStep('warning')}
                   className="rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-600 hover:bg-surface-800"
                 >
                   Back
                 </button>
                 <button
+                  type="button"
                   onClick={handleDelete}
-                  disabled={isLoading || !password || confirmText !== confirmPhrase || (mfaEnabled && twoFactorCode.length !== 6)}
+                  disabled={
+                    isLoading ||
+                    !password ||
+                    confirmText !== confirmPhrase ||
+                    (mfaEnabled && twoFactorCode.length !== 6)
+                  }
                   className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     isAccount
                       ? 'bg-red-600 text-white hover:bg-red-500'

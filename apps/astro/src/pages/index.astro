@@ -1,6 +1,6 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
 import Logo from '@/components/Logo.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
 
 // Static landing page - pre-render at build time
 export const prerender = true;
@@ -22,7 +22,7 @@ export const prerender = true;
 
     <!-- Background effects with parallax -->
     <div class="pointer-events-none absolute inset-0 bg-grid opacity-30" data-parallax="slow"></div>
-    <div class="pointer-events-none absolute inset-x-0 -top-1/4 h-[100vh] w-full" data-parallax="medium">
+    <div class="pointer-events-none absolute inset-x-0 -top-1/4 h-screen w-full" data-parallax="medium">
       <div class="gradient-hero gradient-animate h-full w-full pointer-events-none"></div>
     </div>
 
@@ -59,7 +59,7 @@ export const prerender = true;
               <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span id="home-dropdown-name" class="max-w-[100px] truncate">Account</span>
+            <span id="home-dropdown-name" class="max-w-25 truncate">Account</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-surface-500 transition-transform" id="home-dropdown-chevron">
               <path d="m6 9 6 6 6-6"/>
             </svg>
@@ -67,7 +67,7 @@ export const prerender = true;
 
           <div
             id="home-dropdown-menu"
-            class="absolute right-0 top-full z-[100] mt-2 hidden w-56 origin-top-right rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-xl shadow-black/20 backdrop-blur-xl"
+            class="absolute right-0 top-full z-100 mt-2 hidden w-56 origin-top-right rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-xl shadow-black/20 backdrop-blur-xl"
           >
             <div class="px-3 py-2 border-b border-surface-800 mb-1.5">
               <p id="home-dropdown-email" class="text-sm font-medium text-surface-200 truncate">user@example.com</p>
@@ -148,7 +148,7 @@ export const prerender = true;
             <span class="hero-word inline-block">Public Records</span>
           </span>
           <span class="mt-2 block overflow-hidden" data-reveal="up" data-delay="3">
-            <span class="hero-word inline-block bg-gradient-to-r from-accent-400 via-accent-300 to-teal-300 bg-clip-text text-transparent gradient-animate">
+            <span class="hero-word inline-block bg-linear-to-r from-accent-400 via-accent-300 to-teal-300 bg-clip-text text-transparent gradient-animate">
               Made Accessible
             </span>
           </span>
@@ -170,7 +170,7 @@ export const prerender = true;
             <svg class="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
             </svg>
-            <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full"></div>
+            <div class="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full"></div>
           </a>
           <a
             href="#features"
@@ -217,7 +217,7 @@ export const prerender = true;
     <!-- Features Section -->
     <section id="features" class="relative z-10 mx-auto max-w-7xl px-6 py-32 lg:px-8">
       <!-- Decorative line -->
-      <div class="absolute left-1/2 top-0 h-24 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-accent-500/50 to-transparent" data-reveal="scale"></div>
+      <div class="absolute left-1/2 top-0 h-24 w-px -translate-x-1/2 bg-linear-to-b from-transparent via-accent-500/50 to-transparent" data-reveal="scale"></div>
 
       <div class="text-center">
         <h2 class="font-display text-sm uppercase tracking-widest text-accent-400" data-reveal="up">Features</h2>
@@ -324,7 +324,7 @@ export const prerender = true;
 
       <div class="relative mt-16">
         <!-- Connecting line -->
-        <div class="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-gradient-to-b from-accent-500/50 via-accent-500/20 to-transparent lg:block" data-reveal="scale"></div>
+        <div class="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-linear-to-b from-accent-500/50 via-accent-500/20 to-transparent lg:block" data-reveal="scale"></div>
 
         <div class="grid gap-12 lg:grid-cols-3">
           <!-- Step 1 -->
@@ -365,7 +365,7 @@ export const prerender = true;
 
     <!-- CTA Section -->
     <section class="relative z-10 mx-auto max-w-7xl px-6 pb-32 lg:px-8">
-      <div class="relative overflow-hidden rounded-3xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-950 px-8 py-16 text-center sm:px-16 sm:py-24" data-reveal="scale">
+      <div class="relative overflow-hidden rounded-3xl border border-surface-800 bg-linear-to-br from-surface-900 to-surface-950 px-8 py-16 text-center sm:px-16 sm:py-24" data-reveal="scale">
         <div class="pointer-events-none absolute inset-0 bg-grid opacity-20"></div>
 
         <!-- Subtle aurora blobs -->

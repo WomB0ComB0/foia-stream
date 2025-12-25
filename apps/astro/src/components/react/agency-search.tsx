@@ -25,9 +25,19 @@
  * @module components/react/AgencySearch
  */
 
-import type { Agency } from '@/lib/api';
-import { Building2, ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Loader2, MapPin, Search, X } from 'lucide-react';
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Loader2,
+  MapPin,
+  Search,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Agency } from '@/lib/api';
 
 /**
  * Props for the AgencySearch component
@@ -70,13 +80,16 @@ function highlightMatch(text: string, pattern: string): React.ReactNode {
   const searchTerms = pattern.replace(/[*?]/g, ' ').trim().split(/\s+/).filter(Boolean);
   if (searchTerms.length === 0) return text;
 
-  const regex = new RegExp(`(${searchTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  const regex = new RegExp(
+    `(${searchTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+    'gi',
+  );
   const parts = text.split(regex);
 
   return (
     <>
       {parts.map((part, i) => {
-        const isMatch = searchTerms.some(term => part.toLowerCase() === term.toLowerCase());
+        const isMatch = searchTerms.some((term) => part.toLowerCase() === term.toLowerCase());
         const key = `${part}-${i}`;
         return isMatch ? (
           <mark key={key} className="bg-accent-500/30 text-accent-300 rounded px-0.5">
@@ -144,7 +157,7 @@ export default function AgencySearch({
   const listRef = useRef<HTMLDivElement>(null);
 
   const toggleSection = (jurisdiction: string) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
       [jurisdiction]: !prev[jurisdiction],
     }));
@@ -159,12 +172,15 @@ export default function AgencySearch({
   };
 
   const allExpanded = Object.values(expandedSections).every(Boolean);
-  const allCollapsed = Object.values(expandedSections).every(v => !v);
+  const allCollapsed = Object.values(expandedSections).every((v) => !v);
 
   const filteredAgencies = useMemo(() => {
     if (!searchQuery.trim()) return agencies;
 
-    const terms = searchQuery.trim().split(/\s+/).filter(t => !['', '*'].includes(t));
+    const terms = searchQuery
+      .trim()
+      .split(/\s+/)
+      .filter((t) => !['', '*'].includes(t));
     if (terms.length === 0) return agencies;
 
     return agencies.filter((agency) => {
@@ -179,7 +195,7 @@ export default function AgencySearch({
         .filter(Boolean)
         .join(' ');
 
-      return terms.every(term => {
+      return terms.every((term) => {
         const regex = patternToRegex(term);
         return regex.test(searchableText);
       });
@@ -411,7 +427,9 @@ export default function AgencySearch({
                           <span className="text-xs font-semibold uppercase tracking-wider text-surface-300">
                             {JURISDICTION_LABELS[jurisdiction]}
                           </span>
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${JURISDICTION_COLORS[jurisdiction]}`}>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${JURISDICTION_COLORS[jurisdiction]}`}
+                          >
                             {list.length}
                           </span>
                         </div>
@@ -452,7 +470,7 @@ export default function AgencySearch({
                                       <MapPin className="h-3 w-3" />
                                       {highlightMatch(
                                         [agency.city, agency.state].filter(Boolean).join(', '),
-                                        searchQuery
+                                        searchQuery,
                                       )}
                                     </div>
                                   )}

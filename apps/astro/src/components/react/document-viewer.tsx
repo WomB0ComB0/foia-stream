@@ -1,10 +1,31 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Lightweight document viewer component
  * @module components/react/DocumentViewer
  * @description Client-side document preview that doesn't require server resources
  */
 
-import { useState } from 'react';
 import {
   Download,
   ExternalLink,
@@ -19,6 +40,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import { useState } from 'react';
 
 interface Document {
   id: string;
@@ -54,7 +76,7 @@ function formatFileSize(bytes: number): string {
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 /**
@@ -94,6 +116,7 @@ export default function DocumentViewer({ document, onClose }: Props) {
           {canPreview && (
             <>
               <button
+                type="button"
                 onClick={handleZoomOut}
                 disabled={zoom <= 25}
                 className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200 disabled:opacity-50"
@@ -101,10 +124,9 @@ export default function DocumentViewer({ document, onClose }: Props) {
               >
                 <ZoomOut className="h-5 w-5" />
               </button>
-              <span className="min-w-[4rem] text-center text-sm text-surface-400">
-                {zoom}%
-              </span>
+              <span className="min-w-16 text-center text-sm text-surface-400">{zoom}%</span>
               <button
+                type="button"
                 onClick={handleZoomIn}
                 disabled={zoom >= 200}
                 className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200 disabled:opacity-50"
@@ -117,15 +139,12 @@ export default function DocumentViewer({ document, onClose }: Props) {
           )}
 
           <button
+            type="button"
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? (
-              <Minimize2 className="h-5 w-5" />
-            ) : (
-              <Maximize2 className="h-5 w-5" />
-            )}
+            {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
           </button>
 
           <a
@@ -149,6 +168,7 @@ export default function DocumentViewer({ document, onClose }: Props) {
 
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
               className="ml-2 rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
             >
@@ -221,9 +241,7 @@ export default function DocumentViewer({ document, onClose }: Props) {
               <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-2xl bg-surface-800 text-surface-400">
                 {getFileIcon(document.type)}
               </div>
-              <h3 className="mb-2 text-lg font-medium text-surface-100">
-                Preview not available
-              </h3>
+              <h3 className="mb-2 text-lg font-medium text-surface-100">Preview not available</h3>
               <p className="mb-6 text-surface-400">
                 This file type cannot be previewed in the browser.
               </p>
@@ -253,8 +271,7 @@ export function DocumentListItem({
   document: Document;
   onPreview: (doc: Document) => void;
 }) {
-  const isPreviewable =
-    document.type.startsWith('image/') || document.type.includes('pdf');
+  const isPreviewable = document.type.startsWith('image/') || document.type.includes('pdf');
 
   return (
     <div className="flex items-center gap-3 rounded-lg border border-surface-700 bg-surface-800/50 p-3 transition-colors hover:bg-surface-800">
@@ -262,14 +279,13 @@ export function DocumentListItem({
         {getFileIcon(document.type)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-medium text-surface-100">
-          {document.name}
-        </p>
+        <p className="truncate text-sm font-medium text-surface-100">{document.name}</p>
         <p className="text-xs text-surface-500">{formatFileSize(document.size)}</p>
       </div>
       <div className="flex items-center gap-1">
         {isPreviewable && (
           <button
+            type="button"
             onClick={() => onPreview(document)}
             className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-700 hover:text-surface-200"
             title="Preview"

@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file Registration form component for new user accounts
  * @module components/react/RegisterForm
  */
@@ -6,7 +28,7 @@
 import { useStore } from '@nanostores/react';
 import { Check, ChevronDown, FileText, Loader2, Shield, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { register, $isAuthenticated, $isLoading } from '@/stores/auth';
+import { $isAuthenticated, $isLoading, register } from '@/stores/auth';
 
 /**
  * Document type for the viewer modal
@@ -74,7 +96,7 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
               <p className="text-xs text-surface-500">Please read carefully before accepting</p>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
             className="rounded-lg p-2 text-surface-400 hover:bg-surface-800 hover:text-surface-200 transition-colors"
           >
@@ -100,7 +122,7 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
 
           {/* Scroll indicator at bottom */}
           {!hasScrolledToBottom && (
-            <div className="sticky bottom-0 left-0 right-0 flex justify-center pb-4 pt-8 bg-gradient-to-t from-surface-900 via-surface-900/90 to-transparent">
+            <div className="sticky bottom-0 left-0 right-0 flex justify-center pb-4 pt-8 bg-linear-to-t from-surface-900 via-surface-900/90 to-transparent">
               <div className="flex items-center gap-2 text-accent-400 animate-bounce">
                 <ChevronDown className="h-4 w-4" />
                 <span className="text-xs">Scroll to continue reading</span>
@@ -124,19 +146,18 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
               )}
             </p>
             <div className="flex gap-3">
-              <button
+              <button type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-sm text-surface-400 hover:text-surface-200 transition-colors"
               >
                 Cancel
               </button>
-              <button
+              <button type="button"
                 onClick={() => onAccept(type)}
                 disabled={!hasScrolledToBottom}
                 className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Check className="h-4 w-4" />
-                I Accept
+                <Check className="h-4 w-4" />I Accept
               </button>
             </div>
           </div>
@@ -155,9 +176,9 @@ function TermsContent() {
       <section>
         <h3 className="text-base font-semibold text-surface-200 mb-2">1. Agreement to Terms</h3>
         <p>
-          Welcome to FOIA Stream. These Terms of Service ("Terms") govern your access to and use of our
-          Freedom of Information Act request management platform, including our website, applications,
-          and services (collectively, the "Service").
+          Welcome to FOIA Stream. These Terms of Service ("Terms") govern your access to and use of
+          our Freedom of Information Act request management platform, including our website,
+          applications, and services (collectively, the "Service").
         </p>
         <p className="mt-2">
           By creating an account or using our Service, you agree to be bound by these Terms and our
@@ -179,9 +200,9 @@ function TermsContent() {
       <section>
         <h3 className="text-base font-semibold text-surface-200 mb-2">3. Account Security</h3>
         <p>
-          You are responsible for maintaining the confidentiality of your account credentials and for
-          all activities under your account. You agree to notify us immediately of any unauthorized
-          use of your account.
+          You are responsible for maintaining the confidentiality of your account credentials and
+          for all activities under your account. You agree to notify us immediately of any
+          unauthorized use of your account.
         </p>
       </section>
 
@@ -211,26 +232,28 @@ function TermsContent() {
       <section>
         <h3 className="text-base font-semibold text-surface-200 mb-2">6. Data Retention</h3>
         <p>
-          In accordance with our data minimization practices, FOIA request content (titles and descriptions)
-          are automatically purged 90 days after request completion. Metadata may be retained longer for
-          your reference.
+          In accordance with our data minimization practices, FOIA request content (titles and
+          descriptions) are automatically purged 90 days after request completion. Metadata may be
+          retained longer for your reference.
         </p>
       </section>
 
       <section>
-        <h3 className="text-base font-semibold text-surface-200 mb-2">7. Limitation of Liability</h3>
+        <h3 className="text-base font-semibold text-surface-200 mb-2">
+          7. Limitation of Liability
+        </h3>
         <p>
-          The Service is provided "as is" without warranties of any kind. We disclaim all warranties,
-          including merchantability and fitness for a particular purpose. We shall not be liable for
-          any indirect, incidental, special, or consequential damages.
+          The Service is provided "as is" without warranties of any kind. We disclaim all
+          warranties, including merchantability and fitness for a particular purpose. We shall not
+          be liable for any indirect, incidental, special, or consequential damages.
         </p>
       </section>
 
       <section>
         <h3 className="text-base font-semibold text-surface-200 mb-2">8. Termination</h3>
         <p>
-          You may terminate your account at any time through your account settings. We may suspend or
-          terminate your access for violation of these Terms or extended inactivity.
+          You may terminate your account at any time through your account settings. We may suspend
+          or terminate your access for violation of these Terms or extended inactivity.
         </p>
       </section>
 
@@ -244,15 +267,20 @@ function TermsContent() {
 
       <section>
         <h3 className="text-base font-semibold text-surface-200 mb-2">10. Contact</h3>
-        <p>
-          For questions about these Terms, contact us at legal@foiastream.com.
-        </p>
+        <p>For questions about these Terms, contact us at legal@foiastream.com.</p>
       </section>
 
       <div className="mt-8 p-4 rounded-lg bg-surface-800/50 border border-surface-700">
         <p className="text-xs text-surface-500 text-center">
           Last Updated: December 25, 2024 • Full terms available at{' '}
-          <a href="/terms" target="_blank" className="text-accent-400 hover:text-accent-300">/terms</a>
+          <a
+            href="/terms"
+            target="_blank"
+            className="text-accent-400 hover:text-accent-300"
+            rel="noopener"
+          >
+            /terms
+          </a>
         </p>
       </div>
     </div>
@@ -276,13 +304,17 @@ function PrivacyContent() {
 
       <section>
         <h3 className="text-base font-semibold text-surface-200 mb-2">2. Information We Collect</h3>
-        <p><strong className="text-surface-300">Information You Provide:</strong></p>
+        <p>
+          <strong className="text-surface-300">Information You Provide:</strong>
+        </p>
         <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
           <li>Account information (email, name, organization)</li>
           <li>FOIA request content and metadata</li>
           <li>Communications with us</li>
         </ul>
-        <p className="mt-3"><strong className="text-surface-300">Automatically Collected:</strong></p>
+        <p className="mt-3">
+          <strong className="text-surface-300">Automatically Collected:</strong>
+        </p>
         <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
           <li>Device information and browser type</li>
           <li>Usage data and analytics</li>
@@ -291,7 +323,9 @@ function PrivacyContent() {
       </section>
 
       <section>
-        <h3 className="text-base font-semibold text-surface-200 mb-2">3. How We Use Your Information</h3>
+        <h3 className="text-base font-semibold text-surface-200 mb-2">
+          3. How We Use Your Information
+        </h3>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>Provide and improve our services</li>
           <li>Process and submit your FOIA requests</li>
@@ -308,9 +342,7 @@ function PrivacyContent() {
           the core function of our service). We may also share with service providers who help us
           operate the platform.
         </p>
-        <p className="mt-2 text-red-400 font-medium">
-          We never sell your personal data.
-        </p>
+        <p className="mt-2 text-red-400 font-medium">We never sell your personal data.</p>
       </section>
 
       <section>
@@ -362,7 +394,8 @@ function PrivacyContent() {
           <li>Withdraw consent at any time</li>
         </ul>
         <p className="mt-2">
-          California residents have additional rights under CCPA. EU residents have rights under GDPR.
+          California residents have additional rights under CCPA. EU residents have rights under
+          GDPR.
         </p>
       </section>
 
@@ -385,7 +418,14 @@ function PrivacyContent() {
       <div className="mt-8 p-4 rounded-lg bg-surface-800/50 border border-surface-700">
         <p className="text-xs text-surface-500 text-center">
           Last Updated: December 25, 2024 • Full policy available at{' '}
-          <a href="/privacy" target="_blank" className="text-accent-400 hover:text-accent-300">/privacy</a>
+          <a
+            href="/privacy"
+            target="_blank"
+            className="text-accent-400 hover:text-accent-300"
+            rel="noopener"
+          >
+            /privacy
+          </a>
         </p>
       </div>
     </div>
@@ -667,8 +707,7 @@ export default function RegisterForm() {
             </div>
           </div>
           {consents.termsAccepted ? (
-            <button
-              type="button"
+            <button type="button"
               onClick={() => {
                 setConsents((prev) => ({ ...prev, termsAccepted: false }));
               }}
@@ -677,8 +716,7 @@ export default function RegisterForm() {
               Reset
             </button>
           ) : (
-            <button
-              type="button"
+            <button type="button"
               onClick={() => setViewingDocument('terms')}
               className="flex items-center gap-1.5 rounded-lg bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 hover:bg-accent-500/20 transition-colors"
             >
@@ -708,8 +746,7 @@ export default function RegisterForm() {
             </div>
           </div>
           {consents.privacyAccepted ? (
-            <button
-              type="button"
+            <button type="button"
               onClick={() => {
                 setConsents((prev) => ({ ...prev, privacyAccepted: false }));
               }}
@@ -718,8 +755,7 @@ export default function RegisterForm() {
               Reset
             </button>
           ) : (
-            <button
-              type="button"
+            <button type="button"
               onClick={() => setViewingDocument('privacy')}
               className="flex items-center gap-1.5 rounded-lg bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 hover:bg-accent-500/20 transition-colors"
             >
@@ -743,21 +779,28 @@ export default function RegisterForm() {
               Data Processing Consent
             </p>
             <p className="text-xs text-surface-500 mt-0.5">
-              I consent to the processing of my FOIA requests and understand that request content
-              is retained for up to 90 days after completion.
+              I consent to the processing of my FOIA requests and understand that request content is
+              retained for up to 90 days after completion.
             </p>
           </div>
         </label>
 
         <p className="text-xs text-surface-500 pt-2 border-t border-surface-800">
           You can withdraw consent at any time in your{' '}
-          <a href="/settings" className="text-accent-400 hover:text-accent-300">account settings</a>.
+          <a href="/settings" className="text-accent-400 hover:text-accent-300">
+            account settings
+          </a>
+          .
         </p>
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting || !consents.termsAccepted || !consents.privacyAccepted || !consents.dataProcessingAccepted}
+      <button type="submit"
+        disabled={
+          isSubmitting ||
+          !consents.termsAccepted ||
+          !consents.privacyAccepted ||
+          !consents.dataProcessingAccepted
+        }
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting ? (

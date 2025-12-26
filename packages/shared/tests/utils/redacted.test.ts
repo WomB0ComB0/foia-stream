@@ -27,7 +27,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { COMMON_SENSITIVE_FIELDS, Redacted, REDACTED_MARKER } from '../../src/utils/redacted';
+import { COMMON_SENSITIVE_FIELDS, REDACTED_MARKER, Redacted } from '../../src/utils/redacted';
 
 describe('Redacted', () => {
   describe('make', () => {

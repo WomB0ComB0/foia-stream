@@ -26,8 +26,7 @@
  */
 
 import { api, type User as UserType } from '@/lib/api';
-import { $isAuthenticated, $isLoading, $user, initAuth, refreshUser } from '@/stores/auth';
-import { useStore } from '@nanostores/react';
+import { initAuth, refreshUser, useAuthStore } from '@/stores/auth';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -51,6 +50,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { PrivacyToggleCompact } from './privacy-toggle';
 
 type TabId = 'profile' | 'security' | 'preferences' | 'api' | 'danger';
 
@@ -99,9 +99,9 @@ const TABS: Tab[] = [
  * @component
  */
 export default function Settings() {
-  const user = useStore($user);
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [activeTab, setActiveTab] = useState<TabId>('profile');
 
   useEffect(() => {
@@ -137,10 +137,11 @@ export default function Settings() {
             >
               <ArrowLeft className="h-5 w-5" />
             </a>
-            <div>
+            <div className="flex-1">
               <h1 className="text-lg font-semibold text-surface-100">Settings</h1>
               <p className="text-sm text-surface-400">Manage your account preferences</p>
             </div>
+            <PrivacyToggleCompact />
           </div>
         </div>
       </header>

@@ -89,7 +89,8 @@ export class ErrorBoundary extends Component<Props, State> {
               </details>
             )}
             <div className="flex gap-3 justify-center">
-              <button type="button"
+              <button
+                type="button"
                 onClick={this.handleReset}
                 className="flex items-center gap-2 rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800"
               >
@@ -128,7 +129,8 @@ export function ErrorDisplay({
       <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-red-400" />
       <p className="text-surface-200 mb-4">{message}</p>
       {onRetry && (
-        <button type="button"
+        <button
+          type="button"
           onClick={onRetry}
           className="inline-flex items-center gap-2 rounded-lg border border-surface-700 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-800"
         >
@@ -174,7 +176,8 @@ export function EmptyState({
             {action.label}
           </a>
         ) : (
-          <button type="button"
+          <button
+            type="button"
             onClick={action.onClick}
             className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-all hover:bg-accent-400"
           >

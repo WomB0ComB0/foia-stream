@@ -2,6 +2,7 @@
  * Copyright (c) 2025 Foia Stream
  * Homepage E2E Tests
  */
+import { describe, beforeEach, it } from 'vitest';
 
 describe('Homepage', () => {
   beforeEach(() => {

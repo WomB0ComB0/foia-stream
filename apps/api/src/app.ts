@@ -43,7 +43,18 @@ import { env } from './config/env';
 import configureOpenAPI from './lib/configure-open-api';
 import createApp from './lib/create-app';
 import { httpsEnforcement, requestId } from './middleware/security.middleware';
+<<<<<<< HEAD
 import { agencyRoutes, authRoutes, documentRoutes, redactionRoutes, requestRoutes, templateRoutes } from './routes';
+=======
+import {
+  agencyRoutes,
+  authRoutes,
+  redactionRoutes,
+  requestRoutes,
+  templateRoutes,
+  uploadRoutes,
+} from './routes';
+>>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
 import agenciesOpenAPIRoute from './routes/agencies';
 import authOpenAPIRoute from './routes/auth';
 import indexRoute from './routes/index.route';
@@ -149,7 +160,11 @@ api.route('/requests', requestRoutes);
 api.route('/agencies', agencyRoutes);
 api.route('/templates', templateRoutes);
 api.route('/redaction', redactionRoutes);
+<<<<<<< HEAD
 api.route('/documents', documentRoutes);
+=======
+api.route('/upload', uploadRoutes);
+>>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
 
 app.route('/api/v1', api);
 

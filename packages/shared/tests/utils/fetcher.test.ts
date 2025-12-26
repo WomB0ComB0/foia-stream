@@ -29,10 +29,10 @@
 import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 import {
-  FetcherError,
-  ValidationError,
   createApiResponseSchema,
   createPaginatedSchema,
+  FetcherError,
+  ValidationError,
 } from '../../src/utils/fetcher';
 
 describe('FetcherError', () => {

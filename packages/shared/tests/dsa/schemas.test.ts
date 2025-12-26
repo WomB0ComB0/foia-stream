@@ -28,19 +28,19 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    FOIARequestPrioritySchema,
-    GraphEdgeSchema,
-    GraphOptionsSchema,
-    PriorityQueueOptionsSchema,
-    RabinKarpMultiSearchSchema,
-    RabinKarpOptionsSchema,
-    RabinKarpSearchSchema,
-    TrieInsertSchema,
-    TrieOptionsSchema,
-    TrieSearchSchema,
-    validate,
-    validateSafe,
-    VertexIdSchema,
+  FOIARequestPrioritySchema,
+  GraphEdgeSchema,
+  GraphOptionsSchema,
+  PriorityQueueOptionsSchema,
+  RabinKarpMultiSearchSchema,
+  RabinKarpOptionsSchema,
+  RabinKarpSearchSchema,
+  TrieInsertSchema,
+  TrieOptionsSchema,
+  TrieSearchSchema,
+  VertexIdSchema,
+  validate,
+  validateSafe,
 } from '../../src/dsa/schemas';
 
 describe('Schema Validation Helpers', () => {

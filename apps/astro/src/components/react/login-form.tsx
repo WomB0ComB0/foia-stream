@@ -25,17 +25,9 @@
  * @module components/react/LoginForm
  */
 
-import { useStore } from '@nanostores/react';
 import { ArrowLeft, Eye, EyeOff, Key, Loader2, Shield } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import {
-  $isAuthenticated,
-  $isLoading,
-  $mfaPending,
-  cancelMFALogin,
-  login,
-  verifyMFALogin,
-} from '@/stores/auth';
+import { cancelMFALogin, login, useAuthStore, verifyMFALogin } from '@/stores/auth';
 
 /**
  * Login form component that handles user authentication with 2FA support
@@ -44,9 +36,9 @@ import {
  * @returns {React.JSX.Element | null} Login form or null during redirect
  */
 export default function LoginForm() {
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
-  const mfaPending = useStore($mfaPending);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
+  const mfaPending = useAuthStore((s) => s.mfaPending);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

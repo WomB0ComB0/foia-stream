@@ -71,3 +71,9 @@ drizzle/meta/
 
 ./apps/api/data/*
 ./apps/api/data/test*
+
+# Cypress
+**/cypress/screenshots
+**/cypress/videos
+**/cypress_output.txt
+**/check_output.txt

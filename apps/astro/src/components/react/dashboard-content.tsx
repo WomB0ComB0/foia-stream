@@ -26,7 +26,10 @@
  * @author FOIA Stream Team
  */
 
-import { useStore } from '@nanostores/react';
+import type { FoiaRequest } from '@/lib/api';
+import { API_BASE } from '@/lib/config';
+import { formatDate, getStatusColor } from '@/lib/utils';
+import { initAuth, logout, useAuthStore } from '@/stores/auth';
 import {
   Building2,
   ChevronDown,
@@ -40,10 +43,6 @@ import {
   User,
 } from 'lucide-react';
 import { Suspense, useEffect, useRef, useState } from 'react';
-import type { FoiaRequest } from '@/lib/api';
-import { API_BASE } from '@/lib/config';
-import { formatDate, getStatusColor } from '@/lib/utils';
-import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
 import { useDataLoader } from './effect-data-loader';
 
 interface RequestsResponse {
@@ -100,9 +99,7 @@ function RequestsList({ onRefetch }: { onRefetch?: (refetch: () => Promise<void>
         >
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-medium text-surface-100">
-                {request.title}
-              </h3>
+              <h3 className="truncate text-sm font-medium text-surface-100">{request.title}</h3>
               <p className="mt-1 line-clamp-2 text-sm text-surface-400">{request.description}</p>
               <div className="mt-2 flex items-center gap-4 text-xs text-surface-500">
                 <span>Created {formatDate(request.createdAt)}</span>
@@ -137,8 +134,15 @@ function DashboardStats() {
   const pendingCount = requests.filter(
     (r) => r.status === 'submitted' || r.status === 'processing' || r.status === 'acknowledged',
   ).length;
-  const completedCount = requests.filter(
-    (r) => r.status === 'fulfilled' || r.status === 'partially_fulfilled',
+  const completedCount = requests.filter((r) =>
+    [
+      'fulfilled',
+      'partially_fulfilled',
+      'denied',
+      'appeal_granted',
+      'appeal_denied',
+      'withdrawn',
+    ].includes(r.status),
   ).length;
   const uniqueAgencies = new Set(requests.map((r) => r.agencyId)).size;
 
@@ -203,9 +207,9 @@ function StatCard({
  * Main dashboard content component
  */
 export default function DashboardContent() {
-  const user = useStore($user);
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [refetchFn, setRefetchFn] = useState<(() => Promise<void>) | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);

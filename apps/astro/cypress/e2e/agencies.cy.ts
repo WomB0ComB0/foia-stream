@@ -3,6 +3,8 @@
  * Agencies Page E2E Tests
  */
 
+import { describe, beforeEach, it } from "vitest";
+
 describe('Agencies Page', () => {
   beforeEach(() => {
     // Visit the agencies page

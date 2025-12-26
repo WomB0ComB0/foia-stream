@@ -27,7 +27,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Trie, createAgencyTrie } from '../../src/dsa/trie';
+import { createAgencyTrie, Trie } from '../../src/dsa/trie';
 
 interface TestAgency {
   id: string;

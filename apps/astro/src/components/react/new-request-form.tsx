@@ -25,12 +25,11 @@
  * @module components/react/NewRequestForm
  */
 
-import { useStore } from '@nanostores/react';
 import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { type Agency, api, type Template } from '@/lib/api';
 import { CATEGORIES } from '@/lib/utils';
-import { $isAuthenticated, $isLoading, initAuth } from '@/stores/auth';
+import { initAuth, useAuthStore } from '@/stores/auth';
 import AgencySearch from './agency-search';
 
 /**
@@ -45,8 +44,8 @@ import AgencySearch from './agency-search';
  * ```
  */
 export default function NewRequestForm() {
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
 
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);

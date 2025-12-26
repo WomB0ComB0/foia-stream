@@ -161,10 +161,7 @@ describe('RabinKarp', () => {
   describe('searchWithStats', () => {
     it('should return matches with statistics', () => {
       const matcher = new RabinKarp();
-      const { matches, stats } = matcher.searchWithStats(
-        'The quick brown fox',
-        'quick',
-      );
+      const { matches, stats } = matcher.searchWithStats('The quick brown fox', 'quick');
 
       expect(matches.length).toBe(1);
       expect(stats.matchesFound).toBe(1);
@@ -174,10 +171,7 @@ describe('RabinKarp', () => {
 
     it('should track hash collisions', () => {
       const matcher = new RabinKarp();
-      const { stats } = matcher.searchWithStats(
-        'The quick brown fox jumps',
-        'fox',
-      );
+      const { stats } = matcher.searchWithStats('The quick brown fox jumps', 'fox');
       expect(typeof stats.hashCollisions).toBe('number');
     });
 

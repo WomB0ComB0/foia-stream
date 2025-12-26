@@ -25,8 +25,6 @@
  * @module components/react/TemplatesPage
  */
 
-import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
-import { useStore } from '@nanostores/react';
 import {
   AlertCircle,
   Bookmark,
@@ -52,6 +50,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { initAuth, logout, useAuthStore } from '@/stores/auth';
 
 const SAVED_TEMPLATES_KEY = 'foiastream_saved_templates';
 
@@ -450,9 +449,9 @@ interface SavedTemplate {
  * Templates browsing page component
  */
 export default function TemplatesPage() {
-  const user = useStore($user);
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);

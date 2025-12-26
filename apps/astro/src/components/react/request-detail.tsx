@@ -25,10 +25,6 @@
  * @module components/react/RequestDetail
  */
 
-import { api, type FoiaRequest } from '@/lib/api';
-import { formatDate, formatDateTime, getStatusColor } from '@/lib/utils';
-import { $isAuthenticated, $isLoading, initAuth } from '@/stores/auth';
-import { useStore } from '@nanostores/react';
 import {
   ArrowLeft,
   Building2,
@@ -51,6 +47,9 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { api, type FoiaRequest } from '@/lib/api';
+import { formatDate, formatDateTime, getStatusColor } from '@/lib/utils';
+import { initAuth, useAuthStore } from '@/stores/auth';
 
 /**
  * Props for the RequestDetail component
@@ -74,8 +73,8 @@ interface Props {
  * ```
  */
 export default function RequestDetail({ requestId }: Props) {
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [request, setRequest] = useState<FoiaRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

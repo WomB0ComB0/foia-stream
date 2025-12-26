@@ -49,16 +49,16 @@ export {
 // ============================================
 
 export {
+  type CompareFn,
   createDeadlineQueue,
   createMaxHeap,
   createMinHeap,
   createPriorityLevelQueue,
   PriorityQueue,
-  validatePriorityItem,
-  type CompareFn,
   type PriorityQueueOptions,
   type PriorityQueueStats,
   type PriorityRequestItem,
+  validatePriorityItem,
 } from './priority-queue';
 
 // ============================================
@@ -68,9 +68,9 @@ export {
 export {
   createDocumentMatcher,
   createPIIMatcher,
+  type PatternMatch,
   quickSearch,
   RabinKarp,
-  type PatternMatch,
   type RabinKarpOptions,
   type SearchStats,
 } from './rabin-karp';
@@ -80,15 +80,15 @@ export {
 // ============================================
 
 export {
+  type AgencyNode,
   addValidatedEdge,
   buildAgencyHierarchy,
   createAgencyHierarchy,
   createRequestRoutingGraph,
-  Graph,
-  isValidVertexId,
-  type AgencyNode,
   type Edge,
+  Graph,
   type GraphOptions,
+  isValidVertexId,
   type PathResult,
   type TraversalResult,
   type Vertex,
@@ -99,36 +99,36 @@ export {
 // ============================================
 
 export {
+  // Types
+  type AgencyAutocompleteData,
   // Agency-specific schemas
   AgencyAutocompleteDataSchema,
+  type AgencyHierarchyNode,
   AgencyHierarchyNodeSchema,
   createValidator,
+  type FOIARequestPriority,
   FOIARequestPrioritySchema,
+  type GraphEdge,
   GraphEdgeSchema,
   // Graph schemas
   GraphOptionsSchema,
   // Priority Queue schemas
   PriorityQueueOptionsSchema,
+  type RabinKarpMultiSearch,
   RabinKarpMultiSearchSchema,
   // Rabin-Karp schemas
   RabinKarpOptionsSchema,
+  type RabinKarpSearch,
   RabinKarpSearchSchema,
+  type TrieInsert,
   TrieInsertSchema,
   // Trie schemas
   TrieOptionsSchema,
+  type TrieSearch,
   TrieSearchSchema,
+  type VertexId,
+  VertexIdSchema,
   // Validation helpers
   validate,
   validateSafe,
-  VertexIdSchema,
-  // Types
-  type AgencyAutocompleteData,
-  type AgencyHierarchyNode,
-  type FOIARequestPriority,
-  type GraphEdge,
-  type RabinKarpMultiSearch,
-  type RabinKarpSearch,
-  type TrieInsert,
-  type TrieSearch,
-  type VertexId,
 } from './schemas';

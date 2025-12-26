@@ -84,11 +84,16 @@ export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     draft: 'bg-surface-500 text-surface-100',
     submitted: 'bg-blue-600 text-white',
-    pending: 'bg-amber-500 text-black',
+    acknowledged: 'bg-indigo-600 text-white',
     processing: 'bg-purple-600 text-white',
-    completed: 'bg-emerald-600 text-white',
-    rejected: 'bg-red-600 text-white',
-    appealed: 'bg-orange-500 text-white',
+    fulfilled: 'bg-emerald-600 text-white',
+    partially_fulfilled: 'bg-teal-600 text-white',
+    denied: 'bg-red-600 text-white',
+    appealed: 'bg-orange-600 text-white',
+    appeal_pending: 'bg-amber-600 text-white',
+    appeal_granted: 'bg-emerald-600 text-white',
+    appeal_denied: 'bg-rose-600 text-white',
+    withdrawn: 'bg-surface-600 text-surface-200',
   };
   return colors[status] ?? 'bg-surface-600 text-surface-100';
 }

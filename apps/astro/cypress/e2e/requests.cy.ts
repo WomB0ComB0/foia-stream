@@ -84,7 +84,7 @@ describe('Request Detail Page', () => {
       submittedAt: new Date().toISOString(),
       acknowledgedAt: null,
       dueDate: null,
-      closedAt: null,
+      completedAt: null,
       responseDeadline: null,
       fees: null,
       estimatedFee: null,

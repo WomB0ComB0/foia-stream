@@ -6,14 +6,14 @@
 // Import commands
 import './commands';
 
-// Import mount from cypress/react
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      mount: typeof import('cypress/react18')['mount'];
-    }
-  }
-}
+// Note: This project uses Cypress for E2E testing only.
+// If component testing is needed, install @cypress/react18
+// and uncomment the mount type declaration below.
 
-// Mount command will be added by Cypress automatically
-// when using the React framework
+// declare global {
+//   namespace Cypress {
+//     interface Chainable {
+//       mount: typeof import('@cypress/react18')['mount'];
+//     }
+//   }
+// }

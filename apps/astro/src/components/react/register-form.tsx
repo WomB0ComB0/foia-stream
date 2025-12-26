@@ -25,10 +25,10 @@
  * @module components/react/RegisterForm
  */
 
-import { useStore } from '@nanostores/react';
 import { Check, ChevronDown, FileText, Loader2, Shield, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { $isAuthenticated, $isLoading, register } from '@/stores/auth';
+import { createPortal } from 'react-dom';
+import { register, useAuthStore } from '@/stores/auth';
 
 /**
  * Document type for the viewer modal
@@ -78,12 +78,15 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
 
   if (!type) return null;
 
+  // Check if we're in the browser
+  if (typeof document === 'undefined') return null;
+
   const isTerms = type === 'terms';
   const title = isTerms ? 'Terms of Service' : 'Privacy Policy';
   const Icon = isTerms ? FileText : Shield;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border border-surface-700 bg-surface-900 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-surface-700 px-6 py-4">
@@ -96,7 +99,8 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
               <p className="text-xs text-surface-500">Please read carefully before accepting</p>
             </div>
           </div>
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="rounded-lg p-2 text-surface-400 hover:bg-surface-800 hover:text-surface-200 transition-colors"
           >
@@ -146,13 +150,15 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
               )}
             </p>
             <div className="flex gap-3">
-              <button type="button"
+              <button
+                type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-sm text-surface-400 hover:text-surface-200 transition-colors"
               >
                 Cancel
               </button>
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => onAccept(type)}
                 disabled={!hasScrolledToBottom}
                 className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-semibold text-surface-950 transition-all hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
@@ -163,7 +169,8 @@ function DocumentViewerModal({ type, onClose, onAccept }: DocumentViewerModalPro
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -444,8 +451,8 @@ function PrivacyContent() {
  * ```
  */
 export default function RegisterForm() {
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -707,7 +714,8 @@ export default function RegisterForm() {
             </div>
           </div>
           {consents.termsAccepted ? (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => {
                 setConsents((prev) => ({ ...prev, termsAccepted: false }));
               }}
@@ -716,7 +724,8 @@ export default function RegisterForm() {
               Reset
             </button>
           ) : (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setViewingDocument('terms')}
               className="flex items-center gap-1.5 rounded-lg bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 hover:bg-accent-500/20 transition-colors"
             >
@@ -746,7 +755,8 @@ export default function RegisterForm() {
             </div>
           </div>
           {consents.privacyAccepted ? (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => {
                 setConsents((prev) => ({ ...prev, privacyAccepted: false }));
               }}
@@ -755,7 +765,8 @@ export default function RegisterForm() {
               Reset
             </button>
           ) : (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setViewingDocument('privacy')}
               className="flex items-center gap-1.5 rounded-lg bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 hover:bg-accent-500/20 transition-colors"
             >
@@ -794,7 +805,8 @@ export default function RegisterForm() {
         </p>
       </div>
 
-      <button type="submit"
+      <button
+        type="submit"
         disabled={
           isSubmitting ||
           !consents.termsAccepted ||

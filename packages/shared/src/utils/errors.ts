@@ -218,7 +218,7 @@ Metadata: ${JSON.stringify(this.metadata, null, 2)}`
   /**
    * Checks if this error was caused by a specific error type.
    */
-  public isCausedBy<T extends Error>(errorType: new (...args: unknown[]) => T): boolean {
+  public isCausedBy<T extends Error>(errorType: new (...args: never) => T): boolean {
     return this.cause instanceof errorType;
   }
 

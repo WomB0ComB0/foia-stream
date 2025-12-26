@@ -4,6 +4,7 @@
  */
 
 // Import commands
+import { beforeEach } from "vitest";
 import './commands';
 
 // Global configurations

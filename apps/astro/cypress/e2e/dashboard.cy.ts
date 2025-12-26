@@ -106,7 +106,7 @@ describe('Dashboard with Requests', () => {
       submittedAt: new Date().toISOString(),
       acknowledgedAt: null,
       dueDate: null,
-      closedAt: null,
+      completedAt: null,
       responseDeadline: null,
       fees: null,
       estimatedFee: null,

@@ -25,9 +25,6 @@
  * @module components/react/AgenciesPage
  */
 
-import { type Agency, api } from '@/lib/api';
-import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
-import { useStore } from '@nanostores/react';
 import {
   Building2,
   ChevronDown,
@@ -49,6 +46,8 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { type Agency, api } from '@/lib/api';
+import { initAuth, logout, useAuthStore } from '@/stores/auth';
 
 const FAVORITES_KEY = 'foiastream_favorite_agencies';
 
@@ -113,9 +112,9 @@ const US_STATES = [
  * Agencies browsing page component
  */
 export default function AgenciesPage() {
-  const user = useStore($user);
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

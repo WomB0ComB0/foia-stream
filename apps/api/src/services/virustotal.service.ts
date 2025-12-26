@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2025 Foia Stream
  *
+<<<<<<< HEAD
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -34,11 +35,78 @@
 
 import { createHash } from 'node:crypto';
 import { logger } from '../lib/logger';
+=======
+ * @file VirusTotal Integration Service
+ * @module services/virustotal.service
+ * @description Scans files for malware using VirusTotal API.
+ *              Implements hash-based lookups and file uploads for scanning.
+ * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
+ */
+
+import * as crypto from 'node:crypto';
+import { Effect, Schema as S } from 'effect';
+import { env } from '../config/env';
+
+// ============================================
+// Effect Schemas for VT API Responses
+// ============================================
+
+/**
+ * Schema for VT scan result statistics
+ */
+const VTStatsSchema = S.Struct({
+  harmless: S.Number,
+  malicious: S.Number,
+  suspicious: S.Number,
+  undetected: S.Number,
+  timeout: S.Number,
+});
+
+/**
+ * Schema for VT analysis result response
+ */
+const VTAnalysisResultSchema = S.Struct({
+  data: S.Struct({
+    id: S.String,
+    type: S.String,
+    attributes: S.Struct({
+      stats: VTStatsSchema.pipe(S.optional),
+      status: S.String,
+    }),
+  }),
+});
+
+/**
+ * Schema for VT file report response
+ */
+const VTFileReportSchema = S.Struct({
+  data: S.Struct({
+    id: S.String,
+    type: S.String,
+    attributes: S.Struct({
+      last_analysis_stats: VTStatsSchema.pipe(S.optional),
+      reputation: S.Number.pipe(S.optional),
+      sha256: S.String.pipe(S.optional),
+    }),
+  }),
+});
+
+/**
+ * Schema for VT analysis response (after upload)
+ */
+const VTUploadResponseSchema = S.Struct({
+  data: S.Struct({
+    id: S.String,
+    type: S.Literal('analysis'),
+  }),
+});
+>>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
 
 // ============================================
 // Types
 // ============================================
 
+<<<<<<< HEAD
 /**
  * Scan result from VirusTotal
  */
@@ -95,10 +163,50 @@ export interface FileValidationResult {
     fileSize: number;
     mimeType: string;
     sha256: string;
+=======
+export type VTStats = typeof VTStatsSchema.Type;
+
+export interface ScanResult {
+  safe: boolean;
+  hash: string;
+  stats: VTStats | null;
+  message: string;
+  scanned: boolean;
+}
+
+// ============================================
+// VirusTotal Service
+// ============================================
+
+const VT_API_BASE = 'https://www.virustotal.com/api/v3';
+
+/**
+ * Calculate SHA256 hash of a buffer
+ */
+function calculateSHA256(buffer: Buffer): string {
+  return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
+/**
+ * Check if VirusTotal API is configured
+ */
+function isConfigured(): boolean {
+  return Boolean(env.VIRUSTOTAL_API_KEY && env.VIRUSTOTAL_API_KEY.length > 0);
+}
+
+/**
+ * Get authorization headers for VT API
+ */
+function getHeaders(): Record<string, string> {
+  return {
+    'x-apikey': env.VIRUSTOTAL_API_KEY,
+    Accept: 'application/json',
+>>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
   };
 }
 
 /**
+<<<<<<< HEAD
  * Allowed file types for upload
  */
 const ALLOWED_MIME_TYPES = [
@@ -227,10 +335,88 @@ export class VirusTotalService {
         headers: {
           'x-apikey': this.apiKey,
         },
+=======
+ * Look up a file by its hash in VirusTotal
+ *
+ * @param hash - SHA256 hash of the file
+ * @returns Effect with scan result or error
+ */
+function lookupByHash(hash: string): Effect.Effect<ScanResult, Error> {
+  return Effect.tryPromise({
+    try: async () => {
+      const response = await fetch(`${VT_API_BASE}/files/${hash}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+
+      if (response.status === 404) {
+        // File not found in VT database - needs upload
+        return {
+          safe: true,
+          hash,
+          stats: null,
+          message: 'File not found in VirusTotal database',
+          scanned: false,
+        };
+      }
+
+      if (!response.ok) {
+        throw new Error(`VirusTotal API error: ${response.status}`);
+      }
+
+      const json = await response.json();
+      const parsed = S.decodeUnknownSync(VTFileReportSchema)(json);
+      const stats = parsed.data.attributes.last_analysis_stats;
+
+      if (!stats) {
+        return {
+          safe: true,
+          hash,
+          stats: null,
+          message: 'No analysis available',
+          scanned: false,
+        };
+      }
+
+      const isMalicious = stats.malicious > 0 || stats.suspicious > 2;
+
+      return {
+        safe: !isMalicious,
+        hash,
+        stats,
+        message: isMalicious
+          ? `Detected as malicious by ${stats.malicious} engines`
+          : 'File appears safe',
+        scanned: true,
+      };
+    },
+    catch: (error) => new Error(`VT lookup failed: ${error}`),
+  });
+}
+
+/**
+ * Upload a file to VirusTotal for scanning
+ *
+ * @param buffer - File buffer to scan
+ * @param filename - Original filename
+ * @returns Effect with analysis ID
+ */
+function uploadForScan(buffer: Buffer, filename: string): Effect.Effect<string, Error> {
+  return Effect.tryPromise({
+    try: async () => {
+      const formData = new FormData();
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      formData.append('file', blob, filename);
+
+      const response = await fetch(`${VT_API_BASE}/files`, {
+        method: 'POST',
+        headers: getHeaders(),
+>>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
         body: formData,
       });
 
       if (!response.ok) {
+<<<<<<< HEAD
         const errorText = await response.text();
         logger.error({ status: response.status, error: errorText }, 'VirusTotal upload failed');
         return null;
@@ -525,3 +711,131 @@ export class VirusTotalService {
  * @type {VirusTotalService}
  */
 export const virusTotalService = new VirusTotalService();
+=======
+        const text = await response.text();
+        throw new Error(`VT upload failed: ${response.status} - ${text}`);
+      }
+
+      const json = await response.json();
+      const parsed = S.decodeUnknownSync(VTUploadResponseSchema)(json);
+      return parsed.data.id;
+    },
+    catch: (error) => new Error(`VT upload failed: ${error}`),
+  });
+}
+
+/**
+ * Get analysis results from VirusTotal
+ *
+ * @param analysisId - Analysis ID from upload
+ * @returns Effect with scan result
+ */
+function getAnalysisResult(analysisId: string): Effect.Effect<ScanResult, Error> {
+  return Effect.tryPromise({
+    try: async () => {
+      const response = await fetch(`${VT_API_BASE}/analyses/${analysisId}`, {
+        method: 'GET',
+        headers: getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`VT analysis fetch failed: ${response.status}`);
+      }
+
+      const json = await response.json();
+      const parsed = S.decodeUnknownSync(VTAnalysisResultSchema)(json);
+      const status = parsed.data.attributes.status;
+
+      if (status === 'queued' || status === 'in-progress') {
+        return {
+          safe: true,
+          hash: '',
+          stats: null,
+          message: 'Scan in progress',
+          scanned: false,
+        };
+      }
+
+      const stats = parsed.data.attributes.stats;
+      if (!stats) {
+        return {
+          safe: true,
+          hash: '',
+          stats: null,
+          message: 'No scan results available',
+          scanned: false,
+        };
+      }
+
+      const isMalicious = stats.malicious > 0 || stats.suspicious > 2;
+
+      return {
+        safe: !isMalicious,
+        hash: '',
+        stats,
+        message: isMalicious
+          ? `Detected as malicious by ${stats.malicious} engines`
+          : 'File appears safe',
+        scanned: true,
+      };
+    },
+    catch: (error) => new Error(`VT analysis failed: ${error}`),
+  });
+}
+
+/**
+ * Scan a file buffer for malware
+ *
+ * @param buffer - File buffer to scan
+ * @param filename - Original filename
+ * @returns Effect with scan result
+ */
+function scanFile(buffer: Buffer, filename: string): Effect.Effect<ScanResult, Error> {
+  if (!isConfigured()) {
+    return Effect.succeed({
+      safe: true,
+      hash: calculateSHA256(buffer),
+      stats: null,
+      message: 'VirusTotal not configured - skipping scan',
+      scanned: false,
+    });
+  }
+
+  const hash = calculateSHA256(buffer);
+
+  // First, try to look up by hash (faster, no quota usage)
+  return Effect.flatMap(lookupByHash(hash), (result) => {
+    if (result.scanned) {
+      return Effect.succeed(result);
+    }
+
+    // File not in VT database - upload for scanning
+    // Note: For production, you might want to queue this and poll later
+    return Effect.flatMap(uploadForScan(buffer, filename), (analysisId) =>
+      // Wait a bit and get results (in production, implement proper polling)
+      Effect.delay(getAnalysisResult(analysisId), '5 seconds'),
+    );
+  });
+}
+
+/**
+ * Synchronous wrapper for scanning - runs the Effect
+ */
+async function scanFileAsync(buffer: Buffer, filename: string): Promise<ScanResult> {
+  return Effect.runPromise(scanFile(buffer, filename));
+}
+
+// ============================================
+// Export Service
+// ============================================
+
+export const virusTotalService = {
+  isConfigured,
+  calculateSHA256,
+  lookupByHash,
+  uploadForScan,
+  getAnalysisResult,
+  scanFile,
+  scanFileAsync,
+};
+>>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)

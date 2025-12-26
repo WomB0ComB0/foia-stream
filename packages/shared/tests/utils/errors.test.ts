@@ -17,8 +17,8 @@ import {
   isHttpError,
   NotFoundError,
   SecurityError,
-  toHttpResponse,
   TooManyRequestsError,
+  toHttpResponse,
   UnauthorizedError,
   ValidationError,
 } from '../../src/utils/errors';

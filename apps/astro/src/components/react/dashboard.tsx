@@ -25,7 +25,10 @@
  * @module components/react/Dashboard
  */
 
-import { useStore } from '@nanostores/react';
+import { api, type FoiaRequest } from '@/lib/api';
+import { formatDate, getStatusColor } from '@/lib/utils';
+import { initAuth, logout, useAuthStore } from '@/stores/auth';
+import { maybeRedact, redactName, usePrivacyStore } from '@/stores/privacy';
 import {
   Building2,
   Check,
@@ -45,9 +48,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, type FoiaRequest } from '@/lib/api';
-import { formatDate, getStatusColor } from '@/lib/utils';
-import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
+import { PrivacyToggleCompact } from './privacy-toggle';
 
 /**
  * Main dashboard component showing request statistics and list
@@ -61,9 +62,10 @@ import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/
  * ```
  */
 export default function Dashboard() {
-  const user = useStore($user);
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
+  const privacyMode = usePrivacyStore((s) => s.privacyMode);
   const [requests, setRequests] = useState<FoiaRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -181,8 +183,15 @@ export default function Dashboard() {
   const pendingCount = requests.filter(
     (r) => r.status === 'submitted' || r.status === 'processing' || r.status === 'acknowledged',
   ).length;
-  const completedCount = requests.filter(
-    (r) => r.status === 'fulfilled' || r.status === 'closed',
+  const completedCount = requests.filter((r) =>
+    [
+      'fulfilled',
+      'partially_fulfilled',
+      'denied',
+      'appeal_granted',
+      'appeal_denied',
+      'withdrawn',
+    ].includes(r.status),
   ).length;
   const uniqueAgencies = new Set(requests.map((r) => r.agencyId)).size;
 
@@ -228,79 +237,87 @@ export default function Dashboard() {
               </a>
             </nav>
 
-            {/* User Menu */}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                type="button"
-                className="flex items-center gap-2 rounded-lg border border-surface-700 px-3 py-2 text-sm text-surface-200 transition-colors hover:border-surface-600 hover:bg-surface-800"
-              >
-                <User className="h-4 w-4 text-surface-400" />
-                <span className="hidden sm:inline">{user.firstName}</span>
-                <ChevronDown
-                  className={`h-4 w-4 text-surface-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
-                />
-              </button>
+            {/* Privacy Toggle + User Menu */}
+            <div className="flex items-center gap-2">
+              <PrivacyToggleCompact />
 
-              {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-xl shadow-black/20">
-                  {/* User Info */}
-                  <div className="border-b border-surface-800 px-3 py-2 mb-1.5">
-                    <p className="text-sm font-medium text-surface-200">
-                      {user.firstName} {user.lastName}
-                    </p>
-                    <p className="text-xs text-surface-500 truncate">{user.email}</p>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-surface-700 px-3 py-2 text-sm text-surface-200 transition-colors hover:border-surface-600 hover:bg-surface-800"
+                >
+                  <User className="h-4 w-4 text-surface-400" />
+                  <span className="hidden sm:inline">{user.firstName}</span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-surface-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-xl shadow-black/20">
+                    {/* User Info */}
+                    <div className="border-b border-surface-800 px-3 py-2 mb-1.5">
+                      <p className="text-sm font-medium text-surface-200">
+                        {privacyMode
+                          ? redactName(user.firstName, user.lastName)
+                          : `${user.firstName} ${user.lastName}`}
+                      </p>
+                      <p className="text-xs text-surface-500 truncate">
+                        {maybeRedact(user.email, privacyMode)}
+                      </p>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <a
+                      href="/dashboard"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                    >
+                      <LayoutDashboard className="h-4 w-4 text-surface-500" />
+                      Dashboard
+                    </a>
+                    <a
+                      href="/settings"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                    >
+                      <Settings className="h-4 w-4 text-surface-500" />
+                      Settings
+                    </a>
+
+                    {/* Divider */}
+                    <div className="my-1.5 border-t border-surface-800" />
+
+                    {/* Legal Links */}
+                    <a
+                      href="/terms"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300"
+                    >
+                      <FileText className="h-4 w-4 text-surface-500" />
+                      Terms of Service
+                    </a>
+                    <a
+                      href="/privacy"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300"
+                    >
+                      <Shield className="h-4 w-4 text-surface-500" />
+                      Privacy Policy
+                    </a>
+
+                    {/* Divider */}
+                    <div className="my-1.5 border-t border-surface-800" />
+
+                    {/* Sign Out */}
+                    <button
+                      onClick={handleLogout}
+                      type="button"
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </button>
                   </div>
-
-                  {/* Navigation Links */}
-                  <a
-                    href="/dashboard"
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                  >
-                    <LayoutDashboard className="h-4 w-4 text-surface-500" />
-                    Dashboard
-                  </a>
-                  <a
-                    href="/settings"
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                  >
-                    <Settings className="h-4 w-4 text-surface-500" />
-                    Settings
-                  </a>
-
-                  {/* Divider */}
-                  <div className="my-1.5 border-t border-surface-800" />
-
-                  {/* Legal Links */}
-                  <a
-                    href="/terms"
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300"
-                  >
-                    <FileText className="h-4 w-4 text-surface-500" />
-                    Terms of Service
-                  </a>
-                  <a
-                    href="/privacy"
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-300"
-                  >
-                    <Shield className="h-4 w-4 text-surface-500" />
-                    Privacy Policy
-                  </a>
-
-                  {/* Divider */}
-                  <div className="my-1.5 border-t border-surface-800" />
-
-                  {/* Sign Out */}
-                  <button
-                    onClick={handleLogout}
-                    type="button"
-                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

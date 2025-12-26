@@ -24,23 +24,23 @@
 export * from './errors';
 // Fetcher exports (ValidationError and FetcherError are fetch-specific)
 export {
-  FetcherError,
-  ValidationError as FetcherValidationError,
   createApiResponseSchema,
   createPaginatedSchema,
   del,
+  FetcherError,
+  type FetcherOptions,
   fetcher,
   get,
+  type Headers as FetcherHeaders,
+  type HttpMethod,
   head,
   options,
   patch,
   post,
   put,
-  type Headers as FetcherHeaders,
-  type FetcherOptions,
-  type HttpMethod,
   type QueryParams,
   type RequestBody,
+  ValidationError as FetcherValidationError,
 } from './fetcher';
 // Redaction and sanitization utilities
 export * from './redacted';

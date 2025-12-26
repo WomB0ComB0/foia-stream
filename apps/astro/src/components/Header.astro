@@ -138,7 +138,7 @@ import Logo from '@/components/Logo.astro';
 </header>
 
 <script>
-  import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
+  import { useAuthStore, initAuth, logout } from '@/stores/auth';
 
   // Initialize auth on page load
   initAuth();
@@ -198,9 +198,10 @@ import Logo from '@/components/Logo.astro';
 
   // Update UI based on auth state
   function updateAuthUI() {
-    const isAuth = $isAuthenticated.get();
-    const isLoading = $isLoading.get();
-    const user = $user.get();
+    const state = useAuthStore.getState();
+    const isAuth = state.isAuthenticated;
+    const isLoading = state.isLoading;
+    const user = state.user;
 
     if (isLoading) return;
 
@@ -219,8 +220,9 @@ import Logo from '@/components/Logo.astro';
     }
   }
 
-  // Subscribe to auth changes
-  $isAuthenticated.subscribe(updateAuthUI);
-  $isLoading.subscribe(updateAuthUI);
-  $user.subscribe(updateAuthUI);
+  // Subscribe to auth changes using Zustand's subscribe
+  useAuthStore.subscribe(updateAuthUI);
+
+  // Initial update
+  updateAuthUI();
 </script>

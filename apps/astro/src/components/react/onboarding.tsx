@@ -25,10 +25,9 @@
  * @module components/react/Onboarding
  */
 
-import { $user } from '@/stores/auth';
-import { useStore } from '@nanostores/react';
 import { ArrowRight, Check, ChevronLeft, FileText, Search, Send, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { $user } from '@/stores/auth';
 
 /**
  * Onboarding step configuration
@@ -114,7 +113,7 @@ const steps: OnboardingStep[] = [
  * Shows for new users to guide them through the platform
  */
 export default function Onboarding() {
-  const user = useStore($user);
+  const user = useAuthStore((s) => s.user);
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [animating, setAnimating] = useState(false);

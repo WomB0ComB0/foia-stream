@@ -110,6 +110,10 @@ This project handles sensitive PII and government records. Security is the highe
     - Define schemas in `apps/api/src/validators/schemas.ts`.
     - Use the `effectValidator` middleware in Hono routes.
 
+5.  **ESM Compatibility (NIST SC-8):**
+    - **Always** use `globalThis` instead of `global` for environment-agnostic code (Node.js, Bun, Browser).
+    - This ensures compatibility across the monorepo's different runtimes.
+
 ---
 
 ## 💻 Tech Stack & Architecture
@@ -136,6 +140,9 @@ This project handles sensitive PII and government records. Security is the highe
     - Use semantic colors from `src/styles/global.css` (e.g., `bg-surface-950`, `text-accent-400`).
     - Use `clsx` and `tailwind-merge` via `cn()` utility.
 - **Data Fetching:** Use the typed `api` client in `src/lib/api.ts`.
+- **Testing:**
+    - **Cypress:** Used for **E2E testing only**. Do not use for component testing unless `@cypress/react18` is explicitly installed and configured.
+    - **Vitest:** Used for unit and integration testing.
 
 ---
 
@@ -160,6 +167,9 @@ This project handles sensitive PII and government records. Security is the highe
       });
       ```
 
+4.  **Error Type Compatibility:**
+    - When implementing `isCausedBy` or similar type-checking methods for Errors, use `new (...args: never) => T` for the constructor type to ensure compatibility with built-in errors like `TypeError` and `RangeError`.
+
 ---
 
 ## 🧪 Testing Guidelines
@@ -181,4 +191,5 @@ This project handles sensitive PII and government records. Security is the highe
 - **Do not** suggest `axios`; use the native `fetch` API or the internal `api` client wrapper.
 - **Do not** hardcode secrets. Import `env` from `src/config/env.ts`.
 - **Do not** use `console.log` in production code. Use the configured logger.
-- **Do not** ignore linting rules. The project uses **Biome**.
+- **Do not** ignore linting rules. The project uses **Biome**. If Biome reports stale JSX errors, try restarting the LSP or running `biome check` manually.
+- **Do not** mix Vite major versions. Ensure all packages in the monorepo use compatible Vite versions (e.g., avoid mixing Vite 6 and Vite 7 plugins without careful resolution).

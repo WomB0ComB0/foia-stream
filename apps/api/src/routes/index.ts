@@ -38,3 +38,4 @@ export { documentRoutes } from './documents.routes';
 export { redactionRoutes } from './redaction.routes';
 export { requestRoutes } from './requests.routes';
 export { templateRoutes } from './templates.routes';
+export { uploadRoutes } from './upload.routes';

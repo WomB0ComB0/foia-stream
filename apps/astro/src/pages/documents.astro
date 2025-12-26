@@ -1,0 +1,18 @@
+---
+import DocumentsPage from '@/components/react/documents-page';
+/**
+ * @file Documents management page
+ * @module pages/documents
+ * @author FOIA Stream Team
+ * @description Secure document upload, virus scanning, and redaction page
+ * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
+ * @compliance NIST 800-53 MP-6 (Media Sanitization)
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export const prerender = true;
+---
+
+<BaseLayout title="Documents" description="Upload, scan, and redact sensitive documents securely">
+  <DocumentsPage client:load />
+</BaseLayout>

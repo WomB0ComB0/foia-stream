@@ -254,6 +254,12 @@ export default function AgenciesPage() {
               >
                 Templates
               </a>
+              <a
+                href="/documents"
+                className="text-sm text-surface-400 transition-colors hover:text-surface-100"
+              >
+                Documents
+              </a>
             </nav>
 
             {isAuth && user ? (

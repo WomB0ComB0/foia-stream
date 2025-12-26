@@ -561,6 +561,12 @@ export default function TemplatesPage() {
                 <ClipboardCopy className="h-4 w-4" />
                 Templates
               </a>
+              <a
+                href="/documents"
+                className="text-sm text-surface-400 transition-colors hover:text-surface-100"
+              >
+                Documents
+              </a>
             </nav>
 
             {isAuth && user ? (

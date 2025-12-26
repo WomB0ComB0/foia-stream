@@ -105,6 +105,13 @@ const EnvSchema = S.Struct({
     S.minLength(32),
     S.optionalWith({ default: () => 'change-this-password-pepper-in-prod-32ch' }),
   ),
+
+  /**
+   * VirusTotal API key for malware scanning
+   * Optional - if not set, virus scanning will be skipped
+   * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
+   */
+  VIRUSTOTAL_API_KEY: S.optional(S.String),
 });
 
 /**

@@ -178,7 +178,7 @@ export default function PDFRedactionViewer({
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`${API_BASE}/api/v1/redaction/info`, {
+        const response = await fetch(`${API_BASE}/redaction/info`, {
           method: 'POST',
           headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
           body: formData,
@@ -225,7 +225,7 @@ export default function PDFRedactionViewer({
       formData.append('file', file);
       formData.append('data', JSON.stringify({ areas: redactionAreas }));
 
-      const response = await fetch(`${API_BASE}/api/v1/redaction/preview`, {
+      const response = await fetch(`${API_BASE}/redaction/preview`, {
         method: 'POST',
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
         body: formData,
@@ -269,7 +269,7 @@ export default function PDFRedactionViewer({
         }),
       );
 
-      const response = await fetch(`${API_BASE}/api/v1/redaction/apply`, {
+      const response = await fetch(`${API_BASE}/redaction/apply`, {
         method: 'POST',
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
         body: formData,
@@ -635,7 +635,11 @@ export default function PDFRedactionViewer({
               <iframe
                 src={`${showPreview && previewUrl ? previewUrl : pdfUrl}#view=FitH&page=${currentPage + 1}`}
                 title="PDF Document"
-                className="h-200 w-150 rounded-lg bg-white"
+                className="rounded-lg bg-white pointer-events-none"
+                style={{
+                  width: pageInfo[currentPage]?.width ? `${pageInfo[currentPage].width}px` : '816px',
+                  height: pageInfo[currentPage]?.height ? `${pageInfo[currentPage].height}px` : '1056px',
+                }}
               />
 
               {/* Redaction overlays */}

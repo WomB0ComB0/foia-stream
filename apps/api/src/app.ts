@@ -43,7 +43,7 @@ import { env } from './config/env';
 import configureOpenAPI from './lib/configure-open-api';
 import createApp from './lib/create-app';
 import { httpsEnforcement, requestId } from './middleware/security.middleware';
-import { agencyRoutes, authRoutes, redactionRoutes, requestRoutes, templateRoutes } from './routes';
+import { agencyRoutes, authRoutes, documentRoutes, redactionRoutes, requestRoutes, templateRoutes } from './routes';
 import agenciesOpenAPIRoute from './routes/agencies';
 import authOpenAPIRoute from './routes/auth';
 import indexRoute from './routes/index.route';
@@ -149,6 +149,7 @@ api.route('/requests', requestRoutes);
 api.route('/agencies', agencyRoutes);
 api.route('/templates', templateRoutes);
 api.route('/redaction', redactionRoutes);
+api.route('/documents', documentRoutes);
 
 app.route('/api/v1', api);
 

@@ -41,6 +41,11 @@ import {
   type RedactionArea,
   type RedactionOptions,
 } from '../services/pdf-redaction.service';
+import {
+  applyTrueRedactions,
+  type RedactionArea as TrueRedactionArea,
+  type TrueRedactionOptions,
+} from '../services/pdf-true-redaction.service';
 
 // ============================================
 // Validation Schemas
@@ -149,14 +154,18 @@ redaction.post('/apply', authMiddleware, async (c) => {
     // Get PDF buffer
     const pdfBuffer = await file.arrayBuffer();
 
-    // Apply redactions
-    const result = await pdfRedactionService.applyRedactions(
+    // Apply TRUE redactions (flattens pages to images, removing text completely)
+    const result = await applyTrueRedactions(
       pdfBuffer,
-      parsedData.areas as RedactionArea[],
+      parsedData.areas as TrueRedactionArea[],
       {
-        ...parsedData.options,
+        redactionColor: parsedData.options?.redactionColor,
+        addRedactionLabel: parsedData.options?.addRedactionLabel,
+        labelText: parsedData.options?.labelText,
+        documentId: parsedData.options?.documentId,
         userId,
-      } as RedactionOptions,
+        dpi: 150, // Good balance of quality vs file size
+      } as TrueRedactionOptions,
     );
 
     if (!result.success || !result.pdfBytes) {
@@ -168,8 +177,9 @@ redaction.post('/apply', authMiddleware, async (c) => {
         userId,
         redactionCount: result.redactionCount,
         documentId: parsedData.options?.documentId,
+        flattened: result.flattened,
       },
-      'PDF redactions applied',
+      'TRUE PDF redactions applied - text permanently removed',
     );
 
     // Return the redacted PDF
@@ -179,6 +189,7 @@ redaction.post('/apply', authMiddleware, async (c) => {
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="redacted.pdf"',
         'X-Redaction-Count': result.redactionCount.toString(),
+        'X-Flattened': result.flattened ? 'true' : 'false',
       },
     });
   } catch (error) {

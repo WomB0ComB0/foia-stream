@@ -273,6 +273,161 @@ const MessageResponseSchema = S.Struct({
 });
 
 // ============================================
+// Document Management Schemas
+// ============================================
+
+/**
+ * Document status enum schema
+ */
+const DocumentStatusSchema = S.Literal(
+  'pending_scan',
+  'scanning',
+  'clean',
+  'infected',
+  'scan_failed',
+  'redacted',
+  'archived',
+);
+
+/**
+ * Secure document schema
+ * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
+ */
+const SecureDocumentSchema = S.Struct({
+  id: S.String.pipe(S.minLength(1)),
+  originalFileName: S.String,
+  fileSize: S.Number,
+  mimeType: S.String,
+  status: DocumentStatusSchema,
+  requiresMfa: S.Boolean,
+  hasPassword: S.Boolean,
+  expiresAt: S.NullOr(S.String),
+  accessCount: S.Number,
+  lastAccessedAt: S.NullOr(S.String),
+  createdAt: S.String,
+  updatedAt: S.optional(S.String),
+});
+
+/**
+ * Virus scan result schema
+ */
+const VirusScanResultSchema = S.Struct({
+  scannedAt: S.optional(S.String),
+  isSafe: S.optional(S.Boolean),
+  status: S.optional(S.String),
+  analysisId: S.optional(S.String),
+  permalink: S.optional(S.String),
+});
+
+/**
+ * Redaction pattern schema
+ */
+const RedactionPatternSchema = S.Struct({
+  id: S.String,
+  name: S.String,
+  description: S.String,
+  pattern: S.String,
+  flags: S.optional(S.String),
+  category: S.String,
+  sensitivity: S.Literal('low', 'medium', 'high', 'critical'),
+  enabledByDefault: S.Boolean,
+  examples: S.Array(S.String),
+  redactionLabel: S.String,
+});
+
+/**
+ * Redaction template schema
+ */
+const RedactionTemplateSchema = S.Struct({
+  id: S.String,
+  name: S.String,
+  description: S.String,
+  category: S.String,
+  patterns: S.Array(RedactionPatternSchema),
+  isSystem: S.Boolean,
+  disclaimer: S.String,
+  version: S.String,
+  createdAt: S.String,
+  updatedAt: S.String,
+});
+
+/**
+ * Custom redaction template schema
+ */
+const CustomRedactionTemplateSchema = S.Struct({
+  id: S.String,
+  userId: S.String,
+  name: S.String,
+  description: S.NullOr(S.String),
+  category: S.String,
+  patterns: S.Array(
+    S.Struct({
+      id: S.String,
+      name: S.String,
+      pattern: S.String,
+      flags: S.optional(S.String),
+      sensitivity: S.Literal('low', 'medium', 'high', 'critical'),
+      redactionLabel: S.String,
+    }),
+  ),
+  isShared: S.Boolean,
+  usageCount: S.Number,
+  createdAt: S.String,
+  updatedAt: S.String,
+});
+
+/**
+ * Redaction templates response schema
+ */
+const RedactionTemplatesResponseSchema = S.Struct({
+  system: S.Array(RedactionTemplateSchema),
+  custom: S.Array(CustomRedactionTemplateSchema),
+  disclaimer: S.String,
+});
+
+/**
+ * Pattern match schema
+ */
+const PatternMatchSchema = S.Struct({
+  patternId: S.String,
+  patternName: S.String,
+  matchedText: S.String,
+  startIndex: S.Number,
+  endIndex: S.Number,
+  sensitivity: S.Literal('low', 'medium', 'high', 'critical'),
+  redactionLabel: S.String,
+});
+
+/**
+ * Text redaction result schema
+ */
+const TextRedactionResultSchema = S.Struct({
+  original: S.String,
+  redacted: S.String,
+  hasChanges: S.Boolean,
+  matches: S.Array(PatternMatchSchema),
+  matchesByPattern: S.Record({ key: S.String, value: S.Array(PatternMatchSchema) }),
+  matchesBySensitivity: S.Record({ key: S.String, value: S.Array(PatternMatchSchema) }),
+  disclaimer: S.String,
+});
+
+/**
+ * Document access log entry schema
+ * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+ */
+const DocumentAccessLogSchema = S.Struct({
+  id: S.String,
+  documentId: S.String,
+  userId: S.String,
+  accessType: S.Literal('view', 'download', 'preview_redaction', 'apply_redaction', 'share', 'delete'),
+  mfaVerified: S.Boolean,
+  ipAddress: S.NullOr(S.String),
+  userAgent: S.NullOr(S.String),
+  metadata: S.optional(S.Record({ key: S.String, value: S.Unknown })),
+  createdAt: S.String,
+});
+
+// ============================================
 // Type Exports (inferred from schemas)
 // ============================================
 
@@ -293,6 +448,17 @@ export type Session = S.Schema.Type<typeof SessionSchema>;
 export type MFAStatus = S.Schema.Type<typeof MFAStatusSchema>;
 export type MFASetupResponse = S.Schema.Type<typeof MFASetupResponseSchema>;
 export type ApiKey = S.Schema.Type<typeof ApiKeySchema>;
+
+// Document Management Types
+export type SecureDocument = S.Schema.Type<typeof SecureDocumentSchema>;
+export type VirusScanResult = S.Schema.Type<typeof VirusScanResultSchema>;
+export type RedactionPattern = S.Schema.Type<typeof RedactionPatternSchema>;
+export type RedactionTemplate = S.Schema.Type<typeof RedactionTemplateSchema>;
+export type CustomRedactionTemplate = S.Schema.Type<typeof CustomRedactionTemplateSchema>;
+export type RedactionTemplatesResponse = S.Schema.Type<typeof RedactionTemplatesResponseSchema>;
+export type PatternMatch = S.Schema.Type<typeof PatternMatchSchema>;
+export type TextRedactionResult = S.Schema.Type<typeof TextRedactionResultSchema>;
+export type DocumentAccessLogEntry = S.Schema.Type<typeof DocumentAccessLogSchema>;
 
 const HttpClientLive = FetchHttpClient.layer;
 
@@ -924,6 +1090,140 @@ class ApiClient {
         { headers: getAuthHeaders() },
       ),
       MessageResponseSchema,
+    );
+  }
+
+  // ============================================
+  // Document Management
+  // ============================================
+
+  /**
+   * Get list of user's documents
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+   */
+  async getDocuments(): Promise<ApiResponse<SecureDocument[]>> {
+    return runEffect(
+      get<SecureDocument[]>(`${this.baseUrl}/documents`, { headers: getAuthHeaders() }),
+      S.mutable(S.Array(SecureDocumentSchema)),
+    );
+  }
+
+  /**
+   * Get a single document by ID
+   */
+  async getDocument(id: string): Promise<ApiResponse<SecureDocument>> {
+    return runEffect(
+      get<SecureDocument>(`${this.baseUrl}/documents/${id}`, { headers: getAuthHeaders() }),
+      SecureDocumentSchema,
+    );
+  }
+
+  /**
+   * Verify MFA for document access
+   * @compliance NIST 800-53 IA-2(1) (Multi-Factor Authentication)
+   */
+  async verifyDocumentMfa(
+    documentId: string,
+    code: string,
+  ): Promise<ApiResponse<{ accessToken: string; expiresIn: number }>> {
+    return runEffect(
+      post<{ accessToken: string; expiresIn: number }>(
+        `${this.baseUrl}/documents/${documentId}/verify-mfa`,
+        { code },
+        { headers: getAuthHeaders() },
+      ),
+      S.Struct({
+        accessToken: S.String,
+        expiresIn: S.Number,
+      }),
+    );
+  }
+
+  /**
+   * Verify password for document access
+   */
+  async verifyDocumentPassword(
+    documentId: string,
+    password: string,
+  ): Promise<ApiResponse<{ accessToken: string; expiresIn: number }>> {
+    return runEffect(
+      post<{ accessToken: string; expiresIn: number }>(
+        `${this.baseUrl}/documents/${documentId}/verify-password`,
+        { password },
+        { headers: getAuthHeaders() },
+      ),
+      S.Struct({
+        accessToken: S.String,
+        expiresIn: S.Number,
+      }),
+    );
+  }
+
+  /**
+   * Get redaction templates
+   * @compliance NIST 800-53 MP-6 (Media Sanitization)
+   */
+  async getRedactionTemplates(): Promise<ApiResponse<RedactionTemplatesResponse>> {
+    return runEffect(
+      get<RedactionTemplatesResponse>(`${this.baseUrl}/documents/templates/redaction`, {
+        headers: getAuthHeaders(),
+      }),
+      RedactionTemplatesResponseSchema,
+    );
+  }
+
+  /**
+   * Get available redaction patterns
+   */
+  async getRedactionPatterns(): Promise<ApiResponse<RedactionPattern[]>> {
+    return runEffect(
+      get<RedactionPattern[]>(`${this.baseUrl}/documents/templates/redaction/patterns`, {
+        headers: getAuthHeaders(),
+      }),
+      S.mutable(S.Array(RedactionPatternSchema)),
+    );
+  }
+
+  /**
+   * Redact sensitive text
+   * @compliance NIST 800-53 SI-12 (Information Handling and Retention)
+   */
+  async redactText(
+    text: string,
+    templateId?: string,
+    patternIds?: string[],
+  ): Promise<ApiResponse<TextRedactionResult>> {
+    return runEffect(
+      post<TextRedactionResult>(
+        `${this.baseUrl}/documents/redact-text`,
+        { text, templateId, patternIds },
+        { headers: getAuthHeaders() },
+      ),
+      TextRedactionResultSchema,
+    );
+  }
+
+  /**
+   * Delete a document
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+   */
+  async deleteDocument(id: string): Promise<ApiResponse<{ message: string }>> {
+    return runEffect(
+      del<{ message: string }>(`${this.baseUrl}/documents/${id}`, { headers: getAuthHeaders() }),
+      MessageResponseSchema,
+    );
+  }
+
+  /**
+   * Get document access log
+   * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+   */
+  async getDocumentAccessLog(documentId: string): Promise<ApiResponse<DocumentAccessLogEntry[]>> {
+    return runEffect(
+      get<DocumentAccessLogEntry[]>(`${this.baseUrl}/documents/${documentId}/access-log`, {
+        headers: getAuthHeaders(),
+      }),
+      S.mutable(S.Array(DocumentAccessLogSchema)),
     );
   }
 }

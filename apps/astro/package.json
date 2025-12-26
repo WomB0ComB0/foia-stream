@@ -32,6 +32,7 @@
     "effect": "^3.19.13",
     "lucide-react": "^0.511.0",
     "nanostores": "^0.11.4",
+    "pdfjs-dist": "^5.4.449",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.0"

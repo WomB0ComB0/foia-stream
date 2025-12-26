@@ -34,6 +34,19 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss() as any],
+    optimizeDeps: {
+      include: ['pdfjs-dist'],
+    },
+    build: {
+      rollupOptions: {
+        // Ensure pdfjs-dist worker is properly bundled
+        output: {
+          manualChunks: {
+            pdfjs: ['pdfjs-dist'],
+          },
+        },
+      },
+    },
   },
   server: {
     port: 3001,

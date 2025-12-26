@@ -703,3 +703,221 @@ export const knowledgeArticles = sqliteTable(
     index('idx_knowledge_articles_is_published').on(table.isPublished),
   ],
 );
+
+// ============================================
+// Secure Documents & Redaction
+// ============================================
+
+/**
+ * Secure Documents table - stores uploaded documents with security metadata
+ *
+ * @table secure_documents
+ * @description Tracks documents uploaded for redaction with virus scan results,
+ *              access controls, and MFA requirements for sensitive files.
+ * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
+ * @compliance NIST 800-53 SC-28 (Protection of Information at Rest)
+ * @compliance NIST 800-53 AC-3 (Access Enforcement)
+ */
+export const secureDocuments = sqliteTable(
+  'secure_documents',
+  {
+    id: text('id').primaryKey(),
+    /** User who uploaded the document */
+    uploadedBy: text('uploaded_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** Original file name */
+    originalFileName: text('original_file_name').notNull(),
+    /** Stored file path (encrypted) */
+    filePath: text('file_path').notNull(),
+    /** File size in bytes */
+    fileSize: integer('file_size').notNull(),
+    /** MIME type */
+    mimeType: text('mime_type').notNull(),
+    /** SHA-256 hash for integrity verification */
+    sha256Hash: text('sha256_hash').notNull(),
+    /** Document status */
+    status: text('status', {
+      enum: ['pending_scan', 'scanning', 'clean', 'infected', 'scan_failed', 'redacted', 'archived'],
+    })
+      .notNull()
+      .default('pending_scan'),
+    /** VirusTotal scan result */
+    virusScanResult: text('virus_scan_result', { mode: 'json' }).$type<{
+      scannedAt?: string;
+      isSafe?: boolean;
+      status?: string;
+      analysisId?: string;
+      detections?: Array<{ engine: string; result: string }>;
+    }>(),
+    /** Whether MFA is required to access this document */
+    requiresMfa: integer('requires_mfa', { mode: 'boolean' }).notNull().default(false),
+    /** Access password hash (optional additional protection) */
+    accessPasswordHash: text('access_password_hash'),
+    /** Whether the document is encrypted at rest */
+    isEncrypted: integer('is_encrypted', { mode: 'boolean' }).notNull().default(true),
+    /** Encryption key ID for key rotation */
+    encryptionKeyId: text('encryption_key_id'),
+    /** Expiration date for auto-deletion */
+    expiresAt: text('expires_at'),
+    /** Number of times the document has been accessed */
+    accessCount: integer('access_count').notNull().default(0),
+    /** Last access timestamp */
+    lastAccessedAt: text('last_accessed_at'),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index('idx_secure_documents_uploaded_by').on(table.uploadedBy),
+    index('idx_secure_documents_status').on(table.status),
+    index('idx_secure_documents_sha256').on(table.sha256Hash),
+    index('idx_secure_documents_created_at').on(table.createdAt),
+    index('idx_secure_documents_expires_at').on(table.expiresAt),
+  ],
+);
+
+/**
+ * Document Access Log - tracks all access to secure documents
+ *
+ * @table document_access_log
+ * @description Immutable audit trail for document access including
+ *              view, download, and redaction operations.
+ * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+ * @compliance NIST 800-53 AU-12 (Audit Generation)
+ */
+export const documentAccessLog = sqliteTable(
+  'document_access_log',
+  {
+    id: text('id').primaryKey(),
+    /** Document being accessed */
+    documentId: text('document_id')
+      .notNull()
+      .references(() => secureDocuments.id, { onDelete: 'cascade' }),
+    /** User accessing the document */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** Type of access */
+    accessType: text('access_type', {
+      enum: ['view', 'download', 'preview_redaction', 'apply_redaction', 'share', 'delete'],
+    }).notNull(),
+    /** Whether MFA was verified for this access */
+    mfaVerified: integer('mfa_verified', { mode: 'boolean' }).notNull().default(false),
+    /** IP address of the accessor */
+    ipAddress: text('ip_address'),
+    /** User agent string */
+    userAgent: text('user_agent'),
+    /** Additional metadata */
+    metadata: text('metadata', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** Timestamp of access */
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index('idx_document_access_log_document_id').on(table.documentId),
+    index('idx_document_access_log_user_id').on(table.userId),
+    index('idx_document_access_log_access_type').on(table.accessType),
+    index('idx_document_access_log_created_at').on(table.createdAt),
+  ],
+);
+
+/**
+ * Redaction History - tracks all redaction operations
+ *
+ * @table redaction_history
+ * @description Records all redaction operations applied to documents
+ *              for audit and undo capabilities.
+ * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+ * @compliance NIST 800-53 MP-6 (Media Sanitization)
+ */
+export const redactionHistory = sqliteTable(
+  'redaction_history',
+  {
+    id: text('id').primaryKey(),
+    /** Original document */
+    sourceDocumentId: text('source_document_id')
+      .notNull()
+      .references(() => secureDocuments.id, { onDelete: 'cascade' }),
+    /** Resulting redacted document (if saved) */
+    resultDocumentId: text('result_document_id').references(() => secureDocuments.id),
+    /** User who performed the redaction */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** Template used for auto-redaction (if any) */
+    templateId: text('template_id'),
+    /** Number of redactions applied */
+    redactionCount: integer('redaction_count').notNull().default(0),
+    /** Redaction areas applied */
+    redactionAreas: text('redaction_areas', { mode: 'json' }).$type<
+      Array<{
+        page: number;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        reason?: string;
+      }>
+    >(),
+    /** Patterns matched (for auto-redaction) */
+    patternsMatched: text('patterns_matched', { mode: 'json' }).$type<
+      Array<{
+        patternId: string;
+        matchCount: number;
+      }>
+    >(),
+    /** Whether this was a preview or permanent application */
+    isPermanent: integer('is_permanent', { mode: 'boolean' }).notNull().default(false),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index('idx_redaction_history_source_document_id').on(table.sourceDocumentId),
+    index('idx_redaction_history_user_id').on(table.userId),
+    index('idx_redaction_history_template_id').on(table.templateId),
+    index('idx_redaction_history_created_at').on(table.createdAt),
+  ],
+);
+
+/**
+ * Custom Redaction Templates - user-created redaction patterns
+ *
+ * @table custom_redaction_templates
+ * @description Allows users to save custom redaction patterns and templates
+ *              for reuse across documents.
+ */
+export const customRedactionTemplates = sqliteTable(
+  'custom_redaction_templates',
+  {
+    id: text('id').primaryKey(),
+    /** User who created the template */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** Template name */
+    name: text('name').notNull(),
+    /** Template description */
+    description: text('description'),
+    /** Template category */
+    category: text('category').notNull().default('Custom'),
+    /** Pattern definitions */
+    patterns: text('patterns', { mode: 'json' }).$type<
+      Array<{
+        id: string;
+        name: string;
+        pattern: string;
+        flags?: string;
+        sensitivity: 'low' | 'medium' | 'high' | 'critical';
+        redactionLabel: string;
+      }>
+    >(),
+    /** Whether this template is shared with team */
+    isShared: integer('is_shared', { mode: 'boolean' }).notNull().default(false),
+    /** Usage count */
+    usageCount: integer('usage_count').notNull().default(0),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index('idx_custom_redaction_templates_user_id').on(table.userId),
+    index('idx_custom_redaction_templates_is_shared').on(table.isShared),
+  ],
+);

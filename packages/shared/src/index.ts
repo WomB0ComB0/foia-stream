@@ -22,6 +22,8 @@
 
 // @foia-stream/shared - Shared types, utilities, and schemas
 
+// Export data structures & algorithms
+export * from './dsa';
 // Export types first (these are the canonical type definitions)
 export * from './types';
 export * from './utils';

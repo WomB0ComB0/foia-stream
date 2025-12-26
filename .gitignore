@@ -70,3 +70,4 @@ drizzle/meta/
 .drizzle/
 
 ./apps/api/data/*
+./apps/api/data/test*

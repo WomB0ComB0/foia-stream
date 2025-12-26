@@ -24,10 +24,10 @@
 // FOIA Stream - Test Utilities
 // ============================================
 
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import type { Database } from 'better-sqlite3';
 import BetterSqlite3 from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import * as schema from '../src/db/schema';
 
 // Type for accessing internal drizzle session
@@ -97,6 +97,11 @@ export function applyMigrations(db: ReturnType<typeof drizzle>) {
       last_failed_login_at TEXT,
       password_changed_at TEXT,
       must_change_password INTEGER DEFAULT 0 NOT NULL,
+      terms_accepted_at TEXT,
+      privacy_accepted_at TEXT,
+      data_processing_consent_at TEXT,
+      marketing_consent_at TEXT,
+      consent_updated_at TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );
@@ -175,6 +180,9 @@ export function applyMigrations(db: ReturnType<typeof drizzle>) {
       completed_at TEXT,
       denial_reason TEXT,
       is_public INTEGER DEFAULT 1 NOT NULL,
+      content_purge_at TEXT,
+      content_purged INTEGER DEFAULT 0 NOT NULL,
+      title_hash TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL
     );

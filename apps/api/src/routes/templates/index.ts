@@ -29,8 +29,8 @@
  * @compliance NIST 800-53 AC-3 (Access Enforcement)
  */
 
-import { createRouter } from '../../lib/create-app';
-import { authMiddleware, requireAdmin } from '../../middleware/auth.middleware';
+import { createRouter } from '@/lib/create-app';
+import { authMiddleware, requireAdmin } from '@/middleware/auth.middleware';
 import * as handlers from './templates.handlers';
 import * as routes from './templates.routes';
 

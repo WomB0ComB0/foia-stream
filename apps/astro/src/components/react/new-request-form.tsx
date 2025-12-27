@@ -367,9 +367,7 @@ export default function NewRequestForm() {
                   className="mt-1 h-4 w-4 rounded border-surface-600 bg-surface-800 text-accent-500 focus:ring-accent-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-surface-100">
-                    Make Request Public
-                  </span>
+                  <span className="text-sm font-medium text-surface-100">Make Request Public</span>
                   <p className="text-sm text-surface-400">
                     Allow others to view this request and its responses.
                   </p>

@@ -1,4 +1,26 @@
 /**
+ * Copyright (c) 2025 Foia Stream
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
  * @file PDF Text Redactor Component
  * @module components/react/pdf-text-redactor
  * @author FOIA Stream Team
@@ -107,7 +129,12 @@ export default function PDFTextRedactor({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
-  const [currentSelection, setCurrentSelection] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [currentSelection, setCurrentSelection] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -154,7 +181,7 @@ export default function PDFTextRedactor({
     return () => {
       pdfDoc?.destroy();
     };
-  }, [file]);
+  }, [file, pdfDoc?.destroy]);
 
   // ============================================
   // Page Rendering
@@ -171,8 +198,10 @@ export default function PDFTextRedactor({
         const scale = (zoom / 100) * 1.5; // Base scale for good quality
         const viewport = page.getViewport({ scale });
 
-        const canvas = canvasRef.current!;
-        const context = canvas.getContext('2d')!;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const context = canvas.getContext('2d');
+        if (!context) return;
 
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -199,10 +228,7 @@ export default function PDFTextRedactor({
 
           for (const item of textContent.items) {
             if ('str' in item && item.str) {
-              const tx = pdfjsLib.Util.transform(
-                viewport.transform,
-                item.transform
-              );
+              const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
 
               const span = document.createElement('span');
               span.textContent = item.str;
@@ -247,20 +273,52 @@ export default function PDFTextRedactor({
     setSelectedId(null);
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isSelecting || !selectionStart || !containerRef.current) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isSelecting || !selectionStart || !containerRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    setCurrentSelection({
-      x: Math.min(selectionStart.x, x),
-      y: Math.min(selectionStart.y, y),
-      width: Math.abs(x - selectionStart.x),
-      height: Math.abs(y - selectionStart.y),
-    });
-  }, [isSelecting, selectionStart]);
+      setCurrentSelection({
+        x: Math.min(selectionStart.x, x),
+        y: Math.min(selectionStart.y, y),
+        width: Math.abs(x - selectionStart.x),
+        height: Math.abs(y - selectionStart.y),
+      });
+    },
+    [isSelecting, selectionStart],
+  );
+  const getTextInSelection = useCallback(
+    (selection: { x: number; y: number; width: number; height: number }): string => {
+      if (!textLayerRef.current) return '';
+
+      const spans = textLayerRef.current.querySelectorAll('span');
+      let text = '';
+
+      for (const span of spans) {
+        const rect = span.getBoundingClientRect();
+        const containerRect = containerRef.current?.getBoundingClientRect();
+
+        const spanX = rect.left - (containerRect?.left || 0);
+        const spanY = rect.top - (containerRect?.top || 0);
+
+        // Check if span overlaps with selection
+        if (
+          spanX < selection.x + selection.width &&
+          spanX + rect.width > selection.x &&
+          spanY < selection.y + selection.height &&
+          spanY + rect.height > selection.y
+        ) {
+          text += `${span.dataset.text || ''} `;
+        }
+      }
+
+      return text.trim();
+    },
+    [],
+  );
 
   const handleMouseUp = useCallback(() => {
     if (!isSelecting || !currentSelection) {
@@ -277,58 +335,37 @@ export default function PDFTextRedactor({
         id: generateId(),
         pageNumber: currentPage,
         text: selectedText || '[Area selection]',
-        rects: [{
-          x: currentSelection.x,
-          y: currentSelection.y,
-          width: currentSelection.width,
-          height: currentSelection.height,
-        }],
+        rects: [
+          {
+            x: currentSelection.x,
+            y: currentSelection.y,
+            width: currentSelection.width,
+            height: currentSelection.height,
+          },
+        ],
       };
 
-      setSelections(prev => [...prev, newSelection]);
+      setSelections((prev) => [...prev, newSelection]);
       setSelectedId(newSelection.id);
     }
 
     setIsSelecting(false);
     setSelectionStart(null);
     setCurrentSelection(null);
-  }, [isSelecting, currentSelection, currentPage]);
+  }, [isSelecting, currentSelection, currentPage, getTextInSelection]);
 
-  const getTextInSelection = useCallback((selection: { x: number; y: number; width: number; height: number }): string => {
-    if (!textLayerRef.current) return '';
-
-    const spans = textLayerRef.current.querySelectorAll('span');
-    let text = '';
-
-    for (const span of spans) {
-      const rect = span.getBoundingClientRect();
-      const containerRect = containerRef.current!.getBoundingClientRect();
-
-      const spanX = rect.left - containerRect.left;
-      const spanY = rect.top - containerRect.top;
-
-      // Check if span overlaps with selection
-      if (
-        spanX < selection.x + selection.width &&
-        spanX + rect.width > selection.x &&
-        spanY < selection.y + selection.height &&
-        spanY + rect.height > selection.y
-      ) {
-        text += (span.dataset.text || '') + ' ';
-      }
-    }
-
-    return text.trim();
-  }, []);
 
   // ============================================
   // Selection Management
   // ============================================
 
-  const deleteSelection = useCallback((id: string) => {
-    setSelections(prev => prev.filter(s => s.id !== id));
-    if (selectedId === id) setSelectedId(null);
-  }, [selectedId]);
+  const deleteSelection = useCallback(
+    (id: string) => {
+      setSelections((prev) => prev.filter((s) => s.id !== id));
+      if (selectedId === id) setSelectedId(null);
+    },
+    [selectedId],
+  );
 
   const clearAllSelections = useCallback(() => {
     setSelections([]);
@@ -336,9 +373,7 @@ export default function PDFTextRedactor({
   }, []);
 
   const updateSelectionReason = useCallback((id: string, reason: string) => {
-    setSelections(prev => prev.map(s =>
-      s.id === id ? { ...s, reason } : s
-    ));
+    setSelections((prev) => prev.map((s) => (s.id === id ? { ...s, reason } : s)));
   }, []);
 
   // ============================================
@@ -357,25 +392,28 @@ export default function PDFTextRedactor({
 
       // Convert selections to redaction areas with page coordinates
       const scale = pageDimensions?.scale || 1.5;
-      const areas = selections.flatMap(sel =>
-        sel.rects.map(rect => ({
+      const areas = selections.flatMap((sel) =>
+        sel.rects.map((rect) => ({
           page: sel.pageNumber - 1, // 0-indexed
           x: rect.x / scale,
           y: rect.y / scale,
           width: rect.width / scale,
           height: rect.height / scale,
           reason: sel.reason,
-        }))
+        })),
       );
 
-      formData.append('data', JSON.stringify({
-        areas,
-        options: {
-          redactionColor: '#000000',
-          addRedactionLabel: false,
-          removeText: true,
-        },
-      }));
+      formData.append(
+        'data',
+        JSON.stringify({
+          areas,
+          options: {
+            redactionColor: '#000000',
+            addRedactionLabel: false,
+            removeText: true,
+          },
+        }),
+      );
 
       const response = await fetch(`${API_BASE}/redaction/apply`, {
         method: 'POST',
@@ -418,7 +456,7 @@ export default function PDFTextRedactor({
   // Current page selections
   // ============================================
 
-  const currentPageSelections = selections.filter(s => s.pageNumber === currentPage);
+  const currentPageSelections = selections.filter((s) => s.pageNumber === currentPage);
 
   // ============================================
   // Render
@@ -452,7 +490,7 @@ export default function PDFTextRedactor({
           <div className="flex items-center gap-1 rounded-lg bg-surface-800 p-1">
             <button
               type="button"
-              onClick={() => setZoom(z => Math.max(50, z - 25))}
+              onClick={() => setZoom((z) => Math.max(50, z - 25))}
               className="rounded p-1.5 text-surface-400 hover:bg-surface-700 hover:text-surface-200"
               title="Zoom out"
             >
@@ -461,7 +499,7 @@ export default function PDFTextRedactor({
             <span className="min-w-12 text-center text-xs text-surface-300">{zoom}%</span>
             <button
               type="button"
-              onClick={() => setZoom(z => Math.min(200, z + 25))}
+              onClick={() => setZoom((z) => Math.min(200, z + 25))}
               className="rounded p-1.5 text-surface-400 hover:bg-surface-700 hover:text-surface-200"
               title="Zoom in"
             >
@@ -473,7 +511,7 @@ export default function PDFTextRedactor({
           <div className="flex items-center gap-1 rounded-lg bg-surface-800 p-1">
             <button
               type="button"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
               className="rounded p-1.5 text-surface-400 hover:bg-surface-700 hover:text-surface-200 disabled:opacity-50"
             >
@@ -484,7 +522,7 @@ export default function PDFTextRedactor({
             </span>
             <button
               type="button"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
               className="rounded p-1.5 text-surface-400 hover:bg-surface-700 hover:text-surface-200 disabled:opacity-50"
             >
@@ -612,7 +650,8 @@ export default function PDFTextRedactor({
             <div className="flex gap-2 rounded-lg bg-amber-500/10 p-3">
               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
               <p className="text-xs text-amber-400/90">
-                Redactions are <strong>permanent</strong>. The text will be removed and replaced with black bars.
+                Redactions are <strong>permanent</strong>. The text will be removed and replaced
+                with black bars.
               </p>
             </div>
           </div>
@@ -646,10 +685,7 @@ export default function PDFTextRedactor({
               onMouseLeave={handleMouseUp}
             >
               {/* PDF Canvas */}
-              <canvas
-                ref={canvasRef}
-                className="block rounded-lg bg-white"
-              />
+              <canvas ref={canvasRef} className="block rounded-lg bg-white" />
 
               {/* Text layer for selection detection */}
               <div
@@ -659,7 +695,7 @@ export default function PDFTextRedactor({
               />
 
               {/* Selection overlays for current page */}
-              {currentPageSelections.map(sel => (
+              {currentPageSelections.map((sel) =>
                 sel.rects.map((rect, idx) => (
                   <div
                     key={`${sel.id}-${idx}`}
@@ -674,10 +710,13 @@ export default function PDFTextRedactor({
                       width: rect.width,
                       height: rect.height,
                     }}
-                    onClick={() => setSelectedId(sel.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedId(sel.id);
+                    }}
                   />
-                ))
-              ))}
+                )),
+              )}
 
               {/* Current drawing selection */}
               {currentSelection && currentSelection.width > 0 && currentSelection.height > 0 && (

@@ -29,9 +29,9 @@
  * @compliance NIST 800-53 AU-2 (Audit Events)
  */
 
-import { HttpStatusCodes } from '../../lib/constants';
-import type { AppRouteHandler } from '../../lib/types';
-import { foiaRequestService } from '../../services/foia-request.service';
+import { HttpStatusCodes } from '@/lib/constants';
+import type { AppRouteHandler } from '@/lib/types';
+import { foiaRequestService } from '@/services/requests/foia-request.service';
 import type {
   createRequestRoute,
   getDeadlinesRoute,

@@ -113,16 +113,12 @@
       "indexes": {
         "idx_agencies_jurisdiction": {
           "name": "idx_agencies_jurisdiction",
-          "columns": [
-            "jurisdiction_level"
-          ],
+          "columns": ["jurisdiction_level"],
           "isUnique": false
         },
         "idx_agencies_state": {
           "name": "idx_agencies_state",
-          "columns": [
-            "state"
-          ],
+          "columns": ["state"],
           "isUnique": false
         }
       },
@@ -214,9 +210,7 @@
       "indexes": {
         "agency_stats_agency_id_unique": {
           "name": "agency_stats_agency_id_unique",
-          "columns": [
-            "agency_id"
-          ],
+          "columns": ["agency_id"],
           "isUnique": true
         }
       },
@@ -225,12 +219,8 @@
           "name": "agency_stats_agency_id_agencies_id_fk",
           "tableFrom": "agency_stats",
           "tableTo": "agencies",
-          "columnsFrom": [
-            "agency_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agency_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -304,16 +294,12 @@
       "indexes": {
         "idx_api_keys_user_id": {
           "name": "idx_api_keys_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_api_keys_key_hash": {
           "name": "idx_api_keys_key_hash",
-          "columns": [
-            "key_hash"
-          ],
+          "columns": ["key_hash"],
           "isUnique": true
         }
       },
@@ -322,12 +308,8 @@
           "name": "api_keys_user_id_users_id_fk",
           "tableFrom": "api_keys",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -416,23 +398,17 @@
       "indexes": {
         "idx_appeals_request_id": {
           "name": "idx_appeals_request_id",
-          "columns": [
-            "request_id"
-          ],
+          "columns": ["request_id"],
           "isUnique": false
         },
         "idx_appeals_user_id": {
           "name": "idx_appeals_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_appeals_status": {
           "name": "idx_appeals_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -441,12 +417,8 @@
           "name": "appeals_request_id_foia_requests_id_fk",
           "tableFrom": "appeals",
           "tableTo": "foia_requests",
-          "columnsFrom": [
-            "request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -454,12 +426,8 @@
           "name": "appeals_user_id_users_id_fk",
           "tableFrom": "appeals",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -539,61 +507,42 @@
       "indexes": {
         "idx_audit_logs_user_id": {
           "name": "idx_audit_logs_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_audit_logs_action": {
           "name": "idx_audit_logs_action",
-          "columns": [
-            "action"
-          ],
+          "columns": ["action"],
           "isUnique": false
         },
         "idx_audit_logs_resource_type": {
           "name": "idx_audit_logs_resource_type",
-          "columns": [
-            "resource_type"
-          ],
+          "columns": ["resource_type"],
           "isUnique": false
         },
         "idx_audit_logs_resource_id": {
           "name": "idx_audit_logs_resource_id",
-          "columns": [
-            "resource_id"
-          ],
+          "columns": ["resource_id"],
           "isUnique": false
         },
         "idx_audit_logs_created_at": {
           "name": "idx_audit_logs_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         },
         "idx_audit_logs_user_action": {
           "name": "idx_audit_logs_user_action",
-          "columns": [
-            "user_id",
-            "action"
-          ],
+          "columns": ["user_id", "action"],
           "isUnique": false
         },
         "idx_audit_logs_action_created": {
           "name": "idx_audit_logs_action_created",
-          "columns": [
-            "action",
-            "created_at"
-          ],
+          "columns": ["action", "created_at"],
           "isUnique": false
         },
         "idx_audit_logs_resource_type_id": {
           "name": "idx_audit_logs_resource_type_id",
-          "columns": [
-            "resource_type",
-            "resource_id"
-          ],
+          "columns": ["resource_type", "resource_id"],
           "isUnique": false
         }
       },
@@ -602,12 +551,8 @@
           "name": "audit_logs_user_id_users_id_fk",
           "tableFrom": "audit_logs",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -659,24 +604,17 @@
       "indexes": {
         "idx_comment_votes_comment_id": {
           "name": "idx_comment_votes_comment_id",
-          "columns": [
-            "comment_id"
-          ],
+          "columns": ["comment_id"],
           "isUnique": false
         },
         "idx_comment_votes_user_id": {
           "name": "idx_comment_votes_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_comment_votes_user_comment": {
           "name": "idx_comment_votes_user_comment",
-          "columns": [
-            "user_id",
-            "comment_id"
-          ],
+          "columns": ["user_id", "comment_id"],
           "isUnique": true
         }
       },
@@ -685,12 +623,8 @@
           "name": "comment_votes_comment_id_comments_id_fk",
           "tableFrom": "comment_votes",
           "tableTo": "comments",
-          "columnsFrom": [
-            "comment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["comment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -698,12 +632,8 @@
           "name": "comment_votes_user_id_users_id_fk",
           "tableFrom": "comment_votes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -810,30 +740,22 @@
       "indexes": {
         "idx_comments_document_id": {
           "name": "idx_comments_document_id",
-          "columns": [
-            "document_id"
-          ],
+          "columns": ["document_id"],
           "isUnique": false
         },
         "idx_comments_user_id": {
           "name": "idx_comments_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_comments_type": {
           "name": "idx_comments_type",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "idx_comments_created_at": {
           "name": "idx_comments_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         }
       },
@@ -842,12 +764,8 @@
           "name": "comments_document_id_documents_id_fk",
           "tableFrom": "comments",
           "tableTo": "documents",
-          "columnsFrom": [
-            "document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -855,12 +773,8 @@
           "name": "comments_user_id_users_id_fk",
           "tableFrom": "comments",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -936,12 +850,8 @@
           "name": "consent_history_user_id_users_id_fk",
           "tableFrom": "consent_history",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1032,16 +942,12 @@
       "indexes": {
         "idx_custom_redaction_templates_user_id": {
           "name": "idx_custom_redaction_templates_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_custom_redaction_templates_is_shared": {
           "name": "idx_custom_redaction_templates_is_shared",
-          "columns": [
-            "is_shared"
-          ],
+          "columns": ["is_shared"],
           "isUnique": false
         }
       },
@@ -1050,12 +956,8 @@
           "name": "custom_redaction_templates_user_id_users_id_fk",
           "tableFrom": "custom_redaction_templates",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1136,30 +1038,22 @@
       "indexes": {
         "idx_document_access_log_document_id": {
           "name": "idx_document_access_log_document_id",
-          "columns": [
-            "document_id"
-          ],
+          "columns": ["document_id"],
           "isUnique": false
         },
         "idx_document_access_log_user_id": {
           "name": "idx_document_access_log_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_document_access_log_access_type": {
           "name": "idx_document_access_log_access_type",
-          "columns": [
-            "access_type"
-          ],
+          "columns": ["access_type"],
           "isUnique": false
         },
         "idx_document_access_log_created_at": {
           "name": "idx_document_access_log_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         }
       },
@@ -1168,12 +1062,8 @@
           "name": "document_access_log_document_id_secure_documents_id_fk",
           "tableFrom": "document_access_log",
           "tableTo": "secure_documents",
-          "columnsFrom": [
-            "document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1181,12 +1071,8 @@
           "name": "document_access_log_user_id_users_id_fk",
           "tableFrom": "document_access_log",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1325,44 +1211,32 @@
       "indexes": {
         "idx_documents_request_id": {
           "name": "idx_documents_request_id",
-          "columns": [
-            "request_id"
-          ],
+          "columns": ["request_id"],
           "isUnique": false
         },
         "idx_documents_agency_id": {
           "name": "idx_documents_agency_id",
-          "columns": [
-            "agency_id"
-          ],
+          "columns": ["agency_id"],
           "isUnique": false
         },
         "idx_documents_uploaded_by": {
           "name": "idx_documents_uploaded_by",
-          "columns": [
-            "uploaded_by"
-          ],
+          "columns": ["uploaded_by"],
           "isUnique": false
         },
         "idx_documents_type": {
           "name": "idx_documents_type",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "idx_documents_is_public": {
           "name": "idx_documents_is_public",
-          "columns": [
-            "is_public"
-          ],
+          "columns": ["is_public"],
           "isUnique": false
         },
         "idx_documents_created_at": {
           "name": "idx_documents_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         }
       },
@@ -1371,12 +1245,8 @@
           "name": "documents_request_id_foia_requests_id_fk",
           "tableFrom": "documents",
           "tableTo": "foia_requests",
-          "columnsFrom": [
-            "request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1384,12 +1254,8 @@
           "name": "documents_agency_id_agencies_id_fk",
           "tableFrom": "documents",
           "tableTo": "agencies",
-          "columnsFrom": [
-            "agency_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agency_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1397,12 +1263,8 @@
           "name": "documents_uploaded_by_users_id_fk",
           "tableFrom": "documents",
           "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1591,75 +1453,52 @@
       "indexes": {
         "idx_foia_requests_user_id": {
           "name": "idx_foia_requests_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_foia_requests_agency_id": {
           "name": "idx_foia_requests_agency_id",
-          "columns": [
-            "agency_id"
-          ],
+          "columns": ["agency_id"],
           "isUnique": false
         },
         "idx_foia_requests_status": {
           "name": "idx_foia_requests_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "idx_foia_requests_category": {
           "name": "idx_foia_requests_category",
-          "columns": [
-            "category"
-          ],
+          "columns": ["category"],
           "isUnique": false
         },
         "idx_foia_requests_created_at": {
           "name": "idx_foia_requests_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         },
         "idx_foia_requests_due_date": {
           "name": "idx_foia_requests_due_date",
-          "columns": [
-            "due_date"
-          ],
+          "columns": ["due_date"],
           "isUnique": false
         },
         "idx_foia_requests_is_public": {
           "name": "idx_foia_requests_is_public",
-          "columns": [
-            "is_public"
-          ],
+          "columns": ["is_public"],
           "isUnique": false
         },
         "idx_foia_requests_user_status": {
           "name": "idx_foia_requests_user_status",
-          "columns": [
-            "user_id",
-            "status"
-          ],
+          "columns": ["user_id", "status"],
           "isUnique": false
         },
         "idx_foia_requests_agency_status": {
           "name": "idx_foia_requests_agency_status",
-          "columns": [
-            "agency_id",
-            "status"
-          ],
+          "columns": ["agency_id", "status"],
           "isUnique": false
         },
         "idx_foia_requests_status_created": {
           "name": "idx_foia_requests_status_created",
-          "columns": [
-            "status",
-            "created_at"
-          ],
+          "columns": ["status", "created_at"],
           "isUnique": false
         }
       },
@@ -1668,12 +1507,8 @@
           "name": "foia_requests_user_id_users_id_fk",
           "tableFrom": "foia_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1681,12 +1516,8 @@
           "name": "foia_requests_agency_id_agencies_id_fk",
           "tableFrom": "foia_requests",
           "tableTo": "agencies",
-          "columnsFrom": [
-            "agency_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agency_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1694,12 +1525,8 @@
           "name": "foia_requests_template_id_request_templates_id_fk",
           "tableFrom": "foia_requests",
           "tableTo": "request_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1803,30 +1630,22 @@
       "indexes": {
         "knowledge_articles_slug_unique": {
           "name": "knowledge_articles_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         },
         "idx_knowledge_articles_category": {
           "name": "idx_knowledge_articles_category",
-          "columns": [
-            "category"
-          ],
+          "columns": ["category"],
           "isUnique": false
         },
         "idx_knowledge_articles_state": {
           "name": "idx_knowledge_articles_state",
-          "columns": [
-            "state"
-          ],
+          "columns": ["state"],
           "isUnique": false
         },
         "idx_knowledge_articles_is_published": {
           "name": "idx_knowledge_articles_is_published",
-          "columns": [
-            "is_published"
-          ],
+          "columns": ["is_published"],
           "isUnique": false
         }
       },
@@ -1835,12 +1654,8 @@
           "name": "knowledge_articles_created_by_users_id_fk",
           "tableFrom": "knowledge_articles",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1929,30 +1744,22 @@
       "indexes": {
         "idx_redaction_history_source_document_id": {
           "name": "idx_redaction_history_source_document_id",
-          "columns": [
-            "source_document_id"
-          ],
+          "columns": ["source_document_id"],
           "isUnique": false
         },
         "idx_redaction_history_user_id": {
           "name": "idx_redaction_history_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_redaction_history_template_id": {
           "name": "idx_redaction_history_template_id",
-          "columns": [
-            "template_id"
-          ],
+          "columns": ["template_id"],
           "isUnique": false
         },
         "idx_redaction_history_created_at": {
           "name": "idx_redaction_history_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         }
       },
@@ -1961,12 +1768,8 @@
           "name": "redaction_history_source_document_id_secure_documents_id_fk",
           "tableFrom": "redaction_history",
           "tableTo": "secure_documents",
-          "columnsFrom": [
-            "source_document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_document_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1974,12 +1777,8 @@
           "name": "redaction_history_result_document_id_secure_documents_id_fk",
           "tableFrom": "redaction_history",
           "tableTo": "secure_documents",
-          "columnsFrom": [
-            "result_document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["result_document_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1987,12 +1786,8 @@
           "name": "redaction_history_user_id_users_id_fk",
           "tableFrom": "redaction_history",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2092,12 +1887,8 @@
           "name": "request_templates_created_by_users_id_fk",
           "tableFrom": "request_templates",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2245,37 +2036,27 @@
       "indexes": {
         "idx_secure_documents_uploaded_by": {
           "name": "idx_secure_documents_uploaded_by",
-          "columns": [
-            "uploaded_by"
-          ],
+          "columns": ["uploaded_by"],
           "isUnique": false
         },
         "idx_secure_documents_status": {
           "name": "idx_secure_documents_status",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "idx_secure_documents_sha256": {
           "name": "idx_secure_documents_sha256",
-          "columns": [
-            "sha256_hash"
-          ],
+          "columns": ["sha256_hash"],
           "isUnique": false
         },
         "idx_secure_documents_created_at": {
           "name": "idx_secure_documents_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         },
         "idx_secure_documents_expires_at": {
           "name": "idx_secure_documents_expires_at",
-          "columns": [
-            "expires_at"
-          ],
+          "columns": ["expires_at"],
           "isUnique": false
         }
       },
@@ -2284,12 +2065,8 @@
           "name": "secure_documents_uploaded_by_users_id_fk",
           "tableFrom": "secure_documents",
           "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2369,31 +2146,22 @@
       "indexes": {
         "sessions_token_unique": {
           "name": "sessions_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         },
         "idx_sessions_user_id": {
           "name": "idx_sessions_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "idx_sessions_expires_at": {
           "name": "idx_sessions_expires_at",
-          "columns": [
-            "expires_at"
-          ],
+          "columns": ["expires_at"],
           "isUnique": false
         },
         "idx_sessions_user_expires": {
           "name": "idx_sessions_user_expires",
-          "columns": [
-            "user_id",
-            "expires_at"
-          ],
+          "columns": ["user_id", "expires_at"],
           "isUnique": false
         }
       },
@@ -2402,12 +2170,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2506,24 +2270,17 @@
       "indexes": {
         "idx_use_of_force_stats_agency_id": {
           "name": "idx_use_of_force_stats_agency_id",
-          "columns": [
-            "agency_id"
-          ],
+          "columns": ["agency_id"],
           "isUnique": false
         },
         "idx_use_of_force_stats_year": {
           "name": "idx_use_of_force_stats_year",
-          "columns": [
-            "year"
-          ],
+          "columns": ["year"],
           "isUnique": false
         },
         "idx_use_of_force_stats_agency_year": {
           "name": "idx_use_of_force_stats_agency_year",
-          "columns": [
-            "agency_id",
-            "year"
-          ],
+          "columns": ["agency_id", "year"],
           "isUnique": false
         }
       },
@@ -2532,12 +2289,8 @@
           "name": "use_of_force_stats_agency_id_agencies_id_fk",
           "tableFrom": "use_of_force_stats",
           "tableTo": "agencies",
-          "columnsFrom": [
-            "agency_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["agency_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2722,9 +2475,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },

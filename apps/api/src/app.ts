@@ -26,7 +26,6 @@
  * @author FOIA Stream Team
  * @description Configures and exports the Hono application with middleware,
  *              routes, and error handling for the FOIA Stream API.
- *              Supports both legacy routes and new OpenAPI routes.
  * @compliance NIST 800-53 SC-8 (Transmission Confidentiality), SI-11 (Error Handling)
  */
 
@@ -34,7 +33,6 @@
 // FOIA Stream - Main Application Entry
 // ============================================
 
-import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
@@ -43,21 +41,13 @@ import { env } from './config/env';
 import configureOpenAPI from './lib/configure-open-api';
 import createApp from './lib/create-app';
 import { httpsEnforcement, requestId } from './middleware/security.middleware';
-<<<<<<< HEAD
-import { agencyRoutes, authRoutes, documentRoutes, redactionRoutes, requestRoutes, templateRoutes } from './routes';
-=======
-import {
-  agencyRoutes,
-  authRoutes,
-  redactionRoutes,
-  requestRoutes,
-  templateRoutes,
-  uploadRoutes,
-} from './routes';
->>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
+import { cacheMiddleware } from './middleware/shared.middleware';
+// OpenAPI Routes (all modules now use OpenAPI pattern)
 import agenciesOpenAPIRoute from './routes/agencies';
 import authOpenAPIRoute from './routes/auth';
+import documentsOpenAPIRoute from './routes/documents';
 import indexRoute from './routes/index.route';
+import redactionOpenAPIRoute from './routes/redaction';
 import requestsOpenAPIRoute from './routes/requests';
 import templatesOpenAPIRoute from './routes/templates';
 
@@ -145,43 +135,32 @@ app.get('/health', (c) => {
 // This ensures /doc and /reference are accessible without authentication
 configureOpenAPI(app);
 
-/**
- * API v1 router instance (legacy routes)
- *
- * @constant
- * @type {Hono}
- * @description Sub-router for all v1 API endpoints (legacy pattern)
- * @deprecated Use OpenAPI routes instead
- */
-const api = new Hono();
-
-api.route('/auth', authRoutes);
-api.route('/requests', requestRoutes);
-api.route('/agencies', agencyRoutes);
-api.route('/templates', templateRoutes);
-api.route('/redaction', redactionRoutes);
-<<<<<<< HEAD
-api.route('/documents', documentRoutes);
-=======
-api.route('/upload', uploadRoutes);
->>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
-
-app.route('/api/v1', api);
-
 // ============================================
-// OpenAPI Routes (New Pattern)
+// OpenAPI Routes (Primary)
 // ============================================
 
-/**
- * Mount OpenAPI routes with documentation
- * These routes use @hono/zod-openapi for type-safe validation
- * All routes are prefixed with /api/v1 for consistency
- */
+// Mount OpenAPI routes with documentation
+// These routes use @hono/zod-openapi for type-safe validation and documentation
+// All routes are prefixed with /api/v1 for consistency
+
+// Cache middleware for different route types:
+// - NoCache for auth (sensitive, user-specific)
+// - Short cache for public read-only endpoints
+// - Private cache for user-specific data
+app.use('/api/v1/auth/*', cacheMiddleware('NoCache'));
+app.use('/api/v1/agencies/*', cacheMiddleware('Short'));
+app.use('/api/v1/templates/*', cacheMiddleware('Short'));
+app.use('/api/v1/requests/*', cacheMiddleware('Private'));
+app.use('/api/v1/documents/*', cacheMiddleware('Private'));
+app.use('/api/v1/redaction/*', cacheMiddleware('NoCache'));
+
 app.route('/', indexRoute);
 app.route('/api/v1', authOpenAPIRoute);
 app.route('/api/v1', agenciesOpenAPIRoute);
 app.route('/api/v1', requestsOpenAPIRoute);
 app.route('/api/v1', templatesOpenAPIRoute);
+app.route('/api/v1', documentsOpenAPIRoute);
+app.route('/api/v1', redactionOpenAPIRoute);
 
 // ============================================
 // Export App

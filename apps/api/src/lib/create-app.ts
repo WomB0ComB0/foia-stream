@@ -28,12 +28,12 @@
  *              and routers with standardized middleware and error handling.
  */
 
+import { pinoLogger } from '@/middleware/pino-logger';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Schema } from 'hono';
 import { requestId } from 'hono/request-id';
 import { notFound, onError, serveEmojiFavicon } from 'stoker/middlewares';
 import { defaultHook } from 'stoker/openapi';
-import { pinoLogger } from '../middlewares/pino-logger';
 import type { AppBindings, AppOpenAPI } from './types';
 
 /**

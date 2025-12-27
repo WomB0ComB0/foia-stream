@@ -637,8 +637,12 @@ export default function PDFRedactionViewer({
                 title="PDF Document"
                 className="rounded-lg bg-white pointer-events-none"
                 style={{
-                  width: pageInfo[currentPage]?.width ? `${pageInfo[currentPage].width}px` : '816px',
-                  height: pageInfo[currentPage]?.height ? `${pageInfo[currentPage].height}px` : '1056px',
+                  width: pageInfo[currentPage]?.width
+                    ? `${pageInfo[currentPage].width}px`
+                    : '816px',
+                  height: pageInfo[currentPage]?.height
+                    ? `${pageInfo[currentPage].height}px`
+                    : '1056px',
                 }}
               />
 

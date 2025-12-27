@@ -37,7 +37,6 @@ import {
   LogOut,
   Mail,
   MapPin,
-  Phone,
   Search,
   Settings,
   Shield,
@@ -537,9 +536,7 @@ export default function AgenciesPage() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-xs text-surface-500">
-                    <span>
-                      {agency.responseDeadlineDays} day response
-                    </span>
+                    <span>{agency.responseDeadlineDays} day response</span>
                     {agency.foiaPortalUrl && (
                       <span className="flex items-center gap-1 text-accent-400">
                         <Globe className="h-3 w-3" />

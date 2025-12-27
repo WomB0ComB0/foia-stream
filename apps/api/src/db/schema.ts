@@ -738,7 +738,15 @@ export const secureDocuments = sqliteTable(
     sha256Hash: text('sha256_hash').notNull(),
     /** Document status */
     status: text('status', {
-      enum: ['pending_scan', 'scanning', 'clean', 'infected', 'scan_failed', 'redacted', 'archived'],
+      enum: [
+        'pending_scan',
+        'scanning',
+        'clean',
+        'infected',
+        'scan_failed',
+        'redacted',
+        'archived',
+      ],
     })
       .notNull()
       .default('pending_scan'),

@@ -2,7 +2,7 @@
  * Copyright (c) 2025 Foia Stream
  * Templates Page E2E Tests
  */
-import { describe, beforeEach, it } from "vitest";
+import { describe, beforeEach, it } from 'vitest';
 
 describe('Templates Page', () => {
   beforeEach(() => {

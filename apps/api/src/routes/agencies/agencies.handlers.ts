@@ -29,10 +29,10 @@
  * @compliance NIST 800-53 AC-3 (Access Enforcement)
  */
 
-import { HttpStatusCodes } from '../../lib/constants';
-import type { AppRouteHandler } from '../../lib/types';
-import { agencyService } from '../../services/agency.service';
-import type { Agency } from '../../types';
+import { HttpStatusCodes } from '@/lib/constants';
+import type { AppRouteHandler } from '@/lib/types';
+import { agencyService } from '@/services/agencies/agency.service';
+import type { Agency } from '@/types';
 import type {
   createAgencyRoute,
   getAgencyRoute,

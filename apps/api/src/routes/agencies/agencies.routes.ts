@@ -29,8 +29,8 @@
  * @compliance NIST 800-53 AC-3 (Access Enforcement)
  */
 
+import { HttpStatusCodes } from '@/lib/constants';
 import { createRoute, z } from '@hono/zod-openapi';
-import { HttpStatusCodes } from '../../lib/constants';
 
 // ============================================
 // Shared Schemas
@@ -179,7 +179,7 @@ export const searchAgenciesRoute = createRoute({
         .positive()
         .optional()
         .default(1)
-        .openapi({ description: 'Page number' }),
+        .openapi({ type: 'integer', description: 'Page number' }),
       pageSize: z.coerce
         .number()
         .int()
@@ -187,7 +187,7 @@ export const searchAgenciesRoute = createRoute({
         .max(100)
         .optional()
         .default(20)
-        .openapi({ description: 'Items per page' }),
+        .openapi({ type: 'integer', description: 'Items per page' }),
     }),
   },
   responses: {

@@ -53,7 +53,7 @@ describe('API Utilities', () => {
       const headers: Record<string, string> = {};
       const token = localStorageMock.getItem('authToken');
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
       }
       expect(headers).toEqual({});
     });
@@ -63,9 +63,9 @@ describe('API Utilities', () => {
       const headers: Record<string, string> = {};
       const token = localStorageMock.getItem('authToken');
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
       }
-      expect(headers['Authorization']).toBe('Bearer my-token');
+      expect(headers.Authorization).toBe('Bearer my-token');
     });
   });
 

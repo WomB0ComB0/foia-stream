@@ -3,7 +3,7 @@
  * Contact Page E2E Tests
  */
 
-import { describe, beforeEach, it } from "vitest";
+import { describe, beforeEach, it } from 'vitest';
 
 describe('Contact Page', () => {
   beforeEach(() => {

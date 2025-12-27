@@ -3,7 +3,7 @@
  * Authentication E2E Tests
  */
 
-import { beforeEach, describe, it } from "vitest";
+import { beforeEach, describe, it } from 'vitest';
 
 describe('Authentication', () => {
   describe('Login Page', () => {

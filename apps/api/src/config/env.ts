@@ -107,18 +107,11 @@ const EnvSchema = S.Struct({
   ),
 
   /**
-<<<<<<< HEAD
    * VirusTotal API key for malware scanning
    * Optional - if not set, virus scanning will be skipped
    * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
    */
   VIRUSTOTAL_API_KEY: S.optional(S.String),
-=======
-   * VirusTotal API key for malware scanning of uploaded files
-   * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
-   */
-  VIRUSTOTAL_API_KEY: S.String.pipe(S.optionalWith({ default: () => '' })),
->>>>>>> 10c15c3 (feat(api): 🔒 Implement secure PDF upload and malware scanning)
 });
 
 /**

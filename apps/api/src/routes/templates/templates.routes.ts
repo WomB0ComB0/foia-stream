@@ -29,8 +29,8 @@
  * @compliance NIST 800-53 AC-3 (Access Enforcement)
  */
 
+import { HttpStatusCodes } from '@/lib/constants';
 import { createRoute, z } from '@hono/zod-openapi';
-import { HttpStatusCodes } from '../../lib/constants';
 
 // ============================================
 // Shared Schemas
@@ -134,8 +134,15 @@ export const searchTemplatesRoute = createRoute({
     query: z.object({
       query: z.string().optional().openapi({ description: 'Text search query' }),
       category: RecordCategorySchema.optional().openapi({ description: 'Filter by category' }),
-      page: z.coerce.number().int().positive().optional().default(1),
-      pageSize: z.coerce.number().int().positive().max(100).optional().default(20),
+      page: z.coerce.number().int().positive().optional().default(1).openapi({ type: 'integer' }),
+      pageSize: z.coerce
+        .number()
+        .int()
+        .positive()
+        .max(100)
+        .optional()
+        .default(20)
+        .openapi({ type: 'integer' }),
     }),
   },
   responses: {

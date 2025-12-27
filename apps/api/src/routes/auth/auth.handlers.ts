@@ -29,12 +29,12 @@
  * @compliance NIST 800-53 AC-2 (Account Management)
  */
 
-import type { Context } from 'hono';
-import { apiKeyService } from '@/services/api-key.service';
-import { authService } from '@/services/auth.service';
-import { type ConsentData, consentService } from '@/services/consent.service';
-import { mfaService } from '@/services/mfa.service';
+import { apiKeyService } from '@/services/auth/api-key.service';
+import { authService } from '@/services/auth/auth.service';
+import { type ConsentData, consentService } from '@/services/auth/consent.service';
+import { mfaService } from '@/services/auth/mfa.service';
 import type { User } from '@/types';
+import type { Context } from 'hono';
 
 /**
  * Maps user object to API response format (excludes passwordHash)

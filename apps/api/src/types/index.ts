@@ -406,3 +406,15 @@ export interface SearchFilters {
   jurisdictionLevel?: JurisdictionLevel;
   state?: string;
 }
+
+/**
+ * Generic paginated result structure
+ * @interface
+ * @template T - Type of data items
+ */
+export interface PaginatedResult<T> {
+  /** Array of result items */
+  data: T[];
+  /** Pagination metadata */
+  pagination: PaginationInfo;
+}

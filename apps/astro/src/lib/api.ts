@@ -213,12 +213,14 @@ const FoiaRequestSchema = S.Struct({
   isPublic: S.Boolean,
   createdAt: S.String,
   updatedAt: S.String,
-  agency: S.optional(S.Struct({
-    id: S.String,
-    name: S.String,
-    abbreviation: S.optional(S.NullOr(S.String)),
-    jurisdictionLevel: S.String,
-  })),
+  agency: S.optional(
+    S.Struct({
+      id: S.String,
+      name: S.String,
+      abbreviation: S.optional(S.NullOr(S.String)),
+      jurisdictionLevel: S.String,
+    }),
+  ),
 });
 
 /**
@@ -419,7 +421,14 @@ const DocumentAccessLogSchema = S.Struct({
   id: S.String,
   documentId: S.String,
   userId: S.String,
-  accessType: S.Literal('view', 'download', 'preview_redaction', 'apply_redaction', 'share', 'delete'),
+  accessType: S.Literal(
+    'view',
+    'download',
+    'preview_redaction',
+    'apply_redaction',
+    'share',
+    'delete',
+  ),
   mfaVerified: S.Boolean,
   ipAddress: S.NullOr(S.String),
   userAgent: S.NullOr(S.String),
@@ -511,8 +520,12 @@ async function runEffect<T, I = T>(
       }
 
       // Some endpoints return data in `data` field, others return message at top level
-      const innerData = response.data !== undefined ? response.data :
-        (response.message !== undefined ? { message: response.message } : undefined);
+      const innerData =
+        response.data !== undefined
+          ? response.data
+          : response.message !== undefined
+            ? { message: response.message }
+            : undefined;
 
       // Validate inner data if schema is provided
       if (schema) {
@@ -730,7 +743,11 @@ class ApiClient {
    */
   async withdrawRequest(id: string): Promise<ApiResponse<FoiaRequest>> {
     return runEffect(
-      post<FoiaRequest>(`${this.baseUrl}/requests/${id}/withdraw`, {}, { headers: getAuthHeaders() }),
+      post<FoiaRequest>(
+        `${this.baseUrl}/requests/${id}/withdraw`,
+        {},
+        { headers: getAuthHeaders() },
+      ),
       FoiaRequestSchema,
     );
   }

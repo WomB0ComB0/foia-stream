@@ -95,6 +95,9 @@ This API is designed with SOC 2 Type II, NIST 800-53, and GDPR compliance in min
       { name: 'Agencies', description: 'Government agency management' },
       { name: 'Requests', description: 'FOIA request lifecycle' },
       { name: 'Templates', description: 'Request template management' },
+      { name: 'Documents', description: 'Document management and storage' },
+      { name: 'Redaction', description: 'Text and PDF redaction tools' },
+      { name: 'Upload', description: 'File upload and validation' },
     ],
   });
 

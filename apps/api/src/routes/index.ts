@@ -24,18 +24,15 @@
  * @file Routes Index
  * @module routes
  * @author FOIA Stream Team
- * @description Centralized export for all API route modules.
- *              Each route module handles a specific domain of the FOIA Stream API.
+ * @description All routes now use the OpenAPI pattern and are imported directly by app.ts.
+ *              This file is kept for backwards compatibility but routes are organized in subfolders:
+ *              - routes/auth/ - Authentication routes
+ *              - routes/agencies/ - Agency management routes
+ *              - routes/requests/ - FOIA request routes
+ *              - routes/templates/ - Template management routes
+ *              - routes/documents/ - Document management and upload routes
+ *              - routes/redaction/ - PDF redaction routes
  */
 
-// ============================================
-// FOIA Stream - Routes Index
-// ============================================
-
-export { agencyRoutes } from './agencies.routes';
-export { authRoutes } from './auth.routes';
-export { documentRoutes } from './documents.routes';
-export { redactionRoutes } from './redaction.routes';
-export { requestRoutes } from './requests.routes';
-export { templateRoutes } from './templates.routes';
-export { uploadRoutes } from './upload.routes';
+// All routes now use OpenAPI pattern via subfolders imported directly in app.ts
+export {};

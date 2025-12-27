@@ -233,11 +233,12 @@ export default function RequestDetail({ requestId }: Props) {
                   {request.agency.abbreviation && (
                     <p className="text-sm text-surface-400">({request.agency.abbreviation})</p>
                   )}
-                  {'foiaEmail' in request.agency && (request.agency as { foiaEmail?: string }).foiaEmail && (
-                    <p className="font-display text-sm text-accent-400">
-                      {(request.agency as { foiaEmail?: string }).foiaEmail}
-                    </p>
-                  )}
+                  {'foiaEmail' in request.agency &&
+                    (request.agency as { foiaEmail?: string }).foiaEmail && (
+                      <p className="font-display text-sm text-accent-400">
+                        {(request.agency as { foiaEmail?: string }).foiaEmail}
+                      </p>
+                    )}
                 </div>
               ) : (
                 <p className="text-surface-400">Agency ID: {request.agencyId}</p>

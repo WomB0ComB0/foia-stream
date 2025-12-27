@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -70,7 +71,9 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '@': '/src',
+      '@': path.resolve(__dirname, './src'),
+      // Mock bun:sqlite for Vitest (Node.js) - tests that need DB should use bun test
+      'bun:sqlite': path.resolve(__dirname, './tests/__mocks__/bun-sqlite.ts'),
     },
   },
 });

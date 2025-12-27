@@ -30,8 +30,8 @@
  * @compliance NIST 800-53 AU-2 (Audit Events)
  */
 
-import { createRouter } from '../../lib/create-app';
-import { authMiddleware, optionalAuthMiddleware } from '../../middleware/auth.middleware';
+import { createRouter } from '@/lib/create-app';
+import { authMiddleware, optionalAuthMiddleware } from '@/middleware/auth.middleware';
 import * as handlers from './requests.handlers';
 import * as routes from './requests.routes';
 

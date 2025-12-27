@@ -33,9 +33,9 @@
 // FOIA Stream - Authentication Middleware
 // ============================================
 
+import { authService, type JWTPayload } from '@/services/auth/auth.service';
+import type { UserRole } from '@/types';
 import type { Context, Next } from 'hono';
-import { authService, type JWTPayload } from '../services/auth.service';
-import type { UserRole } from '../types';
 
 // Extend Hono context to include user
 declare module 'hono' {

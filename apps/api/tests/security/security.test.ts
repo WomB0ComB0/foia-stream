@@ -30,13 +30,13 @@
  * because bun:sqlite is not available in Node.js. Run with `bun test` for full coverage.
  */
 
+import * as rateLimitModule from '@/middleware/rate-limit.middleware';
+import * as backupModule from '@/services/operations/backup.service';
+import * as encryptionService from '@/services/requests/encryption.service';
 import { describe, expect, test } from 'vitest';
-import * as rateLimitModule from '../../src/middleware/rate-limit.middleware';
-import * as backupModule from '../../src/services/backup.service';
-import * as encryptionService from '../../src/services/encryption.service';
 // MFAService requires bun:sqlite - tested separately with `bun test`
-// import { MFAService, mfaService } from '../../src/services/mfa.service';
-import * as securityUtils from '../../src/utils/security';
+// import { MFAService, mfaService } from '@/services/mfa.service';
+import * as securityUtils from '@/utils/security';
 
 // ============================================
 // Encryption Service Tests

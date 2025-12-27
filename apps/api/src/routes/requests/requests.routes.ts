@@ -30,8 +30,8 @@
  * @compliance NIST 800-53 AU-2 (Audit Events)
  */
 
+import { HttpStatusCodes } from '@/lib/constants';
 import { createRoute, z } from '@hono/zod-openapi';
-import { HttpStatusCodes } from '../../lib/constants';
 
 // ============================================
 // Shared Schemas
@@ -194,8 +194,15 @@ export const searchRequestsRoute = createRoute({
       category: RecordCategorySchema.optional().openapi({
         description: 'Filter by record category',
       }),
-      page: z.coerce.number().int().positive().optional().default(1),
-      pageSize: z.coerce.number().int().positive().max(100).optional().default(20),
+      page: z.coerce.number().int().positive().optional().default(1).openapi({ type: 'integer' }),
+      pageSize: z.coerce
+        .number()
+        .int()
+        .positive()
+        .max(100)
+        .optional()
+        .default(20)
+        .openapi({ type: 'integer' }),
     }),
   },
   responses: {
@@ -234,8 +241,15 @@ export const getMyRequestsRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
-      page: z.coerce.number().int().positive().optional().default(1),
-      pageSize: z.coerce.number().int().positive().max(100).optional().default(20),
+      page: z.coerce.number().int().positive().optional().default(1).openapi({ type: 'integer' }),
+      pageSize: z.coerce
+        .number()
+        .int()
+        .positive()
+        .max(100)
+        .optional()
+        .default(20)
+        .openapi({ type: 'integer' }),
     }),
   },
   responses: {
@@ -288,7 +302,7 @@ export const getDeadlinesRoute = createRoute({
         .positive()
         .optional()
         .default(7)
-        .openapi({ description: 'Days to look ahead' }),
+        .openapi({ type: 'integer', description: 'Days to look ahead' }),
     }),
   },
   responses: {

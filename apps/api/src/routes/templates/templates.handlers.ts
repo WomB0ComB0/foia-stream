@@ -28,9 +28,9 @@
  * @compliance NIST 800-53 AC-3 (Access Enforcement)
  */
 
-import { HttpStatusCodes } from '../../lib/constants';
-import type { AppRouteHandler } from '../../lib/types';
-import { templateService } from '../../services/template.service';
+import { HttpStatusCodes } from '@/lib/constants';
+import type { AppRouteHandler } from '@/lib/types';
+import { templateService } from '@/services/templates/template.service';
 import type {
   createTemplateRoute,
   getOfficialTemplatesRoute,

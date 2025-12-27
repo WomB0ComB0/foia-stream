@@ -34,15 +34,16 @@
  * Controls: SC-5, A.8.6, 3.13.13
  */
 
-import { Schema as S } from 'effect';
-import type { Context, MiddlewareHandler, Next } from 'hono';
 import {
   banIdentifier,
+  getMatchingBannedCIDR,
   getSlowmodeMultiplier,
   isIdentifierBanned,
   isIdentifierSlowed,
-} from '../services/banlist.service';
-import { getMatchingBannedCIDR, isIPInBannedCIDR } from '../services/cidr-banlist.service';
+  isIPInBannedCIDR,
+} from '@/services';
+import { Schema as S } from 'effect';
+import type { Context, MiddlewareHandler, Next } from 'hono';
 
 // ============================================
 // Effect Schema Definitions
@@ -653,7 +654,7 @@ export function autoBanProtection(config: Partial<AutoBanConfig> = {}): Middlewa
           violationTracker.delete(ip);
         } else if (useSlowmode && existing.count >= violationsBeforeBan / 2) {
           // Apply slowmode at half the violation threshold
-          const { slowIdentifier } = await import('../services/banlist.service');
+          const { slowIdentifier } = await import('@/services/security/banlist.service');
           slowIdentifier(ip, {
             reason: 'Auto-slowmode: rate limit violations',
             multiplier: Math.min(5, 1 + existing.count / 2),
@@ -706,8 +707,8 @@ export {
   KeyedThrottle,
   LeakyBucketLimiter,
   SlidingWindowCounter,
-  TokenBucketLimiter,
   throttle,
+  TokenBucketLimiter,
 } from '@foia-stream/shared';
 // Re-export banlist functions for convenience
 export {
@@ -715,9 +716,9 @@ export {
   getSlowmodeMultiplier,
   isIdentifierBanned,
   isIdentifierSlowed,
-} from '../services/banlist.service';
+} from '@/services/security/banlist.service';
 export {
   banCIDRRange,
   getMatchingBannedCIDR,
   isIPInBannedCIDR,
-} from '../services/cidr-banlist.service';
+} from '@/services/security/cidr-banlist.service';

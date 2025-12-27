@@ -28,10 +28,10 @@
  *              Defines bindings, route handlers, and application types.
  */
 
+import type { JWTPayload } from '@/services/auth/auth.service';
 import type { OpenAPIHono, RouteConfig, RouteHandler } from '@hono/zod-openapi';
 import type { Schema } from 'hono';
 import type { PinoLogger } from 'hono-pino';
-import type { JWTPayload } from '../services/auth.service';
 
 /**
  * Application context bindings

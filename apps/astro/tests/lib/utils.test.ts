@@ -91,9 +91,9 @@ describe('getStatusColor', () => {
     expect(result).toContain('bg-blue-600');
   });
 
-  it('should return correct color for pending status', () => {
-    const result = getStatusColor('pending');
-    expect(result).toContain('bg-amber-500');
+  it('should return correct color for acknowledged status', () => {
+    const result = getStatusColor('acknowledged');
+    expect(result).toContain('bg-indigo-600');
   });
 
   it('should return correct color for processing status', () => {
@@ -101,19 +101,19 @@ describe('getStatusColor', () => {
     expect(result).toContain('bg-purple-600');
   });
 
-  it('should return correct color for completed status', () => {
-    const result = getStatusColor('completed');
+  it('should return correct color for fulfilled status', () => {
+    const result = getStatusColor('fulfilled');
     expect(result).toContain('bg-emerald-600');
   });
 
-  it('should return correct color for rejected status', () => {
-    const result = getStatusColor('rejected');
+  it('should return correct color for denied status', () => {
+    const result = getStatusColor('denied');
     expect(result).toContain('bg-red-600');
   });
 
   it('should return correct color for appealed status', () => {
     const result = getStatusColor('appealed');
-    expect(result).toContain('bg-orange-500');
+    expect(result).toContain('bg-orange-600');
   });
 
   it('should return default color for unknown status', () => {
@@ -136,16 +136,16 @@ describe('CATEGORIES', () => {
     });
   });
 
-  it('should include general category', () => {
-    const general = CATEGORIES.find((c) => c.value === 'general');
-    expect(general).toBeDefined();
-    expect(general?.label).toBe('General Records');
+  it('should include body_cam_footage category', () => {
+    const bodyCam = CATEGORIES.find((c) => c.value === 'body_cam_footage');
+    expect(bodyCam).toBeDefined();
+    expect(bodyCam?.label).toBe('Body Camera Footage');
   });
 
-  it('should include contracts category', () => {
-    const contracts = CATEGORIES.find((c) => c.value === 'contracts');
-    expect(contracts).toBeDefined();
-    expect(contracts?.label).toBe('Contracts & Procurement');
+  it('should include contract category', () => {
+    const contract = CATEGORIES.find((c) => c.value === 'contract');
+    expect(contract).toBeDefined();
+    expect(contract?.label).toBe('Contract');
   });
 
   it('should have at least 5 categories', () => {

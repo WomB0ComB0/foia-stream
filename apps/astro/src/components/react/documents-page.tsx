@@ -30,9 +30,9 @@
  * @compliance NIST 800-53 MP-6 (Media Sanitization)
  */
 
+import { initAuth, logout, useAuthStore } from '@/stores/auth';
 import {
   AlertTriangle,
-  CheckCircle,
   ChevronDown,
   Download,
   Eye,
@@ -54,10 +54,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useStore } from '@nanostores/react';
-
 import { API_BASE } from '../../lib/config';
-import { $isAuthenticated, $isLoading, $user, initAuth, logout } from '@/stores/auth';
 import PDFTextRedactor from './pdf-text-redactor';
 
 // ============================================
@@ -69,7 +66,14 @@ interface Document {
   originalFileName: string;
   fileSize: number;
   mimeType: string;
-  status: 'pending_scan' | 'scanning' | 'clean' | 'infected' | 'scan_failed' | 'redacted' | 'archived';
+  status:
+    | 'pending_scan'
+    | 'scanning'
+    | 'clean'
+    | 'infected'
+    | 'scan_failed'
+    | 'redacted'
+    | 'archived';
   requiresMfa: boolean;
   hasPassword: boolean;
   expiresAt: string | null;
@@ -167,9 +171,9 @@ function getStatusIcon(status: Document['status']) {
  */
 export default function DocumentsPage() {
   // Auth state
-  const user = useStore($user);
-  const isAuth = useStore($isAuthenticated);
-  const authLoading = useStore($isLoading);
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -209,7 +213,6 @@ export default function DocumentsPage() {
 
   // Redaction templates state
   const [templates, setTemplates] = useState<RedactionTemplate[]>([]);
-  const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   // Text redaction state
@@ -304,111 +307,120 @@ export default function DocumentsPage() {
   // Handlers
   // ============================================
 
-  const handleUpload = useCallback(async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const handleUpload = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return;
 
-    const file = files[0];
-    if (!file) return;
+      const file = files[0];
+      if (!file) return;
 
-    setUploading(true);
-    setUploadProgress(0);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const options: Record<string, unknown> = {};
-      if (uploadOptions.requiresMfa) options.requiresMfa = true;
-      if (uploadOptions.accessPassword) options.accessPassword = uploadOptions.accessPassword;
-      if (uploadOptions.expiresInDays) options.expiresInDays = uploadOptions.expiresInDays;
-
-      if (Object.keys(options).length > 0) {
-        formData.append('options', JSON.stringify(options));
-      }
-
-      // Simulate progress for UX
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
-
-      const response = await fetch(`${API_BASE}/documents/upload`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData,
-      });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Upload failed');
-      }
-
-      // Reset form and refresh list
-      setShowUpload(false);
-      setUploadOptions({ requiresMfa: false, accessPassword: '', expiresInDays: null });
-      await fetchDocuments();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
-    } finally {
-      setUploading(false);
+      setUploading(true);
       setUploadProgress(0);
-    }
-  }, [uploadOptions, getAuthHeaders, fetchDocuments]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    handleUpload(e.dataTransfer.files);
-  }, [handleUpload]);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
 
-  const handleViewDocument = useCallback(async (doc: Document, accessToken?: string) => {
-    // Check if MFA or password required
-    if (doc.requiresMfa && !accessToken) {
-      setMfaDocument(doc);
-      return;
-    }
+        const options: Record<string, unknown> = {};
+        if (uploadOptions.requiresMfa) options.requiresMfa = true;
+        if (uploadOptions.accessPassword) options.accessPassword = uploadOptions.accessPassword;
+        if (uploadOptions.expiresInDays) options.expiresInDays = uploadOptions.expiresInDays;
 
-    if (doc.hasPassword && !doc.requiresMfa && !accessToken) {
-      setPasswordDocument(doc);
-      return;
-    }
+        if (Object.keys(options).length > 0) {
+          formData.append('options', JSON.stringify(options));
+        }
 
-    setLoadingDocument(true);
-    try {
-      const url = new URL(`${API_BASE}/documents/${doc.id}/download`);
-      if (accessToken) {
-        url.searchParams.set('accessToken', accessToken);
-      }
+        // Simulate progress for UX
+        const progressInterval = setInterval(() => {
+          setUploadProgress((prev) => Math.min(prev + 10, 90));
+        }, 200);
 
-      const response = await fetch(url.toString(), {
-        headers: getAuthHeaders(),
-      });
+        const response = await fetch(`${API_BASE}/documents/upload`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: formData,
+        });
 
-      if (!response.ok) {
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+
         const result = await response.json();
-        if (result.requiresMfa) {
-          setMfaDocument(doc);
-          return;
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Upload failed');
         }
-        if (result.requiresPassword) {
-          setPasswordDocument(doc);
-          return;
-        }
-        throw new Error(result.error || 'Failed to load document');
+
+        // Reset form and refresh list
+        setShowUpload(false);
+        setUploadOptions({ requiresMfa: false, accessPassword: '', expiresInDays: null });
+        await fetchDocuments();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Upload failed');
+      } finally {
+        setUploading(false);
+        setUploadProgress(0);
+      }
+    },
+    [uploadOptions, getAuthHeaders, fetchDocuments],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      handleUpload(e.dataTransfer.files);
+    },
+    [handleUpload],
+  );
+
+  const handleViewDocument = useCallback(
+    async (doc: Document, accessToken?: string) => {
+      // Check if MFA or password required
+      if (doc.requiresMfa && !accessToken) {
+        setMfaDocument(doc);
+        return;
       }
 
-      const blob = await response.blob();
-      setDocumentBlob(blob);
-      setViewingDocument(doc);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load document');
-    } finally {
-      setLoadingDocument(false);
-    }
-  }, [getAuthHeaders]);
+      if (doc.hasPassword && !doc.requiresMfa && !accessToken) {
+        setPasswordDocument(doc);
+        return;
+      }
+
+      setLoadingDocument(true);
+      try {
+        const url = new URL(`${API_BASE}/documents/${doc.id}/download`);
+        if (accessToken) {
+          url.searchParams.set('accessToken', accessToken);
+        }
+
+        const response = await fetch(url.toString(), {
+          headers: getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+          const result = await response.json();
+          if (result.requiresMfa) {
+            setMfaDocument(doc);
+            return;
+          }
+          if (result.requiresPassword) {
+            setPasswordDocument(doc);
+            return;
+          }
+          throw new Error(result.error || 'Failed to load document');
+        }
+
+        const blob = await response.blob();
+        setDocumentBlob(blob);
+        setViewingDocument(doc);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load document');
+      } finally {
+        setLoadingDocument(false);
+      }
+    },
+    [getAuthHeaders],
+  );
 
   const handleVerifyMfa = useCallback(async () => {
     if (!mfaDocument || mfaCode.length !== 6) return;
@@ -477,62 +489,68 @@ export default function DocumentsPage() {
     }
   }, [passwordDocument, documentPassword, getAuthHeaders, handleViewDocument]);
 
-  const handleDelete = useCallback(async (doc: Document) => {
-    if (!confirm(`Are you sure you want to delete "${doc.originalFileName}"?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/documents/${doc.id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || 'Delete failed');
+  const handleDelete = useCallback(
+    async (doc: Document) => {
+      if (!confirm(`Are you sure you want to delete "${doc.originalFileName}"?`)) {
+        return;
       }
 
-      await fetchDocuments();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
-    }
-  }, [getAuthHeaders, fetchDocuments]);
+      try {
+        const response = await fetch(`${API_BASE}/documents/${doc.id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+        });
 
-  const handleDownload = useCallback(async (doc: Document) => {
-    // Check security requirements
-    if (doc.requiresMfa) {
-      setMfaDocument(doc);
-      return;
-    }
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || 'Delete failed');
+        }
 
-    if (doc.hasPassword) {
-      setPasswordDocument(doc);
-      return;
-    }
+        await fetchDocuments();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Delete failed');
+      }
+    },
+    [getAuthHeaders, fetchDocuments],
+  );
 
-    try {
-      const response = await fetch(`${API_BASE}/documents/${doc.id}/download`, {
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error('Download failed');
+  const handleDownload = useCallback(
+    async (doc: Document) => {
+      // Check security requirements
+      if (doc.requiresMfa) {
+        setMfaDocument(doc);
+        return;
       }
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = doc.originalFileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Download failed');
-    }
-  }, [getAuthHeaders]);
+      if (doc.hasPassword) {
+        setPasswordDocument(doc);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/documents/${doc.id}/download`, {
+          headers: getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+          throw new Error('Download failed');
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.originalFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Download failed');
+      }
+    },
+    [getAuthHeaders],
+  );
 
   const handleTextRedaction = useCallback(async () => {
     if (!textToRedact.trim()) return;
@@ -570,7 +588,7 @@ export default function DocumentsPage() {
   // ============================================
 
   const filteredDocuments = documents.filter((doc) =>
-    doc.originalFileName.toLowerCase().includes(searchQuery.toLowerCase())
+    doc.originalFileName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // ============================================
@@ -724,509 +742,558 @@ export default function DocumentsPage() {
             </div>
           </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400">
-            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-            <p>{error}</p>
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="ml-auto"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-500" />
-            <input
-              type="text"
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-surface-700 bg-surface-900 py-2.5 pl-10 pr-4 text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
-            />
-          </div>
-        </div>
-
-        {/* Security Notice */}
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-accent-500/30 bg-accent-500/10 px-4 py-3">
-          <Shield className="mt-0.5 h-5 w-5 flex-shrink-0 text-accent-400" />
-          <div>
-            <p className="font-medium text-accent-300">Secure Document Processing</p>
-            <p className="mt-1 text-sm text-surface-400">
-              All uploaded documents are scanned for malware using VirusTotal. Sensitive documents can
-              be protected with MFA or password. Redactions are applied permanently and cannot be undone.
-            </p>
-          </div>
-        </div>
-
-        {/* Documents List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-accent-400" />
-          </div>
-        ) : filteredDocuments.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-surface-700 bg-surface-900/50 px-8 py-12 text-center">
-            <FileText className="mx-auto h-12 w-12 text-surface-500" />
-            <h3 className="mt-4 text-lg font-medium text-surface-200">No documents</h3>
-            <p className="mt-2 text-surface-400">
-              {searchQuery
-                ? 'No documents match your search'
-                : 'Upload your first document to get started'}
-            </p>
-            {!searchQuery && (
-              <button
-                type="button"
-                onClick={() => setShowUpload(true)}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-accent-400"
-              >
-                <Plus className="h-4 w-4" />
-                Upload Document
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <p>{error}</p>
+              <button type="button" onClick={() => setError(null)} className="ml-auto">
+                <X className="h-4 w-4" />
               </button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-surface-800 bg-surface-900">
-            <table className="w-full">
-              <thead className="border-b border-surface-800 bg-surface-800/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
-                    Document
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
-                    Security
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
-                    Size
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
-                    Uploaded
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-800">
-                {filteredDocuments.map((doc) => (
-                  <tr key={doc.id} className="transition-colors hover:bg-surface-800/30">
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-surface-500" />
-                        <div>
-                          <p className="font-medium text-surface-100">{doc.originalFileName}</p>
-                          <p className="text-xs text-surface-500">{doc.mimeType}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(doc.status)}`}>
-                        {getStatusIcon(doc.status)}
-                        {doc.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {doc.requiresMfa && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-400/10 px-2 py-0.5 text-xs text-purple-400">
-                            <Key className="h-3 w-3" />
-                            MFA
-                          </span>
-                        )}
-                        {doc.hasPassword && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-400/10 px-2 py-0.5 text-xs text-blue-400">
-                            <Lock className="h-3 w-3" />
-                            Password
-                          </span>
-                        )}
-                        {!doc.requiresMfa && !doc.hasPassword && (
-                          <span className="text-xs text-surface-500">None</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-surface-300">
-                      {formatFileSize(doc.fileSize)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-surface-300">
-                      {formatDate(doc.createdAt)}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {doc.mimeType === 'application/pdf' && doc.status === 'clean' && (
-                          <button
-                            type="button"
-                            onClick={() => handleViewDocument(doc)}
-                            disabled={loadingDocument}
-                            className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                            title="View & Redact"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(doc)}
-                          className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                          title="Download"
-                        >
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(doc)}
-                          className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Upload Modal */}
-        {showUpload && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-lg rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-surface-100">Upload Document</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowUpload(false)}
-                  className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Drop Zone */}
-              <div
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className={`mb-6 rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
-                  dragOver
-                    ? 'border-accent-500 bg-accent-500/10'
-                    : 'border-surface-700 bg-surface-800/50'
-                }`}
-              >
-                {uploading ? (
-                  <div className="space-y-4">
-                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-accent-400" />
-                    <div className="mx-auto max-w-xs">
-                      <div className="mb-2 h-2 overflow-hidden rounded-full bg-surface-700">
-                        <div
-                          className="h-full bg-accent-500 transition-all"
-                          style={{ width: `${uploadProgress}%` }}
-                        />
-                      </div>
-                      <p className="text-sm text-surface-400">
-                        {uploadProgress < 90 ? 'Uploading...' : 'Scanning for viruses...'}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="mx-auto h-10 w-10 text-surface-500" />
-                    <p className="mt-4 text-surface-300">
-                      Drag and drop a file here, or{' '}
-                      <label className="cursor-pointer text-accent-400 hover:text-accent-300">
-                        browse
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt"
-                          onChange={(e) => handleUpload(e.target.files)}
-                        />
-                      </label>
-                    </p>
-                    <p className="mt-2 text-xs text-surface-500">
-                      Supported: PDF, images, Office documents (max 100MB)
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Security Options */}
-              <div className="space-y-4 border-t border-surface-800 pt-6">
-                <h3 className="text-sm font-medium text-surface-300">Security Options</h3>
-
-                <label className="flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={uploadOptions.requiresMfa}
-                    onChange={(e) => setUploadOptions((prev) => ({ ...prev, requiresMfa: e.target.checked }))}
-                    className="h-4 w-4 rounded border-surface-600 bg-surface-800 text-accent-500 focus:ring-accent-500"
-                  />
-                  <span className="text-sm text-surface-300">Require MFA to access</span>
-                </label>
-
-                <div>
-                  <label className="block text-sm text-surface-400">Access Password (optional)</label>
-                  <input
-                    type="password"
-                    value={uploadOptions.accessPassword}
-                    onChange={(e) => setUploadOptions((prev) => ({ ...prev, accessPassword: e.target.value }))}
-                    placeholder="Enter password"
-                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-surface-400">Auto-expire after (days)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="365"
-                    value={uploadOptions.expiresInDays || ''}
-                    onChange={(e) => setUploadOptions((prev) => ({
-                      ...prev,
-                      expiresInDays: e.target.value ? Number.parseInt(e.target.value, 10) : null,
-                    }))}
-                    placeholder="No expiration"
-                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
-                  />
-                </div>
-              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* MFA Verification Modal */}
-        {mfaDocument && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-surface-100">MFA Verification Required</h2>
-                <button
-                  type="button"
-                  onClick={() => { setMfaDocument(null); setMfaCode(''); setMfaError(null); }}
-                  className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <p className="mb-6 text-surface-400">
-                Enter your 6-digit authentication code to access{' '}
-                <span className="font-medium text-surface-200">{mfaDocument.originalFileName}</span>
-              </p>
-
-              {mfaError && (
-                <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">
-                  {mfaError}
-                </div>
-              )}
-
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-500" />
               <input
                 type="text"
-                value={mfaCode}
-                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                className="mb-6 w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-center font-mono text-2xl tracking-widest text-surface-100 placeholder-surface-600 focus:border-accent-500 focus:outline-none"
-                maxLength={6}
-                autoFocus
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-surface-700 bg-surface-900 py-2.5 pl-10 pr-4 text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
               />
-
-              <button
-                type="button"
-                onClick={handleVerifyMfa}
-                disabled={mfaCode.length !== 6 || verifyingMfa}
-                className="w-full rounded-lg bg-accent-500 py-3 font-medium text-surface-950 transition-colors hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {verifyingMfa ? (
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
-                ) : (
-                  'Verify & Access'
-                )}
-              </button>
             </div>
           </div>
-        )}
 
-        {/* Password Verification Modal */}
-        {passwordDocument && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-surface-100">Password Required</h2>
-                <button
-                  type="button"
-                  onClick={() => { setPasswordDocument(null); setDocumentPassword(''); setPasswordError(null); }}
-                  className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <p className="mb-6 text-surface-400">
-                Enter the password to access{' '}
-                <span className="font-medium text-surface-200">{passwordDocument.originalFileName}</span>
+          {/* Security Notice */}
+          <div className="mb-6 flex items-start gap-3 rounded-lg border border-accent-500/30 bg-accent-500/10 px-4 py-3">
+            <Shield className="mt-0.5 h-5 w-5 shrink-0 text-accent-400" />
+            <div>
+              <p className="font-medium text-accent-300">Secure Document Processing</p>
+              <p className="mt-1 text-sm text-surface-400">
+                All uploaded documents are scanned for malware using VirusTotal. Sensitive documents
+                can be protected with MFA or password. Redactions are applied permanently and cannot
+                be undone.
               </p>
-
-              {passwordError && (
-                <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">
-                  {passwordError}
-                </div>
-              )}
-
-              <input
-                type="password"
-                value={documentPassword}
-                onChange={(e) => setDocumentPassword(e.target.value)}
-                placeholder="Enter password"
-                className="mb-6 w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
-                autoFocus
-              />
-
-              <button
-                type="button"
-                onClick={handleVerifyPassword}
-                disabled={!documentPassword || verifyingPassword}
-                className="w-full rounded-lg bg-accent-500 py-3 font-medium text-surface-950 transition-colors hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {verifyingPassword ? (
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
-                ) : (
-                  'Verify & Access'
-                )}
-              </button>
             </div>
           </div>
-        )}
 
-        {/* Text Redactor Modal */}
-        {showTextRedactor && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-3xl rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-surface-100">Text Redactor</h2>
+          {/* Documents List */}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-accent-400" />
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-surface-700 bg-surface-900/50 px-8 py-12 text-center">
+              <FileText className="mx-auto h-12 w-12 text-surface-500" />
+              <h3 className="mt-4 text-lg font-medium text-surface-200">No documents</h3>
+              <p className="mt-2 text-surface-400">
+                {searchQuery
+                  ? 'No documents match your search'
+                  : 'Upload your first document to get started'}
+              </p>
+              {!searchQuery && (
                 <button
                   type="button"
-                  onClick={() => { setShowTextRedactor(false); setTextToRedact(''); setRedactedText(null); }}
-                  className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                  onClick={() => setShowUpload(true)}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-accent-400"
                 >
-                  <X className="h-5 w-5" />
+                  <Plus className="h-4 w-4" />
+                  Upload Document
                 </button>
-              </div>
-
-              {/* Template Selector */}
-              <div className="mb-4">
-                <label className="block text-sm text-surface-400">Redaction Template</label>
-                <select
-                  value={selectedTemplate || ''}
-                  onChange={(e) => setSelectedTemplate(e.target.value || null)}
-                  className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 focus:border-accent-500 focus:outline-none"
-                >
-                  <option value="">Standard PII (SSN, Email, Phone)</option>
-                  {templates.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-surface-800 bg-surface-900">
+              <table className="w-full">
+                <thead className="border-b border-surface-800 bg-surface-800/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
+                      Document
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
+                      Security
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
+                      Size
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
+                      Uploaded
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-800">
+                  {filteredDocuments.map((doc) => (
+                    <tr key={doc.id} className="transition-colors hover:bg-surface-800/30">
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-surface-500" />
+                          <div>
+                            <p className="font-medium text-surface-100">{doc.originalFileName}</p>
+                            <p className="text-xs text-surface-500">{doc.mimeType}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(doc.status)}`}
+                        >
+                          {getStatusIcon(doc.status)}
+                          {doc.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {doc.requiresMfa && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-400/10 px-2 py-0.5 text-xs text-purple-400">
+                              <Key className="h-3 w-3" />
+                              MFA
+                            </span>
+                          )}
+                          {doc.hasPassword && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-400/10 px-2 py-0.5 text-xs text-blue-400">
+                              <Lock className="h-3 w-3" />
+                              Password
+                            </span>
+                          )}
+                          {!doc.requiresMfa && !doc.hasPassword && (
+                            <span className="text-xs text-surface-500">None</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-surface-300">
+                        {formatFileSize(doc.fileSize)}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-surface-300">
+                        {formatDate(doc.createdAt)}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {doc.mimeType === 'application/pdf' && doc.status === 'clean' && (
+                            <button
+                              type="button"
+                              onClick={() => handleViewDocument(doc)}
+                              disabled={loadingDocument}
+                              className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                              title="View & Redact"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(doc)}
+                            className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc)}
+                            className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                </select>
-              </div>
+                </tbody>
+              </table>
+            </div>
+          )}
 
-              {/* Disclaimer */}
-              <div className="mb-4 flex items-start gap-2 rounded-lg bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                <span>
-                  ⚠️ Automated redaction may not be 100% accurate. Always review results manually before use.
-                </span>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                {/* Input */}
-                <div>
-                  <label className="mb-2 block text-sm text-surface-400">Original Text</label>
-                  <textarea
-                    value={textToRedact}
-                    onChange={(e) => setTextToRedact(e.target.value)}
-                    placeholder="Paste text containing sensitive information..."
-                    rows={12}
-                    className="w-full rounded-lg border border-surface-700 bg-surface-800 p-3 text-sm text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
-                  />
+          {/* Upload Modal */}
+          {showUpload && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-lg rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-surface-100">Upload Document</h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowUpload(false)}
+                    className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
-                {/* Output */}
-                <div>
-                  <label className="mb-2 block text-sm text-surface-400">Redacted Text</label>
-                  <div className="h-[272px] overflow-auto rounded-lg border border-surface-700 bg-surface-800 p-3">
-                    {redacting ? (
-                      <div className="flex h-full items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-accent-400" />
+                {/* Drop Zone */}
+                <section
+                  // role="presentation"
+                  aria-label="Drop zone"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  className={`mb-6 rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+                    dragOver
+                      ? 'border-accent-500 bg-accent-500/10'
+                      : 'border-surface-700 bg-surface-800/50'
+                  }`}
+                >
+                  {uploading ? (
+                    <div className="space-y-4">
+                      <Loader2 className="mx-auto h-10 w-10 animate-spin text-accent-400" />
+                      <div className="mx-auto max-w-xs">
+                        <div className="mb-2 h-2 overflow-hidden rounded-full bg-surface-700">
+                          <div
+                            className="h-full bg-accent-500 transition-all"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-sm text-surface-400">
+                          {uploadProgress < 90 ? 'Uploading...' : 'Scanning for viruses...'}
+                        </p>
                       </div>
-                    ) : redactedText ? (
-                      <pre className="whitespace-pre-wrap text-sm text-surface-100">{redactedText}</pre>
-                    ) : (
-                      <p className="text-sm text-surface-500">
-                        Redacted text will appear here...
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="mx-auto h-10 w-10 text-surface-500" />
+                      <p className="mt-4 text-surface-300">
+                        Drag and drop a file here, or{' '}
+                        <label className="cursor-pointer text-accent-400 hover:text-accent-300">
+                          browse
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt"
+                            onChange={(e) => handleUpload(e.target.files)}
+                          />
+                        </label>
                       </p>
-                    )}
+                      <p className="mt-2 text-xs text-surface-500">
+                        Supported: PDF, images, Office documents (max 100MB)
+                      </p>
+                    </>
+                  )}
+                </section>
+
+                {/* Security Options */}
+                <div className="space-y-4 border-t border-surface-800 pt-6">
+                  <h3 className="text-sm font-medium text-surface-300">Security Options</h3>
+
+                  <label className="flex cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={uploadOptions.requiresMfa}
+                      onChange={(e) =>
+                        setUploadOptions((prev) => ({ ...prev, requiresMfa: e.target.checked }))
+                      }
+                      className="h-4 w-4 rounded border-surface-600 bg-surface-800 text-accent-500 focus:ring-accent-500"
+                    />
+                    <span className="text-sm text-surface-300">Require MFA to access</span>
+                  </label>
+
+                  <div>
+                    <label htmlFor="access-password" className="block text-sm text-surface-400">
+                      Access Password (optional)
+                    </label>
+                    <input
+                      type="password"
+                      value={uploadOptions.accessPassword}
+                      onChange={(e) =>
+                        setUploadOptions((prev) => ({ ...prev, accessPassword: e.target.value }))
+                      }
+                      placeholder="Enter password"
+                      className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="expires-in-days" className="block text-sm text-surface-400">
+                      Auto-expire after (days)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={uploadOptions.expiresInDays || ''}
+                      onChange={(e) =>
+                        setUploadOptions((prev) => ({
+                          ...prev,
+                          expiresInDays: e.target.value
+                            ? Number.parseInt(e.target.value, 10)
+                            : null,
+                        }))
+                      }
+                      placeholder="No expiration"
+                      className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
+                    />
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => { setTextToRedact(''); setRedactedText(null); }}
-                  className="rounded-lg border border-surface-700 px-4 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800"
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  onClick={handleTextRedaction}
-                  disabled={!textToRedact.trim() || redacting}
-                  className="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {redacting ? 'Redacting...' : 'Redact Text'}
-                </button>
-                {redactedText && (
+          {/* MFA Verification Modal */}
+          {mfaDocument && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-surface-100">
+                    MFA Verification Required
+                  </h2>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard.writeText(redactedText)}
-                    className="rounded-lg bg-surface-700 px-4 py-2 text-sm text-surface-200 transition-colors hover:bg-surface-600"
+                    onClick={() => {
+                      setMfaDocument(null);
+                      setMfaCode('');
+                      setMfaError(null);
+                    }}
+                    className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
                   >
-                    Copy Result
+                    <X className="h-5 w-5" />
                   </button>
+                </div>
+
+                <p className="mb-6 text-surface-400">
+                  Enter your 6-digit authentication code to access{' '}
+                  <span className="font-medium text-surface-200">
+                    {mfaDocument.originalFileName}
+                  </span>
+                </p>
+
+                {mfaError && (
+                  <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">
+                    {mfaError}
+                  </div>
                 )}
+
+                <input
+                  type="text"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  className="mb-6 w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-center font-mono text-2xl tracking-widest text-surface-100 placeholder-surface-600 focus:border-accent-500 focus:outline-none"
+                  maxLength={6}
+                />
+
+                <button
+                  type="button"
+                  onClick={handleVerifyMfa}
+                  disabled={mfaCode.length !== 6 || verifyingMfa}
+                  className="w-full rounded-lg bg-accent-500 py-3 font-medium text-surface-950 transition-colors hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {verifyingMfa ? (
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  ) : (
+                    'Verify & Access'
+                  )}
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PDF Text Redactor */}
-        {viewingDocument && documentBlob && (
-          <PDFTextRedactor
-            file={documentBlob}
-            filename={viewingDocument.originalFileName}
-            onClose={() => { setViewingDocument(null); setDocumentBlob(null); }}
-            onRedacted={(blob, areas) => {
-              // Download the redacted PDF
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `redacted_${viewingDocument.originalFileName}`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-            }}
-            authToken={localStorage.getItem('auth_token') || undefined}
-          />
-        )}
+          {/* Password Verification Modal */}
+          {passwordDocument && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-surface-100">Password Required</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPasswordDocument(null);
+                      setDocumentPassword('');
+                      setPasswordError(null);
+                    }}
+                    className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <p className="mb-6 text-surface-400">
+                  Enter the password to access{' '}
+                  <span className="font-medium text-surface-200">
+                    {passwordDocument.originalFileName}
+                  </span>
+                </p>
+
+                {passwordError && (
+                  <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">
+                    {passwordError}
+                  </div>
+                )}
+
+                <input
+                  type="password"
+                  value={documentPassword}
+                  onChange={(e) => setDocumentPassword(e.target.value)}
+                  placeholder="Enter password"
+                  className="mb-6 w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleVerifyPassword}
+                  disabled={!documentPassword || verifyingPassword}
+                  className="w-full rounded-lg bg-accent-500 py-3 font-medium text-surface-950 transition-colors hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {verifyingPassword ? (
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  ) : (
+                    'Verify & Access'
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Text Redactor Modal */}
+          {showTextRedactor && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-3xl rounded-2xl border border-surface-700 bg-surface-900 p-6 shadow-xl">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-surface-100">Text Redactor</h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTextRedactor(false);
+                      setTextToRedact('');
+                      setRedactedText(null);
+                    }}
+                    className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Template Selector */}
+                <div className="mb-4">
+                  <label htmlFor="template" className="block text-sm text-surface-400">
+                    Redaction Template
+                  </label>
+                  <select
+                    value={selectedTemplate || ''}
+                    onChange={(e) => setSelectedTemplate(e.target.value || null)}
+                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 focus:border-accent-500 focus:outline-none"
+                  >
+                    <option value="">Standard PII (SSN, Email, Phone)</option>
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Disclaimer */}
+                <div className="mb-4 flex items-start gap-2 rounded-lg bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    ⚠️ Automated redaction may not be 100% accurate. Always review results manually
+                    before use.
+                  </span>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Input */}
+                  <div>
+                    <label htmlFor="text-to-redact" className="mb-2 block text-sm text-surface-400">
+                      Original Text
+                    </label>
+                    <textarea
+                      value={textToRedact}
+                      onChange={(e) => setTextToRedact(e.target.value)}
+                      placeholder="Paste text containing sensitive information..."
+                      rows={12}
+                      className="w-full rounded-lg border border-surface-700 bg-surface-800 p-3 text-sm text-surface-100 placeholder-surface-500 focus:border-accent-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Output */}
+                  <div>
+                    <label htmlFor="redacted-text" className="mb-2 block text-sm text-surface-400">
+                      Redacted Text
+                    </label>
+                    <div className="h-[272px] overflow-auto rounded-lg border border-surface-700 bg-surface-800 p-3">
+                      {redacting ? (
+                        <div className="flex h-full items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-accent-400" />
+                        </div>
+                      ) : redactedText ? (
+                        <pre className="whitespace-pre-wrap text-sm text-surface-100">
+                          {redactedText}
+                        </pre>
+                      ) : (
+                        <p className="text-sm text-surface-500">
+                          Redacted text will appear here...
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTextToRedact('');
+                      setRedactedText(null);
+                    }}
+                    className="rounded-lg border border-surface-700 px-4 py-2 text-sm text-surface-300 transition-colors hover:bg-surface-800"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleTextRedaction}
+                    disabled={!textToRedact.trim() || redacting}
+                    className="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-accent-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {redacting ? 'Redacting...' : 'Redact Text'}
+                  </button>
+                  {redactedText && (
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(redactedText)}
+                      className="rounded-lg bg-surface-700 px-4 py-2 text-sm text-surface-200 transition-colors hover:bg-surface-600"
+                    >
+                      Copy Result
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PDF Text Redactor */}
+          {viewingDocument && documentBlob && (
+            <PDFTextRedactor
+              file={documentBlob}
+              filename={viewingDocument.originalFileName}
+              onClose={() => {
+                setViewingDocument(null);
+                setDocumentBlob(null);
+              }}
+              onRedacted={(blob,_) => {
+                // Download the redacted PDF
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `redacted_${viewingDocument.originalFileName}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+              authToken={localStorage.getItem('auth_token') || undefined}
+            />
+          )}
         </div>
       </div>
     </div>

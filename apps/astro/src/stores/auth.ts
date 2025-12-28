@@ -86,6 +86,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 export const $user = {
   get: () => useAuthStore.getState().user,
   set: (user: User | null) => useAuthStore.getState().setUser(user),
+  subscribe: (callback: (user: User | null) => void) => {
+    let prev = useAuthStore.getState().user;
+    return useAuthStore.subscribe((state) => {
+      if (state.user !== prev) {
+        prev = state.user;
+        callback(state.user);
+      }
+    });
+  },
 };
 
 /**
@@ -102,6 +111,15 @@ export const $token = {
 export const $isLoading = {
   get: () => useAuthStore.getState().isLoading,
   set: (loading: boolean) => useAuthStore.getState().setLoading(loading),
+  subscribe: (callback: (isLoading: boolean) => void) => {
+    let prev = useAuthStore.getState().isLoading;
+    return useAuthStore.subscribe((state) => {
+      if (state.isLoading !== prev) {
+        prev = state.isLoading;
+        callback(state.isLoading);
+      }
+    });
+  },
 };
 
 /**
@@ -109,6 +127,15 @@ export const $isLoading = {
  */
 export const $isAuthenticated = {
   get: () => useAuthStore.getState().isAuthenticated,
+  subscribe: (callback: (isAuthenticated: boolean) => void) => {
+    let prev = useAuthStore.getState().isAuthenticated;
+    return useAuthStore.subscribe((state) => {
+      if (state.isAuthenticated !== prev) {
+        prev = state.isAuthenticated;
+        callback(state.isAuthenticated);
+      }
+    });
+  },
 };
 
 /**

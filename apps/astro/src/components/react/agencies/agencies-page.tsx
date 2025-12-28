@@ -105,7 +105,7 @@ const US_STATES = [
   { code: 'WI', name: 'Wisconsin' },
   { code: 'WY', name: 'Wyoming' },
   { code: 'DC', name: 'Washington D.C.' },
-];
+] as const;
 
 /**
  * Agencies browsing page component

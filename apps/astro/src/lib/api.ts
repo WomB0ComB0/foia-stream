@@ -507,15 +507,15 @@ async function runEffect<T, I = T>(
   const result = await Effect.runPromiseExit(program);
 
   if (result._tag === 'Success') {
-    const response = result.value as any;
+    const response = result.value as Record<string, unknown>;
 
     // Handle standard API envelope
     if (response && typeof response === 'object' && 'success' in response) {
       if (!response.success) {
         return {
           success: false,
-          error: response.error || response.message || 'Unknown error',
-          message: response.message,
+          error: (response.error as string) || (response.message as string) || 'Unknown error',
+          message: response.message as string | undefined,
         };
       }
 
@@ -538,10 +538,10 @@ async function runEffect<T, I = T>(
             error: `Response validation failed: ${errors}`,
           };
         }
-        return { ...response, data: decoded.right };
+        return { success: true, data: decoded.right } as ApiResponse<T>;
       }
 
-      return response;
+      return { success: response.success as boolean, data: response.data as T } as ApiResponse<T>;
     }
 
     // Fallback for non-envelope responses

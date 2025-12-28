@@ -30,7 +30,6 @@
  * @compliance NIST 800-53 MP-6 (Media Sanitization)
  */
 
-import { initAuth, logout, useAuthStore } from '@/stores/auth';
 import {
   AlertTriangle,
   ChevronDown,
@@ -54,6 +53,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { initAuth, logout, useAuthStore } from '@/stores/auth';
 import { API_BASE } from '../../../lib/config';
 import PDFTextRedactor from './pdf-text-redactor';
 

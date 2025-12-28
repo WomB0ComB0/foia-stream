@@ -25,11 +25,11 @@
  * @module components/react/NewRequestForm
  */
 
+import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { type Agency, api, type Template } from '@/lib/api';
 import { CATEGORIES } from '@/lib/utils';
 import { initAuth, useAuthStore } from '@/stores/auth';
-import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import AgencySearch from '../agencies/agency-search';
 
 /**

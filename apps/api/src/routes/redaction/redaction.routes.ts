@@ -36,7 +36,9 @@ export const applyRedactionsRoute = createRoute({
       content: {
         'multipart/form-data': {
           schema: z.object({
-            file: z.instanceof(File).openapi({ description: 'PDF file to redact' }),
+            file: z
+              .instanceof(File)
+              .openapi({ type: 'string', format: 'binary', description: 'PDF file to redact' }),
             data: z
               .string()
               .openapi({ description: 'JSON string with redaction areas and options' }),
@@ -49,7 +51,7 @@ export const applyRedactionsRoute = createRoute({
     [HttpStatusCodes.OK]: {
       content: {
         'application/pdf': {
-          schema: z.instanceof(Blob),
+          schema: z.instanceof(Blob).openapi({ type: 'string', format: 'binary' }),
         },
       },
       description: 'Redacted PDF file',
@@ -80,7 +82,9 @@ export const previewRedactionsRoute = createRoute({
       content: {
         'multipart/form-data': {
           schema: z.object({
-            file: z.instanceof(File).openapi({ description: 'PDF file to preview' }),
+            file: z
+              .instanceof(File)
+              .openapi({ type: 'string', format: 'binary', description: 'PDF file to preview' }),
             data: z.string().openapi({ description: 'JSON string with redaction areas' }),
           }),
         },
@@ -91,7 +95,7 @@ export const previewRedactionsRoute = createRoute({
     [HttpStatusCodes.OK]: {
       content: {
         'application/pdf': {
-          schema: z.instanceof(Blob),
+          schema: z.instanceof(Blob).openapi({ type: 'string', format: 'binary' }),
         },
       },
       description: 'Preview PDF with redaction overlays',
@@ -117,7 +121,9 @@ export const getPdfInfoRoute = createRoute({
       content: {
         'multipart/form-data': {
           schema: z.object({
-            file: z.instanceof(File).openapi({ description: 'PDF file to analyze' }),
+            file: z
+              .instanceof(File)
+              .openapi({ type: 'string', format: 'binary', description: 'PDF file to analyze' }),
           }),
         },
       },
@@ -153,7 +159,9 @@ export const redactTextInPdfRoute = createRoute({
       content: {
         'multipart/form-data': {
           schema: z.object({
-            file: z.instanceof(File).openapi({ description: 'PDF file to redact' }),
+            file: z
+              .instanceof(File)
+              .openapi({ type: 'string', format: 'binary', description: 'PDF file to redact' }),
             data: z.string().openapi({ description: 'JSON string with text search options' }),
           }),
         },
@@ -164,7 +172,7 @@ export const redactTextInPdfRoute = createRoute({
     [HttpStatusCodes.OK]: {
       content: {
         'application/pdf': {
-          schema: z.instanceof(Blob),
+          schema: z.instanceof(Blob).openapi({ type: 'string', format: 'binary' }),
         },
       },
       description: 'Redacted PDF file',

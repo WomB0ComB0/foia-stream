@@ -148,19 +148,24 @@ app.use(
     // Strict referrer policy - only send origin for same-origin, nothing for cross-origin
     referrerPolicy: 'strict-origin-when-cross-origin',
 
-    // Content Security Policy - tight restrictions
+    // Content Security Policy - tight restrictions with docs exception
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
-      // Scripts: self only, no inline scripts (use nonces in production)
-      scriptSrc: ["'self'"],
-      // Styles: self only, inline needed for some UI frameworks
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      // Scripts: self + Scalar CDN for API docs + inline for Scalar
+      scriptSrc: ["'self'", 'https://cdn.jsdelivr.net', "'unsafe-inline'"],
+      // Styles: self + inline for Scalar + CDN
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        'https://cdn.jsdelivr.net',
+        'https://fonts.googleapis.com',
+      ],
       // Images: self, data URIs for base64, and HTTPS sources
       imgSrc: ["'self'", 'data:', 'https:'],
-      // Connections: same origin plus the API domain
-      connectSrc: ["'self'"],
-      // Fonts: self and data URIs
-      fontSrc: ["'self'", 'data:'],
+      // Connections: same origin plus CDN
+      connectSrc: ["'self'", 'https://cdn.jsdelivr.net'],
+      // Fonts: self, data URIs, Google Fonts, and jsdelivr CDN
+      fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
       // Block all object/embed/applet elements
       objectSrc: ["'none'"],
       // Media: self only
@@ -177,27 +182,21 @@ app.use(
       upgradeInsecureRequests: [],
     },
 
-    // Permissions Policy - disable ALL unnecessary browser features
-    // This prevents fingerprinting and limits attack surface
+    // Permissions Policy - disable unnecessary browser features
+    // Note: Only using standard features recognized by modern browsers
     permissionsPolicy: {
       // Location/sensors - disable completely
       accelerometer: [],
-      ambientLightSensor: [],
       autoplay: [],
-      battery: [],
       camera: [],
       displayCapture: [],
       encryptedMedia: [],
-      executionWhileNotRendered: [],
-      executionWhileOutOfViewport: [],
       fullscreen: ["'self'"],
       gamepad: [],
       geolocation: [],
       gyroscope: [],
       hid: [],
-      identityCredentialsGet: [],
       idleDetection: [],
-      localFonts: [],
       magnetometer: [],
       microphone: [],
       midi: [],
@@ -206,13 +205,9 @@ app.use(
       publickeyCredentialsGet: [],
       screenWakeLock: [],
       serial: [],
-      speakerSelection: [],
       // Only enable storage access for self
       storageAccess: ["'self'"],
-      syncXhr: [],
       usb: [],
-      webShare: [],
-      windowManagement: [],
       xrSpatialTracking: [],
     },
   }),

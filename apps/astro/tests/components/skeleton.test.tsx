@@ -13,7 +13,7 @@ import {
   SkeletonStatCard,
   SkeletonTemplateCard,
   SkeletonText,
-} from '../../src/components/react/skeleton';
+} from '../../src/components/react/common/skeleton';
 
 describe('Skeleton', () => {
   it('should render with default classes', () => {

@@ -409,7 +409,9 @@ export const uploadPdfRoute = createRoute({
       content: {
         'multipart/form-data': {
           schema: z.object({
-            file: z.instanceof(File).openapi({ description: 'PDF file to upload' }),
+            file: z
+              .instanceof(File)
+              .openapi({ type: 'string', format: 'binary', description: 'PDF file to upload' }),
           }),
         },
       },
@@ -445,7 +447,9 @@ export const validatePdfRoute = createRoute({
       content: {
         'multipart/form-data': {
           schema: z.object({
-            file: z.instanceof(File).openapi({ description: 'PDF file to validate' }),
+            file: z
+              .instanceof(File)
+              .openapi({ type: 'string', format: 'binary', description: 'PDF file to validate' }),
           }),
         },
       },

@@ -25,6 +25,9 @@
  * @module components/react/RequestDetail
  */
 
+import { api, type FoiaRequest } from '@/lib/api';
+import { formatDate, formatDateTime, getStatusColor } from '@/lib/utils';
+import { initAuth, useAuthStore } from '@/stores/auth';
 import {
   ArrowLeft,
   Building2,
@@ -46,9 +49,6 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { api, type FoiaRequest } from '@/lib/api';
-import { formatDate, formatDateTime, getStatusColor } from '@/lib/utils';
-import { initAuth, useAuthStore } from '@/stores/auth';
 
 /**
  * Props for the RequestDetail component
@@ -199,27 +199,6 @@ export default function RequestDetail({ requestId }: Props) {
 
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-6">
-          <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
-            <div className="mb-4 flex items-start justify-between">
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-surface-100">{request.title}</h1>
-                {request.trackingNumber && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-surface-400">
-                    <Hash className="h-4 w-4" />
-                    <span className="font-display">Tracking: {request.trackingNumber}</span>
-                  </div>
-                )}
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(request.status)}`}
-              >
-                {request.status}
-              </span>
-            </div>
-
-            <p className="whitespace-pre-wrap text-surface-300">{request.description}</p>
-          </div>
-
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-surface-100">
@@ -268,6 +247,27 @@ export default function RequestDetail({ requestId }: Props) {
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-surface-100">{request.title}</h1>
+                {request.trackingNumber && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-surface-400">
+                    <Hash className="h-4 w-4" />
+                    <span className="font-display">Tracking: {request.trackingNumber}</span>
+                  </div>
+                )}
+              </div>
+              <span
+                className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(request.status)}`}
+              >
+                {request.status}
+              </span>
+            </div>
+
+            <p className="whitespace-pre-wrap text-surface-300">{request.description}</p>
           </div>
 
           <div className="rounded-2xl border border-surface-800 bg-surface-900/50 p-6">

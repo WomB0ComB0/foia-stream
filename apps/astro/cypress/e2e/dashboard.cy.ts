@@ -98,33 +98,33 @@ describe('Dashboard with Requests', () => {
       agencyId: 'agency-1',
       templateId: null,
       title: 'Test FOIA Request 1',
-      subject: 'Test Subject',
       description: 'Test description',
-      requestBody: 'Request body content',
       status: 'submitted',
-      referenceNumber: null,
+      category: 'other',
+      isPublic: true,
+      trackingNumber: null,
       submittedAt: new Date().toISOString(),
       acknowledgedAt: null,
       dueDate: null,
       completedAt: null,
-      responseDeadline: null,
-      fees: null,
+      dateRangeStart: null,
+      dateRangeEnd: null,
       estimatedFee: null,
       actualFee: null,
-      notes: null,
+      denialReason: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
   ];
 
   beforeEach(() => {
-    cy.loginMock();
-
-    // Override requests with mock data
-    cy.intercept('GET', '**/requests*', {
-      statusCode: 200,
-      body: mockRequests,
-    }).as('getRequests');
+    cy.loginMock().then(() => {
+      // Override requests intercept AFTER loginMock (last registered takes precedence in Cypress)
+      cy.intercept('GET', '**/requests*', {
+        statusCode: 200,
+        body: { success: true, data: mockRequests },
+      }).as('getRequestsWithData');
+    });
 
     cy.visit('/dashboard');
     cy.wait(500);
@@ -140,5 +140,35 @@ describe('Dashboard with Requests', () => {
 
   it('should have Select All button when requests exist', () => {
     cy.contains(/Select All/i).should('exist');
+  });
+
+  describe('Interactions', () => {
+    it('should navigate to new request page', () => {
+      cy.contains('New Request').click();
+      cy.url().should('include', '/requests/new');
+    });
+
+    it('should refresh requests when refresh button is clicked', () => {
+      cy.intercept('GET', '**/requests*').as('refreshRequests');
+      cy.get('button[title="Refresh"]').click();
+      cy.wait('@refreshRequests');
+    });
+  });
+});
+
+describe('Dashboard Empty State', () => {
+  beforeEach(() => {
+    cy.loginMock();
+    cy.intercept('GET', '**/requests*', {
+      statusCode: 200,
+      body: { success: true, data: [] },
+    }).as('getEmptyRequests');
+    cy.visit('/dashboard');
+    cy.wait(500);
+  });
+
+  it('should display empty state message', () => {
+    cy.contains(/No requests yet|Create your first/i).should('be.visible');
+    cy.contains('New Request').should('be.visible');
   });
 });

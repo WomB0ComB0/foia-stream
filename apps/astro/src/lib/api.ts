@@ -508,10 +508,12 @@ async function runEffect<T, I = T>(
 
   if (result._tag === 'Success') {
     const response = result.value as Record<string, unknown>;
+    console.log('[API] runEffect success:', response);
 
     // Handle standard API envelope
     if (response && typeof response === 'object' && 'success' in response) {
       if (!response.success) {
+        console.error('[API] Response success=false:', response);
         return {
           success: false,
           error: (response.error as string) || (response.message as string) || 'Unknown error',
@@ -532,7 +534,7 @@ async function runEffect<T, I = T>(
         const decoded = S.decodeUnknownEither(schema)(innerData);
         if (decoded._tag === 'Left') {
           const errors = ParseResult.TreeFormatter.formatIssueSync(decoded.left.issue);
-          console.error('[API] Response validation failed:', errors);
+          console.error('[API] Response validation failed:', errors, innerData);
           return {
             success: false,
             error: `Response validation failed: ${errors}`,

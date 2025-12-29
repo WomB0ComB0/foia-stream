@@ -38,8 +38,8 @@ export const PreviewRedactionsRequestSchema = z
 export const RedactTextInPdfRequestSchema = z
   .object({
     searchText: z.string().min(1, 'Search text is required'),
-    caseSensitive: z.boolean().optional().default(false),
-    wholeWords: z.boolean().optional().default(false),
+    caseSensitive: z.boolean().optional().default(false).openapi({ type: 'boolean' }),
+    wholeWords: z.boolean().optional().default(false).openapi({ type: 'boolean' }),
   })
   .openapi('RedactTextInPdfRequest');
 

@@ -97,8 +97,20 @@ const CreateAgencySchema = z
     foiaEmail: z.string().email().optional().openapi({ example: 'foia@fbi.gov' }),
     foiaAddress: z.string().optional(),
     foiaPortalUrl: z.string().url().optional().openapi({ example: 'https://vault.fbi.gov' }),
-    responseDeadlineDays: z.number().int().positive().optional().default(20),
-    appealDeadlineDays: z.number().int().positive().optional().default(30),
+    responseDeadlineDays: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .default(20)
+      .openapi({ type: 'integer' }),
+    appealDeadlineDays: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .default(30)
+      .openapi({ type: 'integer' }),
   })
   .openapi('CreateAgency');
 
@@ -349,7 +361,7 @@ export const createAgencyRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: AgencySchema,
-            message: z.string().default('Agency created successfully'),
+            message: z.string().default('Agency created successfully').openapi({ type: 'string' }),
           }),
         },
       },
@@ -421,7 +433,7 @@ export const updateAgencyRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: AgencySchema,
-            message: z.string().default('Agency updated successfully'),
+            message: z.string().default('Agency updated successfully').openapi({ type: 'string' }),
           }),
         },
       },

@@ -452,7 +452,7 @@ export const createRequestRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: FOIARequestSchema,
-            message: z.string().default('Request created successfully'),
+            message: z.string().default('Request created successfully').openapi({ type: 'string' }),
           }),
         },
       },
@@ -507,7 +507,10 @@ export const submitRequestRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: FOIARequestSchema,
-            message: z.string().default('Request submitted successfully'),
+            message: z
+              .string()
+              .default('Request submitted successfully')
+              .openapi({ type: 'string' }),
           }),
         },
       },
@@ -563,7 +566,7 @@ export const updateRequestRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: FOIARequestSchema,
-            message: z.string().default('Request updated successfully'),
+            message: z.string().default('Request updated successfully').openapi({ type: 'string' }),
           }),
         },
       },
@@ -618,7 +621,10 @@ export const withdrawRequestRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: FOIARequestSchema,
-            message: z.string().default('Request withdrawn successfully'),
+            message: z
+              .string()
+              .default('Request withdrawn successfully')
+              .openapi({ type: 'string' }),
           }),
         },
       },

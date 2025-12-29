@@ -213,7 +213,8 @@ const successResponse = <T extends z.ZodTypeAny>(dataSchema: T, message?: string
     message: z
       .string()
       .optional()
-      .default(message ?? ''),
+      .default(message ?? '')
+      .openapi({ type: 'string' }),
   });
 
 /**
@@ -300,7 +301,7 @@ export const ApiKeyCreatedResponseSchema = z
 // Route Definitions
 // ============================================
 
-const tags = ['Authentication'];
+const tags = ['Auth'];
 
 /**
  * POST /auth/register - Create new user account

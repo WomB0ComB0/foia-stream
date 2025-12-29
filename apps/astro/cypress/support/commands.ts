@@ -75,25 +75,31 @@ Cypress.Commands.add('loginMock', () => {
   };
 
   // Mock the profile endpoint that verifies authentication
-  cy.intercept('GET', '**/auth/profile', {
+  cy.intercept('GET', '**/api/v1/auth/profile', {
     statusCode: 200,
-    body: mockUser,
+    body: { success: true, data: mockUser },
   }).as('getProfile');
 
-  // Mock common API endpoints
-  cy.intercept('GET', '**/requests*', {
+  // Mock the /auth/me endpoint (used by the app to verify authentication)
+  cy.intercept('GET', '**/api/v1/auth/me', {
     statusCode: 200,
-    body: [],
+    body: { success: true, data: mockUser },
+  }).as('getMe');
+
+  // Mock common API endpoints (using API envelope format)
+  cy.intercept('GET', '**/api/v1/requests*', {
+    statusCode: 200,
+    body: { success: true, data: [] },
   }).as('getRequests');
 
-  cy.intercept('GET', '**/agencies*', {
+  cy.intercept('GET', '**/api/v1/agencies*', {
     statusCode: 200,
-    body: [],
+    body: { success: true, data: [] },
   }).as('getAgencies');
 
-  cy.intercept('GET', '**/templates*', {
+  cy.intercept('GET', '**/api/v1/templates*', {
     statusCode: 200,
-    body: [],
+    body: { success: true, data: [] },
   }).as('getTemplates');
 
   // Set the auth token in localStorage

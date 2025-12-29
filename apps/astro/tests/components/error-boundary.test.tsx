@@ -5,7 +5,11 @@
 
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { EmptyState, ErrorBoundary, ErrorDisplay } from '../../src/components/react/error-boundary';
+import {
+  EmptyState,
+  ErrorBoundary,
+  ErrorDisplay,
+} from '../../src/components/react/common/error-boundary';
 
 // Component that throws an error for testing
 function ThrowError(): never {

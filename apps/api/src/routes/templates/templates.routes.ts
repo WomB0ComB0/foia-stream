@@ -312,7 +312,10 @@ export const createTemplateRoute = createRoute({
           schema: z.object({
             success: z.literal(true),
             data: TemplateSchema,
-            message: z.string().default('Template created successfully'),
+            message: z
+              .string()
+              .default('Template created successfully')
+              .openapi({ type: 'string' }),
           }),
         },
       },
@@ -370,7 +373,10 @@ export const seedTemplatesRoute = createRoute({
         'application/json': {
           schema: z.object({
             success: z.literal(true),
-            message: z.string().default('Default templates seeded successfully'),
+            message: z
+              .string()
+              .default('Default templates seeded successfully')
+              .openapi({ type: 'string' }),
           }),
         },
       },

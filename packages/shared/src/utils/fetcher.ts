@@ -20,8 +20,32 @@
  * SOFTWARE.
  */
 
-import { HttpClient, HttpClientRequest } from '@effect/platform';
+import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
 import { Duration, Effect, ParseResult, pipe, Schedule, Schema } from 'effect';
+
+// ============================================
+// API Response Type
+// ============================================
+
+/**
+ * Standard API response wrapper type
+ * @template T The type of data contained in the response
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// ============================================
+// HTTP Client Layer
+// ============================================
+
+/**
+ * Live layer for the HTTP client using Fetch API
+ */
+export const HttpClientLive = FetchHttpClient.layer;
 
 /**
  * Configuration options for the fetcher utility.
@@ -811,3 +835,116 @@ export const createApiResponseSchema = <T, I>(dataSchema: Schema.Schema<T, I, ne
     errors: Schema.optional(Schema.Array(Schema.String)),
   });
 };
+
+// ============================================
+// Effect Runner Utility
+// ============================================
+
+/**
+ * Executes an Effect with schema validation and returns an ApiResponse
+ *
+ * This utility provides a standard way to run Effect-based HTTP operations
+ * and handle the response with optional schema validation.
+ *
+ * @template T The expected type of the response data
+ * @template I The input type for schema encoding (defaults to T)
+ * @param effect The Effect to execute (requires HttpClient.HttpClient)
+ * @param schema Optional Effect Schema for runtime validation
+ * @param logPrefix Optional prefix for log messages (default: '[API]')
+ * @returns ApiResponse with validated data or error
+ *
+ * @compliance NIST 800-53 SI-10 (Information Input Validation)
+ *
+ * @example
+ * ```ts
+ * const UserSchema = Schema.Struct({
+ *   id: Schema.String,
+ *   name: Schema.String
+ * });
+ *
+ * const result = await runEffect(
+ *   get('/api/user/123'),
+ *   UserSchema
+ * );
+ *
+ * if (result.success) {
+ *   console.log(result.data); // Fully typed as User
+ * }
+ * ```
+ */
+export async function runEffect<T, I = T>(
+  effect: Effect.Effect<unknown, FetcherError | ValidationError, HttpClient.HttpClient>,
+  schema?: Schema.Schema<T, I>,
+  logPrefix = '[API]',
+): Promise<ApiResponse<T>> {
+  const program = pipe(effect, Effect.provide(HttpClientLive));
+  const result = await Effect.runPromiseExit(program);
+
+  if (result._tag === 'Success') {
+    const response = result.value as Record<string, unknown>;
+
+    // Handle standard API envelope
+    if (response && typeof response === 'object' && 'success' in response) {
+      if (!response.success) {
+        console.error(`${logPrefix} Response success=false:`, response);
+        return {
+          success: false,
+          error: (response.error as string) || (response.message as string) || 'Unknown error',
+          message: response.message as string | undefined,
+        };
+      }
+
+      // Some endpoints return data in `data` field, others return message at top level
+      const innerData =
+        response.data !== undefined
+          ? response.data
+          : response.message !== undefined
+            ? { message: response.message }
+            : undefined;
+
+      // Validate inner data if schema is provided
+      if (schema) {
+        const decoded = Schema.decodeUnknownEither(schema)(innerData);
+        if (decoded._tag === 'Left') {
+          const errors = ParseResult.TreeFormatter.formatIssueSync(decoded.left.issue);
+          console.error(`${logPrefix} Response validation failed:`, errors, innerData);
+          return {
+            success: false,
+            error: `Response validation failed: ${errors}`,
+          };
+        }
+        return { success: true, data: decoded.right } as ApiResponse<T>;
+      }
+
+      return { success: response.success as boolean, data: response.data as T } as ApiResponse<T>;
+    }
+
+    // Fallback for non-envelope responses
+    if (schema) {
+      const decoded = Schema.decodeUnknownEither(schema)(response);
+      if (decoded._tag === 'Left') {
+        const errors = ParseResult.TreeFormatter.formatIssueSync(decoded.left.issue);
+        console.error(`${logPrefix} Response validation failed:`, errors);
+        return {
+          success: false,
+          error: `Response validation failed: ${errors}`,
+        };
+      }
+      return { success: true, data: decoded.right };
+    }
+
+    return { success: true, data: response as T };
+  }
+
+  const error = result.cause;
+  let errorMessage = 'An unexpected error occurred';
+
+  if (error._tag === 'Fail') {
+    const failError = error.error;
+    if (failError instanceof FetcherError || failError instanceof ValidationError) {
+      errorMessage = failError.message;
+    }
+  }
+
+  return { success: false, error: errorMessage };
+}

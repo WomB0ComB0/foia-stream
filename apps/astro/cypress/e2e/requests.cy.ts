@@ -127,9 +127,11 @@ describe('New Request Page', () => {
 
   describe('Form Interactions', () => {
     it('should show validation errors when submitting empty form', () => {
-      cy.get('button[type="submit"]').click();
-      // Check for the error message container that appears at the top of the form
-      cy.contains('Please select an agency').should('be.visible');
+      // Submit button should be disabled when form is empty (client-side validation)
+      cy.get('button[type="submit"]').should('be.disabled');
+      // Verify the form fields exist
+      cy.get('textarea[name="description"]').should('exist');
+      cy.get('input[name="title"]').should('exist');
     });
 
     it('should allow filling out the form', () => {

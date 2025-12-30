@@ -48,7 +48,7 @@ import {
 import type * as PDFJS from 'pdfjs-dist';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { api } from '@/lib/api';
+import { API_BASE } from '../../../lib/config';
 
 // ============================================
 // Types
@@ -385,11 +385,13 @@ export default function PDFTextRedactor({
     setError(null);
 
     try {
+      const formData = new FormData();
+      formData.append('file', file);
+
       // Convert selections to redaction areas with page coordinates
       const scale = pageDimensions?.scale || 1.5;
       const areas = selections.flatMap((sel) =>
         sel.rects.map((rect) => ({
-          id: sel.id,
           page: sel.pageNumber - 1, // 0-indexed
           x: rect.x / scale,
           y: rect.y / scale,
@@ -399,25 +401,37 @@ export default function PDFTextRedactor({
         })),
       );
 
-      const response = await api.applyPdfRedactions(
-        file,
-        areas,
-        {
-          addRedactionLabel: false,
-        },
-        authToken,
+      formData.append(
+        'data',
+        JSON.stringify({
+          areas,
+          options: {
+            redactionColor: '#000000',
+            addRedactionLabel: false,
+            removeText: true,
+          },
+        }),
       );
 
-      if (!response.success || !response.data) {
-        throw new Error(response.error || 'Redaction failed');
+      const response = await fetch(`${API_BASE}/redaction/apply`, {
+        method: 'POST',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Redaction failed');
       }
 
+      const blob = await response.blob();
+
       if (onRedacted) {
-        onRedacted(response.data.blob, selections);
+        onRedacted(blob, selections);
       }
 
       // Auto-download
-      const url = URL.createObjectURL(response.data.blob);
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename.replace('.pdf', '-redacted.pdf');

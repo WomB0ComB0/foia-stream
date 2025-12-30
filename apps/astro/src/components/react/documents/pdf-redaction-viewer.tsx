@@ -51,7 +51,7 @@ import {
   useState,
 } from 'react';
 
-import { api } from '@/lib/api';
+import { API_BASE } from '../../../lib/config';
 
 // ============================================
 // Types
@@ -175,12 +175,22 @@ export default function PDFRedactionViewer({
     const loadInfo = async () => {
       try {
         setLoading(true);
-        const response = await api.getPdfInfo(file, authToken);
+        const formData = new FormData();
+        formData.append('file', file);
 
-        if (response.success && response.data) {
-          setPageInfo(response.data.pages);
-        } else {
-          throw new Error(response.error || 'Failed to load PDF info');
+        const response = await fetch(`${API_BASE}/redaction/info`, {
+          method: 'POST',
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load PDF info');
+        }
+
+        const result = await response.json();
+        if (result.success && result.data) {
+          setPageInfo(result.data.pages);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load PDF');
@@ -211,16 +221,25 @@ export default function PDFRedactionViewer({
 
     try {
       setLoading(true);
-      const response = await api.getPdfRedactionPreview(file, redactionAreas, authToken);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('data', JSON.stringify({ areas: redactionAreas }));
 
-      if (!response.success || !response.data) {
-        throw new Error(response.error || 'Failed to generate preview');
+      const response = await fetch(`${API_BASE}/redaction/preview`, {
+        method: 'POST',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate preview');
       }
 
+      const blob = await response.blob();
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
-      setPreviewUrl(URL.createObjectURL(response.data.blob));
+      setPreviewUrl(URL.createObjectURL(blob));
       setShowPreview(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Preview failed');
@@ -237,26 +256,38 @@ export default function PDFRedactionViewer({
 
     try {
       setSaving(true);
-      const response = await api.applyPdfRedactions(
-        file,
-        redactionAreas,
-        {
-          addRedactionLabel: true,
-          labelText: 'REDACTED',
-        },
-        authToken,
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append(
+        'data',
+        JSON.stringify({
+          areas: redactionAreas,
+          options: {
+            addRedactionLabel: true,
+            labelText: 'REDACTED',
+          },
+        }),
       );
 
-      if (!response.success || !response.data) {
-        throw new Error(response.error || 'Failed to apply redactions');
+      const response = await fetch(`${API_BASE}/redaction/apply`, {
+        method: 'POST',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to apply redactions');
       }
 
+      const blob = await response.blob();
+
       if (onRedacted) {
-        onRedacted(response.data.blob, redactionAreas);
+        onRedacted(blob, redactionAreas);
       }
 
       // Download the redacted file
-      const downloadUrl = URL.createObjectURL(response.data.blob);
+      const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
       a.download = filename.replace('.pdf', '-redacted.pdf');

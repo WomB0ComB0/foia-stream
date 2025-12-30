@@ -36,14 +36,23 @@
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema';
+import { fileURLToPath } from 'url';
+import path from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 /**
- * Database file path from environment or default
+ * Database file path from environment or default - resolved relative to this module to support scripts run from repo root
  *
  * @constant
  * @type {string}
  */
-const DB_PATH = process.env.DATABASE_URL || './data/foia-stream.db';
+const DB_PATH = process.env.DATABASE_URL || fileURLToPath(new URL('../../data/foia-stream.db', import.meta.url));
+
+// Ensure database directory exists (create if missing)
+const _dbDir = path.dirname(DB_PATH);
+if (!existsSync(_dbDir)) {
+  mkdirSync(_dbDir, { recursive: true });
+}
 
 /**
  * Native Bun SQLite database instance

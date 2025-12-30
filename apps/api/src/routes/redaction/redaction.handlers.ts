@@ -85,8 +85,8 @@ export const applyRedactions: AppRouteHandler<typeof applyRedactionsRoute> = asy
       );
     }
 
-    const formData = await c.req.formData();
-    const dataResult = parseFormDataJson(formData, 'data', ApplyRedactionsEffectSchema);
+    // Use formData from fileResult - do NOT call c.req.formData() again!
+    const dataResult = parseFormDataJson(fileResult.formData, 'data', ApplyRedactionsEffectSchema);
     if (!dataResult.success) {
       return c.json(
         { success: false as const, error: dataResult.error },
@@ -96,21 +96,29 @@ export const applyRedactions: AppRouteHandler<typeof applyRedactionsRoute> = asy
 
     const { areas, options } = dataResult.data;
 
+    // Normalize to Uint8Array to satisfy pdf.js requirements
+    // Always copy into a plain Uint8Array to satisfy pdf.js requirements
+    const pdfBytes = new Uint8Array(fileResult.buffer);
+
     // Apply TRUE redactions (flattens pages to images)
-    const result = await applyTrueRedactions(fileResult.buffer, areas as TrueRedactionArea[], {
+    const result = await applyTrueRedactions(pdfBytes, areas as TrueRedactionArea[], {
       redactionColor: options?.redactionColor,
       addRedactionLabel: options?.addRedactionLabel,
       labelText: options?.labelText,
     });
 
     logger.info(
-      { redactionCount: result.redactionCount, flattened: result.flattened },
+      { redactionCount: result.redactionCount, flattened: result.flattened, success: result.success },
       'PDF redactions applied',
     );
 
-    if (!result.pdfBytes) {
+    if (!result.success || !result.pdfBytes) {
+      logger.error(
+        { error: result.error, success: result.success },
+        'True redaction failed',
+      );
       return c.json(
-        { success: false as const, error: 'Failed to apply redactions' },
+        { success: false as const, error: result.error || 'Failed to apply redactions' },
         HttpStatusCodes.INTERNAL_SERVER_ERROR,
       );
     }
@@ -143,8 +151,8 @@ export const previewRedactions: AppRouteHandler<typeof previewRedactionsRoute> =
       );
     }
 
-    const formData = await c.req.formData();
-    const dataResult = parseFormDataJson(formData, 'data', PreviewRedactionsEffectSchema);
+    // Use formData from fileResult - do NOT call c.req.formData() again!
+    const dataResult = parseFormDataJson(fileResult.formData, 'data', PreviewRedactionsEffectSchema);
     if (!dataResult.success) {
       return c.json(
         { success: false as const, error: dataResult.error },
@@ -152,8 +160,11 @@ export const previewRedactions: AppRouteHandler<typeof previewRedactionsRoute> =
       );
     }
 
+    // Always copy into a plain Uint8Array to satisfy pdf.js requirements
+    const pdfBytes = new Uint8Array(fileResult.buffer);
+
     const previewPdf = await pdfRedactionService.previewRedactions(
-      fileResult.buffer,
+      pdfBytes,
       dataResult.data.areas as RedactionArea[],
     );
 

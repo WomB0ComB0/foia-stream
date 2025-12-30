@@ -157,7 +157,7 @@ export default function AgenciesPage() {
       search: searchQuery || undefined,
       state: selectedState || undefined,
       jurisdictionLevel: selectedJurisdiction || undefined,
-      limit: 50,
+      pageSize: 100,
     });
     if (response.success && response.data) {
       setAgencies(response.data);

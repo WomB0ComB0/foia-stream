@@ -29,6 +29,7 @@ export interface FileParseResult {
   success: true;
   file: File;
   buffer: Buffer;
+  formData: FormData;
 }
 
 export interface FileParseError {
@@ -105,6 +106,7 @@ export async function parseFormDataFile(
       success: true,
       file,
       buffer,
+      formData,
     };
   } catch (error) {
     return {
@@ -128,20 +130,21 @@ export async function parsePdfFile(
     return result;
   }
 
-  // Check MIME type
-  if (!ALLOWED_PDF_TYPES.includes(result.file.type)) {
-    return {
-      success: false,
-      error: 'Only PDF files are allowed',
-      status: 400,
-    };
-  }
-
-  // Check magic bytes
+  // Check magic bytes first - this is the authoritative check
   if (!pdfService.hasPDFMagicBytes(result.buffer)) {
     return {
       success: false,
       error: 'File does not appear to be a valid PDF',
+      status: 400,
+    };
+  }
+
+  // Check MIME type (only if magic bytes passed, allow common PDF types)
+  const validPdfTypes = ['application/pdf', 'application/x-pdf', 'application/octet-stream', ''];
+  if (!validPdfTypes.includes(result.file.type)) {
+    return {
+      success: false,
+      error: 'Only PDF files are allowed',
       status: 400,
     };
   }

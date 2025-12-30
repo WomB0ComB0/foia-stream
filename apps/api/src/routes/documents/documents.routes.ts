@@ -126,6 +126,47 @@ export const deleteDocumentRoute = createRoute({
   },
 });
 
+/**
+ * GET /documents/:id/download - Download a document
+ */
+export const downloadDocumentRoute = createRoute({
+  path: '/documents/{id}/download',
+  method: 'get',
+  tags,
+  summary: 'Download a document',
+  description: 'Downloads the document file. Requires access token for protected documents.',
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z
+        .string()
+        .uuid()
+        .openapi({
+          param: { name: 'id', in: 'path' },
+          example: '123e4567-e89b-12d3-a456-426614174000',
+        }),
+    }),
+    query: z.object({
+      accessToken: z.string().optional().openapi({
+        description: 'Access token for MFA/password protected documents',
+      }),
+    }),
+  },
+  responses: {
+    [HttpStatusCodes.OK]: {
+      content: {
+        'application/pdf': {
+          schema: z.any().openapi({ type: 'string', format: 'binary' }),
+        },
+      },
+      description: 'Document file',
+    },
+    ...commonResponses.unauthorized,
+    ...commonResponses.notFound,
+    ...commonResponses.serverError,
+  },
+});
+
 // ============================================
 // Document Access Verification Routes
 // ============================================
@@ -402,7 +443,7 @@ export const uploadPdfRoute = createRoute({
   method: 'post',
   tags: ['Documents', 'Upload'],
   summary: 'Upload and scan a PDF file',
-  description: 'Uploads a PDF, validates it, and runs virus scanning.',
+  description: 'Uploads a PDF, validates it, runs virus scanning, and stores the document.',
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -421,10 +462,10 @@ export const uploadPdfRoute = createRoute({
     [HttpStatusCodes.OK]: {
       content: {
         'application/json': {
-          schema: UploadScanResultSchema,
+          schema: successResponseSchema(DocumentSummarySchema),
         },
       },
-      description: 'PDF upload and scan result',
+      description: 'Uploaded document details',
     },
     ...commonResponses.unauthorized,
     ...commonResponses.badRequest,

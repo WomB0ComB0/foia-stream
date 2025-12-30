@@ -100,20 +100,28 @@ export default function NewRequestForm() {
         }
       } else {
         setSubmitProgress(`Creating ${selectedAgencies.length} requests...`);
-        const response = await api.createBulkRequests({
-          agencyIds: selectedAgencies.map((a) => a.id),
-          title: value.title,
-          description: value.description,
-          category: value.category,
-          dateRangeStart: value.dateRangeStart || undefined,
-          dateRangeEnd: value.dateRangeEnd || undefined,
-          isPublic: value.isPublic,
-        });
+        const responses = await Promise.all(
+          selectedAgencies.map((agency) =>
+            api.createRequest({
+              agencyId: agency.id,
+              title: value.title,
+              description: value.description,
+              category: value.category,
+              dateRangeStart: value.dateRangeStart || undefined,
+              dateRangeEnd: value.dateRangeEnd || undefined,
+              isPublic: value.isPublic,
+            })
+          )
+        );
 
-        if (response.success) {
+        const failed = responses.filter((r) => !r.success);
+        if (failed.length === 0) {
           window.location.href = '/dashboard';
         } else {
-          setError(response.error || 'Failed to create requests');
+          setError(
+            failed[0].error ||
+              `Failed to create ${failed.length} of ${selectedAgencies.length} requests`
+          );
           setSubmitProgress('');
         }
       }
@@ -136,7 +144,7 @@ export default function NewRequestForm() {
   const fetchData = useCallback(async () => {
     setAgenciesLoading(true);
     const [agenciesRes, templatesRes] = await Promise.all([
-      api.getAgencies({ limit: 1000 }),
+      api.getAgencies({ pageSize: 100 }),
       api.getTemplates(),
     ]);
     if (agenciesRes.success && agenciesRes.data) {

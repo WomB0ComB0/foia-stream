@@ -29,6 +29,7 @@ import { join } from 'node:path';
 import type {
   createRedactionTemplateRoute,
   deleteDocumentRoute,
+  downloadDocumentRoute,
   getDocumentRoute,
   listDocumentsRoute,
   listRedactionTemplatesRoute,
@@ -240,6 +241,140 @@ export const deleteDocument: AppRouteHandler<typeof deleteDocumentRoute> = async
       'Document delete error',
     );
     return handleRouteError(c, error, 'Delete failed', HttpStatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
+/**
+ * Download document
+ * @compliance NIST 800-53 AU-3 (Content of Audit Records)
+ */
+export const downloadDocument: AppRouteHandler<typeof downloadDocumentRoute> = async (c) => {
+  try {
+    const { userId } = c.get('user');
+    const { id: documentId } = c.req.valid('param');
+    const { accessToken } = c.req.valid('query');
+
+    const [document] = await db
+      .select()
+      .from(secureDocuments)
+      .where(and(eq(secureDocuments.id, documentId), eq(secureDocuments.uploadedBy, userId)));
+
+    if (!document) {
+      return c.json(
+        { success: false as const, error: 'Document not found' },
+        HttpStatusCodes.NOT_FOUND,
+      );
+    }
+
+    // Check if document requires MFA
+    if (document.requiresMfa) {
+      if (!accessToken) {
+        return c.json(
+          { success: false as const, error: 'MFA verification required', requiresMfa: true },
+          HttpStatusCodes.FORBIDDEN,
+        );
+      }
+      // Verify access token
+      const { verify } = await import('hono/jwt');
+      try {
+        const payload = await verify(accessToken, env.JWT_SECRET);
+        if (payload.documentId !== documentId || !payload.mfaVerified) {
+          return c.json(
+            { success: false as const, error: 'Invalid access token' },
+            HttpStatusCodes.FORBIDDEN,
+          );
+        }
+      } catch {
+        return c.json(
+          { success: false as const, error: 'Invalid or expired access token' },
+          HttpStatusCodes.FORBIDDEN,
+        );
+      }
+    }
+
+    // Check if document requires password
+    if (document.accessPasswordHash && !document.requiresMfa) {
+      if (!accessToken) {
+        return c.json(
+          { success: false as const, error: 'Password verification required', requiresPassword: true },
+          HttpStatusCodes.FORBIDDEN,
+        );
+      }
+      // Verify access token
+      const { verify } = await import('hono/jwt');
+      try {
+        const payload = await verify(accessToken, env.JWT_SECRET);
+        if (payload.documentId !== documentId || !payload.passwordVerified) {
+          return c.json(
+            { success: false as const, error: 'Invalid access token' },
+            HttpStatusCodes.FORBIDDEN,
+          );
+        }
+      } catch {
+        return c.json(
+          { success: false as const, error: 'Invalid or expired access token' },
+          HttpStatusCodes.FORBIDDEN,
+        );
+      }
+    }
+
+    // Check if document is expired
+    if (document.expiresAt && new Date(document.expiresAt) < new Date()) {
+      return c.json(
+        { success: false as const, error: 'Document has expired' },
+        HttpStatusCodes.GONE,
+      );
+    }
+
+    // Read file from disk
+    const uploadDir = await ensureUploadDir();
+    const filePath = join(uploadDir, document.filePath);
+
+    const { readFile } = await import('node:fs/promises');
+    let fileBuffer: Buffer;
+    try {
+      fileBuffer = await readFile(filePath);
+    } catch {
+      return c.json(
+        { success: false as const, error: 'File not found on disk' },
+        HttpStatusCodes.NOT_FOUND,
+      );
+    }
+
+    // Update access count
+    await db
+      .update(secureDocuments)
+      .set({
+        accessCount: (document.accessCount || 0) + 1,
+        lastAccessedAt: new Date().toISOString(),
+      })
+      .where(eq(secureDocuments.id, documentId));
+
+    // Log download
+    await logAccess(
+      documentId,
+      userId,
+      'download',
+      document.requiresMfa,
+      c.req.header('x-forwarded-for'),
+      c.req.header('user-agent'),
+    );
+
+    // Return file as response
+    return new Response(fileBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': document.mimeType,
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(document.originalFileName)}"`,
+        'Content-Length': fileBuffer.length.toString(),
+      },
+    });
+  } catch (error) {
+    logger.error(
+      { error: error instanceof Error ? error.message : 'Download failed' },
+      'Document download error',
+    );
+    return handleRouteError(c, error, 'Download failed', HttpStatusCodes.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -574,13 +709,17 @@ export const redactText: AppRouteHandler<typeof redactTextRoute> = async (c) => 
 
 import { pdfService } from '@/services/documents/pdf.service';
 import { virusTotalService } from '@/services/documents/virustotal.service';
+import { writeFile } from 'node:fs/promises';
+import { hashPassword } from '@/services/auth/password.service';
 
 import type { uploadPdfRoute, uploadStatusRoute, validatePdfRoute } from './documents.routes';
 
 const MAX_FILE_SIZE = Math.min(env.MAX_FILE_SIZE, 50 * 1024 * 1024);
 
 /**
- * Upload and scan a PDF file
+ * Upload, scan, and store a PDF file
+ * @compliance NIST 800-53 SI-3 (Malicious Code Protection)
+ * @compliance NIST 800-53 AU-3 (Content of Audit Records)
  */
 export const uploadPdf: AppRouteHandler<typeof uploadPdfRoute> = async (c) => {
   try {
@@ -593,8 +732,26 @@ export const uploadPdf: AppRouteHandler<typeof uploadPdfRoute> = async (c) => {
       );
     }
 
+    // Get authenticated user
+    const { userId } = c.get('user');
+
     const formData = await c.req.formData();
     const file = formData.get('file');
+    const optionsJson = formData.get('options');
+
+    // Parse upload options
+    let options: {
+      requiresMfa?: boolean;
+      accessPassword?: string;
+      expiresInDays?: number | null;
+    } = {};
+    if (optionsJson && typeof optionsJson === 'string') {
+      try {
+        options = JSON.parse(optionsJson);
+      } catch {
+        // Ignore parse errors, use defaults
+      }
+    }
 
     if (!file || !(file instanceof File)) {
       return c.json(
@@ -620,30 +777,90 @@ export const uploadPdf: AppRouteHandler<typeof uploadPdfRoute> = async (c) => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const scanResult = await pdfService.scanPDFAsync(buffer, file.name);
 
+    // Determine document status based on scan results
+    // If VT is not configured (scanned=false) but validation passed, mark as clean
+    // If VT scan ran and passed, mark as clean
+    // If VT scan ran and failed, mark as infected
+    // If validation failed, mark as scan_failed
+    let status: 'clean' | 'infected' | 'scan_failed' | 'pending_scan' = 'clean';
+    if (!scanResult.validation.valid) {
+      status = 'scan_failed';
+    } else if (scanResult.virusScan.scanned && !scanResult.virusScan.safe) {
+      status = 'infected';
+    }
+
+    // If infected, don't store the file
+    if (status === 'infected') {
+      return c.json(
+        { success: false as const, error: 'File failed virus scan and cannot be uploaded' },
+        HttpStatusCodes.BAD_REQUEST,
+      );
+    }
+
+    // Generate document ID and file path
+    const documentId = randomUUID();
+    const fileExtension = file.name.split('.').pop() || 'pdf';
+    const storedFileName = `${documentId}.${fileExtension}`;
+
+    // Save file to disk
+    const uploadDir = await ensureUploadDir();
+    const filePath = join(uploadDir, storedFileName);
+    await writeFile(filePath, buffer);
+
+    // Hash password if provided
+    let accessPasswordHash: string | null = null;
+    if (options.accessPassword) {
+      accessPasswordHash = await hashPassword(options.accessPassword);
+    }
+
+    // Calculate expiration date
+    let expiresAt: string | null = null;
+    if (options.expiresInDays && options.expiresInDays > 0) {
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + options.expiresInDays);
+      expiresAt = expDate.toISOString();
+    }
+
+    const now = new Date().toISOString();
+
+    // Insert document record
+    await db.insert(secureDocuments).values({
+      id: documentId,
+      originalFileName: file.name,
+      filePath: storedFileName,
+      fileSize: file.size,
+      mimeType: file.type,
+      sha256Hash: scanResult.virusScan.hash,
+      status,
+      uploadedBy: userId,
+      requiresMfa: options.requiresMfa ?? false,
+      accessPasswordHash,
+      expiresAt,
+      accessCount: 0,
+      lastAccessedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Log the upload action
+    await logAccess(documentId, userId, 'view', false, c.req.header('x-forwarded-for'), c.req.header('user-agent'));
+
+    // Return the document object
     return c.json(
       {
-        success: scanResult.safe,
-        filename: file.name,
-        size: file.size,
-        hash: scanResult.virusScan.hash,
-        scan: {
-          safe: scanResult.safe,
-          canProcess: scanResult.canProcess,
-          message: scanResult.message,
-          validation: {
-            valid: scanResult.validation.valid,
-            isEncrypted: scanResult.validation.isEncrypted,
-            hasJavaScript: scanResult.validation.hasJavaScript,
-            hasEmbeddedFiles: scanResult.validation.hasEmbeddedFiles,
-            version: scanResult.validation.version ?? null,
-            warnings: [...scanResult.validation.warnings],
-            errors: [...scanResult.validation.errors],
-          },
-          virusScan: {
-            scanned: scanResult.virusScan.scanned,
-            safe: scanResult.virusScan.safe,
-            message: scanResult.virusScan.message,
-          },
+        success: true as const,
+        data: {
+          id: documentId,
+          originalFileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          status,
+          requiresMfa: options.requiresMfa ?? false,
+          hasPassword: !!accessPasswordHash,
+          expiresAt,
+          accessCount: 0,
+          lastAccessedAt: null,
+          createdAt: now,
         },
       },
       HttpStatusCodes.OK,

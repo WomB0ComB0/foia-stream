@@ -48,4 +48,5 @@ export {
 // Redaction and sanitization utilities
 export * from './redacted';
 export * from './sanitize';
+export * from './security-validators';
 export * from './throttle.utils';

@@ -28,6 +28,10 @@ router.openapi(routes.listDocumentsRoute, handlers.listDocuments);
 router.get('/documents/:id', authMiddleware);
 router.openapi(routes.getDocumentRoute, handlers.getDocument);
 
+// GET /documents/:id/download (protected)
+router.get('/documents/:id/download', authMiddleware);
+router.openapi(routes.downloadDocumentRoute, handlers.downloadDocument);
+
 // DELETE /documents/:id (protected)
 router.delete('/documents/:id', authMiddleware);
 router.openapi(routes.deleteDocumentRoute, handlers.deleteDocument);

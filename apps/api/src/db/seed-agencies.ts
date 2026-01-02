@@ -32,7 +32,9 @@
  */
 
 import { nanoid } from 'nanoid';
-import { db, schema } from './index';
+import { db, schema, sqlite } from './index';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Agency seed data structure
@@ -764,7 +766,39 @@ const localAgencies: AgencySeed[] = [
  * await seedAgencies();
  * ```
  */
+async function applyMigrationsIfNeeded() {
+  // Check for agencies table
+  try {
+    const res = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='agencies'").get();
+    if (!res) {
+      console.log('📦 No schema detected. Applying drizzle SQL migrations...');
+      const migrationsDir = path.resolve(__dirname, '../../drizzle');
+      const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort();
+      for (const fileName of files) {
+        const content = fs.readFileSync(path.join(migrationsDir, fileName), 'utf8');
+        // Split using the special marker used in migration files
+        const parts = content.split('--> statement-breakpoint');
+        for (const part of parts) {
+          const sql = part.trim();
+          if (!sql) continue;
+          try {
+            sqlite.exec(sql);
+          } catch (err) {
+            console.warn(`Warning: Failed to execute migration chunk from ${fileName}:`, (err as Error)?.message || err);
+          }
+        }
+      }
+      console.log('✅ Migrations applied');
+    }
+  } catch (err) {
+    console.error('Failed to check or apply migrations:', err);
+    throw err;
+  }
+}
+
 export async function seedAgencies() {
+  await applyMigrationsIfNeeded();
+
   const allAgencies = [...federalAgencies, ...stateAgencies, ...localAgencies];
   const now = new Date().toISOString();
 

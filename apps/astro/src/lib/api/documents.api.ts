@@ -72,7 +72,8 @@ export type RedactionTemplate = S.Schema.Type<typeof RedactionTemplateSchema>;
 
 const RedactionTemplatesResponseSchema = S.mutable(
   S.Struct({
-    system: S.mutable(S.Array(RedactionTemplateSchema)),
+    systemTemplates: S.mutable(S.Array(RedactionTemplateSchema)),
+    customTemplates: S.mutable(S.Array(RedactionTemplateSchema)),
   }),
 );
 
@@ -152,11 +153,16 @@ export const documentsApi = {
   /**
    * Fetch redaction templates
    */
-  async getRedactionTemplates(): Promise<ApiResponse<{ system: RedactionTemplate[] }>> {
+  async getRedactionTemplates(): Promise<
+    ApiResponse<{ systemTemplates: RedactionTemplate[]; customTemplates: RedactionTemplate[] }>
+  > {
     return runEffect(
-      get<{ system: RedactionTemplate[] }>(`${API_BASE}/documents/templates/redaction`, {
-        headers: getAuthHeaders(),
-      }),
+      get<{ systemTemplates: RedactionTemplate[]; customTemplates: RedactionTemplate[] }>(
+        `${API_BASE}/documents/templates/redaction`,
+        {
+          headers: getAuthHeaders(),
+        },
+      ),
       RedactionTemplatesResponseSchema,
     );
   },
@@ -270,7 +276,7 @@ export const documentsApi = {
         formData.append('options', JSON.stringify(options));
       }
 
-      const response = await fetch(`${API_BASE}/documents/upload`, {
+      const response = await fetch(`${API_BASE}/documents/upload/pdf`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: formData,

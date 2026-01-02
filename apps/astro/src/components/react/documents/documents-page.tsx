@@ -217,7 +217,7 @@ export default function DocumentsPage() {
       const result = await documentsApi.getRedactionTemplates();
 
       if (result.success && result.data) {
-        setTemplates(result.data.system || []);
+        setTemplates(result.data.systemTemplates || []);
       }
     } catch {
       // Templates are optional
@@ -289,10 +289,14 @@ export default function DocumentsPage() {
           throw new Error(result.error || 'Upload failed');
         }
 
-        // Reset form and refresh list
+        // Optimistically add the new document to the list
+        if (result.data) {
+          setDocuments((prev) => [result.data!, ...prev]);
+        }
+
+        // Reset form
         setShowUpload(false);
         setUploadOptions({ requiresMfa: false, accessPassword: '', expiresInDays: null });
-        await fetchDocuments();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Upload failed');
       } finally {
@@ -406,16 +410,21 @@ export default function DocumentsPage() {
         return;
       }
 
+      // Optimistically remove from UI immediately
+      setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+
       try {
         const result = await documentsApi.deleteDocument(doc.id);
 
         if (!result.success) {
+          // Restore document if delete failed
+          setDocuments((prev) => [...prev, doc]);
           throw new Error(result.error || 'Delete failed');
         }
-
-        await fetchDocuments();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Delete failed');
+        // Refetch to ensure consistency
+        await fetchDocuments();
       }
     },
     [fetchDocuments],

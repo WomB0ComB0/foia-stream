@@ -156,7 +156,8 @@ export default function PDFTextRedactor({
         pdfjsRef.current = pdfjsLib;
 
         // Set worker source from local public folder (copied from node_modules)
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+        // Add cache-busting query param to ensure latest version is loaded
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs?v=5.4.530';
 
         const arrayBuffer = await file.arrayBuffer();
         fileDataRef.current = arrayBuffer;
@@ -386,7 +387,12 @@ export default function PDFTextRedactor({
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+
+      // Ensure file has correct MIME type (Blobs from download may not have it)
+      const pdfFile = file instanceof File && file.type === 'application/pdf'
+        ? file
+        : new File([file], filename || 'document.pdf', { type: 'application/pdf' });
+      formData.append('file', pdfFile);
 
       // Convert selections to redaction areas with page coordinates
       const scale = pageDimensions?.scale || 1.5;

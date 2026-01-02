@@ -35,12 +35,15 @@
 import { type Canvas, createCanvas } from '@napi-rs/canvas';
 import { Schema as S } from 'effect';
 import { PDFDocument } from 'pdf-lib';
+import { createRequire } from 'module';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 import { logger } from '@/lib/logger';
 
-// Disable worker for server-side usage
-pdfjs.GlobalWorkerOptions.workerSrc = '';
+// Configure PDF.js worker source explicitly for server-side usage
+// Resolve worker bundle via Node resolution to avoid missing file errors
+const require = createRequire(import.meta.url);
+pdfjs.GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.min.mjs');
 
 /**
  * Represents a rectangular area to be redacted in a PDF
@@ -178,6 +181,8 @@ export async function applyTrueRedactions(
   const startTime = Date.now();
   const dpi = options.dpi || 150; // Good balance of quality vs size
   const scale = dpi / 72; // PDF is 72 DPI by default
+  // Normalize data to a proper contiguous Uint8Array to avoid PDF.js parsing errors
+  const pdfBytes = pdfData instanceof Uint8Array ? new Uint8Array(pdfData) : new Uint8Array(pdfData);
 
   try {
     logger.info(
@@ -195,7 +200,7 @@ export async function applyTrueRedactions(
 
     // Load PDF with PDF.js for rendering
     const loadingTask = pdfjs.getDocument({
-      data: new Uint8Array(pdfData instanceof ArrayBuffer ? pdfData : pdfData.buffer),
+      data: pdfBytes,
       useSystemFonts: true,
       standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@latest/standard_fonts/',
     });
@@ -302,7 +307,7 @@ export async function applyTrueRedactions(
     newPdfDoc.setModificationDate(new Date());
 
     // Save the new PDF
-    const pdfBytes = await newPdfDoc.save();
+    const redactedPdfBytes = await newPdfDoc.save();
 
     const duration = Date.now() - startTime;
     logger.info(
@@ -317,7 +322,7 @@ export async function applyTrueRedactions(
 
     return {
       success: true,
-      pdfBytes,
+      pdfBytes: redactedPdfBytes,
       redactionCount: auditEntries.length,
       auditEntries,
       flattened: true,
@@ -349,8 +354,9 @@ export async function applyTrueRedactions(
 export async function getPDFInfo(
   pdfData: ArrayBuffer | Uint8Array,
 ): Promise<{ pageCount: number; pages: { width: number; height: number }[] }> {
+  const pdfBytes = pdfData instanceof Uint8Array ? new Uint8Array(pdfData) : new Uint8Array(pdfData);
   const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(pdfData instanceof ArrayBuffer ? pdfData : pdfData.buffer),
+    data: pdfBytes,
   });
   const pdfDocument = await loadingTask.promise;
 

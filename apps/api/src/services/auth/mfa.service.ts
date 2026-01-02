@@ -35,13 +35,15 @@
 // FOIA Stream - Multi-Factor Authentication Service
 // ============================================
 
-import { logger } from '@/lib/logger';
+import { createHmac, randomBytes } from 'node:crypto';
+
 import { BadRequestError, NotFoundError, SecurityError } from '@foia-stream/shared';
 import { eq } from 'drizzle-orm';
 import { Schema as S } from 'effect';
 import { nanoid } from 'nanoid';
-import { createHmac, randomBytes } from 'node:crypto';
+
 import { db, schema } from '@/db';
+import { logger } from '@/lib/logger';
 import { decryptData, encryptData, getEncryptionKey } from '@/utils/security';
 
 // ============================================
@@ -257,7 +259,8 @@ export class MFAService {
    * Initialize MFA setup for a user
    */
   async setupMFA(userId: string): Promise<MFASetupResult> {
-    const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+    const user = users[0];
 
     if (!user) {
       throw NotFoundError('User not found');
@@ -284,7 +287,7 @@ export class MFAService {
       .update(schema.users)
       .set({
         twoFactorSecret: JSON.stringify(secretData),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .where(eq(schema.users.id, userId));
 
@@ -301,7 +304,8 @@ export class MFAService {
    * Verify and enable MFA with initial TOTP code
    */
   async verifyAndEnableMFA(userId: string, code: string): Promise<boolean> {
-    const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+    const user = users[0];
 
     if (!user || !user.twoFactorSecret) {
       throw BadRequestError('MFA setup not initiated');
@@ -338,7 +342,7 @@ export class MFAService {
       .set({
         twoFactorEnabled: true,
         twoFactorSecret: JSON.stringify(updatedSecretData),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .where(eq(schema.users.id, userId));
 
@@ -351,7 +355,8 @@ export class MFAService {
    * Verify MFA code during login
    */
   async verifyMFA(userId: string, code: string): Promise<MFAVerifyResult> {
-    const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+    const user = users[0];
 
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
       logger.debug(
@@ -412,7 +417,7 @@ export class MFAService {
         .update(schema.users)
         .set({
           twoFactorSecret: JSON.stringify(updatedSecretData),
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(schema.users.id, userId));
 
@@ -439,7 +444,7 @@ export class MFAService {
       .set({
         twoFactorEnabled: false,
         twoFactorSecret: null,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .where(eq(schema.users.id, userId));
 
@@ -450,7 +455,8 @@ export class MFAService {
    * Regenerate backup codes
    */
   async regenerateBackupCodes(userId: string): Promise<string[]> {
-    const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
+    const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+    const user = users[0];
 
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
       throw BadRequestError('MFA is not enabled for this user');
@@ -471,7 +477,7 @@ export class MFAService {
       .update(schema.users)
       .set({
         twoFactorSecret: JSON.stringify(updatedSecretData),
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .where(eq(schema.users.id, userId));
 
@@ -484,11 +490,11 @@ export class MFAService {
    * Check if user has MFA enabled
    */
   async isMFAEnabled(userId: string): Promise<boolean> {
-    const user = await db
+    const users = await db
       .select({ twoFactorEnabled: schema.users.twoFactorEnabled })
       .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .get();
+      .where(eq(schema.users.id, userId));
+    const user = users[0];
 
     return user?.twoFactorEnabled ?? false;
   }
@@ -497,14 +503,14 @@ export class MFAService {
    * Get MFA status for a user
    */
   async getMFAStatus(userId: string): Promise<MFAStatus> {
-    const user = await db
+    const users = await db
       .select({
         twoFactorEnabled: schema.users.twoFactorEnabled,
         twoFactorSecret: schema.users.twoFactorSecret,
       })
       .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .get();
+      .where(eq(schema.users.id, userId));
+    const user = users[0];
 
     if (!user) {
       return { enabled: false, hasPendingSetup: false };
@@ -552,7 +558,7 @@ export class MFAService {
       resourceType: 'user',
       resourceId: userId,
       details: { timestamp: new Date().toISOString() },
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     });
   }
 }

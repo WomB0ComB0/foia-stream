@@ -33,9 +33,6 @@
  * @compliance CMMC 3.8.9 (Protect Backups)
  */
 
-import { env } from '@/config/env';
-import { BadRequestError, DatabaseError, NotFoundError } from '@foia-stream/shared';
-import { Schema as S } from 'effect';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
@@ -48,6 +45,11 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
+
+import { BadRequestError, DatabaseError, NotFoundError } from '@foia-stream/shared';
+import { Schema as S } from 'effect';
+
+import { env } from '@/config/env';
 
 // ============================================
 // Effect Schema Definitions
@@ -239,25 +241,6 @@ function getDatabaseUrl(): string {
 /**
  * Parse PostgreSQL connection string into components
  */
-function parsePostgresUrl(url: string): {
-  host: string;
-  port: string;
-  database: string;
-  user: string;
-  password: string;
-} {
-  const match = url.match(/postgresql:\/\/(?:([^:]+):([^@]+)@)?([^:/]+)(?::(\d+))?\/(.+)/);
-  if (!match) {
-    throw BadRequestError('Invalid PostgreSQL connection string');
-  }
-  return {
-    user: match[1] || 'postgres',
-    password: match[2] || '',
-    host: match[3] || 'localhost',
-    port: match[4] || '5432',
-    database: match[5] || 'postgres',
-  };
-}
 
 /**
  * Determine retention policy based on date

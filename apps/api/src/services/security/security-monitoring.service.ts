@@ -33,6 +33,7 @@
 
 import { and, eq, gte, sql } from 'drizzle-orm';
 import { Schema as S } from 'effect';
+
 import { db } from '@/db';
 import { auditLogs } from '@/db/schema';
 
@@ -71,7 +72,7 @@ export const SecurityEventSchema = S.Struct({
   ipAddress: S.NullOr(S.String),
   userAgent: S.NullOr(S.String),
   details: S.Record({ key: S.String, value: S.Unknown }),
-  timestamp: S.String,
+  timestamp: S.Date,
 });
 export type SecurityEvent = typeof SecurityEventSchema.Type;
 
@@ -259,7 +260,7 @@ async function checkAlertConditions(event: CreateSecurityEvent): Promise<void> {
   const conditions = DEFAULT_ALERT_CONDITIONS.filter((c) => c.eventType === event.type);
 
   for (const condition of conditions) {
-    const windowStart = new Date(Date.now() - condition.windowMinutes * 60 * 1000).toISOString();
+    const windowStart = new Date(Date.now() - condition.windowMinutes * 60 * 1000);
     const action = eventTypeToAction[condition.eventType];
 
     const recentEvents = await db
@@ -328,7 +329,7 @@ async function triggerAlert(
  * Get security dashboard metrics
  */
 export async function getSecurityDashboard(hoursBack: number = 24): Promise<SecurityDashboard> {
-  const windowStart = new Date(Date.now() - hoursBack * 60 * 60 * 1000).toISOString();
+  const windowStart = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
 
   const events = await db
     .select()

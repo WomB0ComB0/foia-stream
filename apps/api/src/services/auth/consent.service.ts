@@ -129,7 +129,7 @@ export async function recordRegistrationConsent(
   ipAddress?: string,
   userAgent?: string,
 ): Promise<void> {
-  const timestamp = consents.consentTimestamp || new Date().toISOString();
+  const timestamp = consents.consentTimestamp ? new Date(consents.consentTimestamp) : new Date();
 
   // Update user record with consent timestamps
   await db
@@ -139,7 +139,7 @@ export async function recordRegistrationConsent(
       privacyAcceptedAt: consents.privacyAccepted ? timestamp : null,
       dataProcessingConsentAt: consents.dataProcessingAccepted ? timestamp : null,
       consentUpdatedAt: timestamp,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     })
     .where(eq(users.id, userId));
 
@@ -170,10 +170,10 @@ export async function withdrawConsent(
   ipAddress?: string,
   userAgent?: string,
 ): Promise<{ success: boolean; message: string }> {
-  const now = new Date().toISOString();
+  const now = new Date();
 
   // Update the user record
-  const updateData: Record<string, string | null> = {
+  const updateData: Record<string, Date | null> = {
     consentUpdatedAt: now,
     updatedAt: now,
   };
@@ -219,7 +219,7 @@ export async function updateMarketingConsent(
   ipAddress?: string,
   userAgent?: string,
 ): Promise<void> {
-  const now = new Date().toISOString();
+  const now = new Date();
 
   await db
     .update(users)
@@ -247,14 +247,14 @@ export async function updateMarketingConsent(
  */
 export async function getConsentStatus(userId: string): Promise<{
   termsAccepted: boolean;
-  termsAcceptedAt: string | null;
+  termsAcceptedAt: Date | null;
   privacyAccepted: boolean;
-  privacyAcceptedAt: string | null;
+  privacyAcceptedAt: Date | null;
   dataProcessingAccepted: boolean;
-  dataProcessingAcceptedAt: string | null;
+  dataProcessingAcceptedAt: Date | null;
   marketingAccepted: boolean;
-  marketingAcceptedAt: string | null;
-  lastUpdated: string | null;
+  marketingAcceptedAt: Date | null;
+  lastUpdated: Date | null;
 }> {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
@@ -296,7 +296,7 @@ export async function getConsentHistory(userId: string): Promise<
     consentType: string;
     action: string;
     policyVersion: string | null;
-    createdAt: string;
+    createdAt: Date;
   }>
 > {
   const history = await db.query.consentHistory.findMany({

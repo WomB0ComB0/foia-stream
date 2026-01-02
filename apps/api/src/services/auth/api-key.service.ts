@@ -28,11 +28,13 @@
  * @compliance NIST 800-53 IA-5 (Authenticator Management)
  */
 
-import { db, schema } from '@/db';
+import { randomBytes } from 'node:crypto';
+
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { randomBytes } from 'node:crypto';
+
+import { db, schema } from '@/db';
 
 /**
  * API Key Service

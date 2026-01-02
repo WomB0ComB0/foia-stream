@@ -10,19 +10,17 @@
 
 import { sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import type { Pool } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import * as schema from '../../src/db/schema';
+import type { AuditAction } from '../../src/types';
 import { cleanupTestDb, clearTestData, createTestDb } from '../utils';
 
 let testDb: NodePgDatabase<typeof schema>;
-let testPool: Pool;
 
 describe('Database Performance Tests', () => {
   beforeAll(async () => {
-    const { db, pool } = await createTestDb();
+    const { db } = await createTestDb();
     testDb = db;
-    testPool = pool;
   });
 
   afterAll(async () => {
@@ -172,27 +170,30 @@ describe('Database Performance Tests', () => {
 
   describe('Audit Log Performance', () => {
     beforeEach(async () => {
-      await testDb.insert(schema.users).values({
-        id: 'test-user-audit',
-        email: 'audit@example.com',
-        passwordHash: 'hash',
-        role: 'civilian',
-        firstName: 'Test',
-        lastName: 'User',
-        isAnonymous: false,
-        isVerified: false,
-        twoFactorEnabled: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      await testDb
+        .insert(schema.users)
+        .values({
+          id: 'test-user-audit',
+          email: 'audit@example.com',
+          passwordHash: 'hash',
+          role: 'civilian',
+          firstName: 'Test',
+          lastName: 'User',
+          isAnonymous: false,
+          isVerified: false,
+          twoFactorEnabled: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .onConflictDoNothing();
 
       const actions = ['user_login', 'user_logout', 'request_created', 'document_viewed'] as const;
-      const logs = [];
+      const logs: (typeof schema.auditLogs.$inferInsert)[] = [];
       for (let i = 0; i < 20; i++) {
         logs.push({
           id: `audit-perf-${i}`,
           userId: 'test-user-audit',
-          action: actions[i % actions.length],
+          action: actions[i % 4] as AuditAction,
           resourceType: 'user',
           resourceId: 'test-user-audit',
           createdAt: new Date(Date.now() - i * 3600000),

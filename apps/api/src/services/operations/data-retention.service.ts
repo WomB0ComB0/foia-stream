@@ -79,8 +79,8 @@ export async function setContentPurgeDate(requestId: string): Promise<void> {
   await db
     .update(foiaRequests)
     .set({
-      contentPurgeAt: purgeDate.toISOString(),
-      updatedAt: new Date().toISOString(),
+      contentPurgeAt: purgeDate,
+      updatedAt: new Date(),
     })
     .where(eq(foiaRequests.id, requestId));
 }
@@ -110,7 +110,7 @@ export async function purgeExpiredRequestContent(): Promise<{
   purgedCount: number;
   errors: string[];
 }> {
-  const now = new Date().toISOString();
+  const now = new Date();
   const errors: string[] = [];
   let purgedCount = 0;
 
@@ -134,7 +134,7 @@ export async function purgeExpiredRequestContent(): Promise<{
               '[Content purged per data retention policy - retained for 90 days after completion]',
             titleHash,
             contentPurged: true,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date(),
           })
           .where(eq(foiaRequests.id, request.id));
 
@@ -175,8 +175,7 @@ export async function purgeExpiredRequestContent(): Promise<{
 export async function purgeInactiveSessions(): Promise<{ purgedCount: number }> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - RETENTION_CONFIG.SESSION_INACTIVE_DAYS);
-  const cutoffISO = cutoffDate.toISOString();
-  const now = new Date().toISOString();
+  const now = new Date();
 
   // First count how many will be deleted
   const countResult = await db
@@ -184,7 +183,7 @@ export async function purgeInactiveSessions(): Promise<{ purgedCount: number }> 
     .from(sessions)
     .where(
       sql`${sessions.expiresAt} < ${now} OR
-          (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffISO})`,
+          (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffDate})`,
     );
 
   const purgedCount = countResult[0]?.count ?? 0;
@@ -193,7 +192,7 @@ export async function purgeInactiveSessions(): Promise<{ purgedCount: number }> 
   if (purgedCount > 0) {
     await db.delete(sessions).where(
       sql`${sessions.expiresAt} < ${now} OR
-            (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffISO})`,
+            (${sessions.lastActiveAt} IS NOT NULL AND ${sessions.lastActiveAt} < ${cutoffDate})`,
     );
   }
 
@@ -210,7 +209,7 @@ export async function getRetentionStats(): Promise<{
   purgedRequests: number;
   expiredSessions: number;
 }> {
-  const now = new Date().toISOString();
+  const now = new Date();
 
   // Count requests pending purge
   const pendingPurgeResult = await db

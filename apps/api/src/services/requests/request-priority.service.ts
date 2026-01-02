@@ -29,10 +29,11 @@
  * @compliance NIST 800-53 AU-6 (Audit Review, Analysis, and Reporting)
  */
 
-import { db, schema } from '@/db';
 import { createDeadlineQueue, PriorityQueue, type PriorityQueueStats } from '@foia-stream/shared';
 import { eq } from 'drizzle-orm';
 import { Schema as S } from 'effect';
+
+import { db, schema } from '@/db';
 
 // ============================================
 // Types
@@ -227,11 +228,11 @@ export class RequestPriorityService {
    * @returns The prioritized request or null if not found
    */
   async addRequest(requestId: string): Promise<PrioritizedRequest | null> {
-    const request = await db
+    const requests = await db
       .select()
       .from(schema.foiaRequests)
-      .where(eq(schema.foiaRequests.id, requestId))
-      .get();
+      .where(eq(schema.foiaRequests.id, requestId));
+    const request = requests[0];
 
     if (!request) {
       return null;

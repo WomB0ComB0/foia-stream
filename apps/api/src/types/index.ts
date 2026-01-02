@@ -75,9 +75,9 @@ export interface User {
   /** MFA enabled status */
   twoFactorEnabled: boolean;
   /** Account creation timestamp */
-  createdAt: string;
+  createdAt: Date;
   /** Last update timestamp */
-  updatedAt: string;
+  updatedAt: Date;
 }
 
 /**
@@ -92,9 +92,9 @@ export interface UserSession {
   /** JWT token */
   token: string;
   /** Token expiration timestamp */
-  expiresAt: string;
+  expiresAt: Date;
   /** Session creation timestamp */
-  createdAt: string;
+  createdAt: Date;
 }
 
 // ============================================
@@ -136,9 +136,9 @@ export interface Agency {
   /** Days allowed to file appeal */
   appealDeadlineDays: number;
   /** Creation timestamp */
-  createdAt: string;
+  createdAt: Date;
   /** Last update timestamp */
-  updatedAt: string;
+  updatedAt: Date;
 }
 
 // ============================================
@@ -196,8 +196,8 @@ export interface FOIARequest {
   completedAt?: string | null;
   denialReason?: string | null;
   isPublic: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface RequestTemplate {
@@ -210,8 +210,8 @@ export interface RequestTemplate {
   createdBy: string;
   isOfficial: boolean;
   usageCount: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Document Types
@@ -240,8 +240,8 @@ export interface Document {
   isPublic: boolean;
   transcript?: string | null;
   metadata: DocumentMetadata;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface DocumentMetadata {
@@ -273,8 +273,8 @@ export interface Comment {
   upvotes: number;
   downvotes: number;
   isVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Appeal Types
@@ -287,8 +287,8 @@ export interface Appeal {
   status: 'pending' | 'granted' | 'denied' | 'partial';
   responseAt?: string | null;
   responseText?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Audit Log Types
@@ -315,7 +315,7 @@ export interface AuditLog {
   details: Record<string, unknown>;
   ipAddress?: string | null;
   userAgent?: string | null;
-  createdAt: string;
+  createdAt: Date;
 }
 
 // Statistics Types
@@ -328,7 +328,7 @@ export interface AgencyStats {
   appealedRequests: number;
   averageResponseDays: number;
   complianceRate: number;
-  lastUpdated: string;
+  lastUpdated: Date;
 }
 
 export interface UseOfForceStats {

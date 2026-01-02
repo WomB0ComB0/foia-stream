@@ -33,11 +33,12 @@
 // FOIA Stream - Agency Service
 // ============================================
 
-import { db, schema } from '@/db';
-import type { Agency, JurisdictionLevel, PaginatedResult } from '@/types';
 import { and, eq, like, or, sql } from 'drizzle-orm';
 import { Schema as S } from 'effect';
 import { nanoid } from 'nanoid';
+
+import { db, schema } from '@/db';
+import type { Agency, JurisdictionLevel, PaginatedResult } from '@/types';
 
 /**
  * Data transfer object schema for creating a new agency

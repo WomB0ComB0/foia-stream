@@ -371,37 +371,6 @@ export const redactTextRoute = createRoute({
 // ============================================
 
 /**
- * Upload scan result schema
- */
-const UploadScanResultSchema = z
-  .object({
-    success: z.boolean(),
-    filename: z.string(),
-    size: z.number(),
-    hash: z.string(),
-    scan: z.object({
-      safe: z.boolean(),
-      canProcess: z.boolean(),
-      message: z.string(),
-      validation: z.object({
-        valid: z.boolean(),
-        isEncrypted: z.boolean(),
-        hasJavaScript: z.boolean(),
-        hasEmbeddedFiles: z.boolean(),
-        version: z.string().nullable(),
-        warnings: z.array(z.string()),
-        errors: z.array(z.string()),
-      }),
-      virusScan: z.object({
-        scanned: z.boolean(),
-        safe: z.boolean(),
-        message: z.string(),
-      }),
-    }),
-  })
-  .openapi('UploadScanResult');
-
-/**
  * Upload validation result schema
  */
 const UploadValidationResultSchema = z

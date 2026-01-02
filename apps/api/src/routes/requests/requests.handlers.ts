@@ -34,6 +34,7 @@ import { handleRouteError } from '@/lib/responses';
 import type { AppRouteHandler } from '@/lib/types';
 import { foiaRequestService } from '@/services/requests/foia-request.service';
 import type {
+  createBulkRequestRoute,
   createRequestRoute,
   getDeadlinesRoute,
   getMyRequestsRoute,

@@ -33,11 +33,12 @@
 // FOIA Stream - Request Templates Service
 // ============================================
 
-import { db, schema } from '@/db';
-import type { JurisdictionLevel, PaginatedResult, RecordCategory, RequestTemplate } from '@/types';
 import { and, eq, like, sql } from 'drizzle-orm';
 import { Schema as S } from 'effect';
 import { nanoid } from 'nanoid';
+
+import { db, schema } from '@/db';
+import type { JurisdictionLevel, PaginatedResult, RecordCategory, RequestTemplate } from '@/types';
 
 /**
  * Data transfer object schema for creating a template
@@ -242,7 +243,7 @@ export class TemplateService {
    */
   async createTemplate(userId: string, data: CreateTemplateDTO): Promise<RequestTemplate> {
     const id = nanoid();
-    const now = new Date().toISOString();
+    const now = new Date();
 
     await db.insert(schema.requestTemplates).values({
       id,
@@ -265,13 +266,12 @@ export class TemplateService {
    * Get template by ID
    */
   async getTemplateById(id: string): Promise<RequestTemplate | null> {
-    const template = await db
+    const templates = await db
       .select()
       .from(schema.requestTemplates)
-      .where(eq(schema.requestTemplates.id, id))
-      .get();
+      .where(eq(schema.requestTemplates.id, id));
 
-    return template as RequestTemplate | null;
+    return (templates[0] as unknown as RequestTemplate) ?? null;
   }
 
   /**
@@ -284,7 +284,7 @@ export class TemplateService {
       .where(eq(schema.requestTemplates.category, category))
       .orderBy(schema.requestTemplates.usageCount);
 
-    return templates as RequestTemplate[];
+    return templates as unknown as RequestTemplate[];
   }
 
   /**
@@ -317,17 +317,13 @@ export class TemplateService {
         .orderBy(schema.requestTemplates.usageCount)
         .limit(pageSize)
         .offset(offset),
-      db
-        .select({ count: sql<number>`count(*)` })
-        .from(schema.requestTemplates)
-        .where(whereClause)
-        .get(),
+      db.select({ count: sql<number>`count(*)` }).from(schema.requestTemplates).where(whereClause),
     ]);
 
-    const totalItems = countResult?.count ?? 0;
+    const totalItems = countResult[0]?.count ?? 0;
 
     return {
-      data: templates as RequestTemplate[],
+      data: templates as unknown as RequestTemplate[],
       pagination: {
         page,
         pageSize,
@@ -347,7 +343,7 @@ export class TemplateService {
       .where(eq(schema.requestTemplates.isOfficial, true))
       .orderBy(schema.requestTemplates.category);
 
-    return templates as RequestTemplate[];
+    return templates as unknown as RequestTemplate[];
   }
 
   /**
@@ -357,10 +353,9 @@ export class TemplateService {
     const existing = await db
       .select({ count: sql<number>`count(*)` })
       .from(schema.requestTemplates)
-      .where(eq(schema.requestTemplates.isOfficial, true))
-      .get();
+      .where(eq(schema.requestTemplates.isOfficial, true));
 
-    if (existing && existing.count > 0) {
+    if (existing[0] && existing[0].count > 0) {
       console.log('Default templates already exist, skipping seed');
       return;
     }
@@ -368,6 +363,7 @@ export class TemplateService {
     console.log('Seeding default request templates...');
 
     for (const template of DEFAULT_TEMPLATES) {
+      const now = new Date();
       await db.insert(schema.requestTemplates).values({
         id: nanoid(),
         name: template.name,
@@ -378,8 +374,8 @@ export class TemplateService {
         createdBy: null,
         isOfficial: true,
         usageCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
       });
     }
 

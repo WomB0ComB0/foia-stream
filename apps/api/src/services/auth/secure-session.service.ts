@@ -29,12 +29,13 @@
  * @compliance NIST 800-53 AC-12 (Session Termination)
  */
 
-import { env } from '@/config/env';
-import { db, schema } from '@/db';
-import { decryptData, encryptData } from '@/utils/security';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { UAParser } from 'ua-parser-js';
+
+import { env } from '@/config/env';
+import { db, schema } from '@/db';
+import { decryptData, encryptData } from '@/utils/security';
 
 /**
  * Session metadata that gets encrypted

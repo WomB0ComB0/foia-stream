@@ -35,6 +35,12 @@
 // FOIA Stream - FOIA Request Service
 // ============================================
 
+import { BadRequestError, ForbiddenError, NotFoundError } from '@foia-stream/shared';
+import dayjs from 'dayjs';
+import { and, asc, desc, eq, like, or, sql } from 'drizzle-orm';
+import { Schema as S } from 'effect';
+import { nanoid } from 'nanoid';
+
 import { db, schema } from '@/db';
 import type {
   CreateRequestDTO,
@@ -45,11 +51,7 @@ import type {
   SearchFilters,
   UpdateRequestDTO,
 } from '@/types';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@foia-stream/shared';
-import dayjs from 'dayjs';
-import { and, asc, desc, eq, like, or, sql } from 'drizzle-orm';
-import { Schema as S } from 'effect';
-import { nanoid } from 'nanoid';
+
 import { decryptSensitiveFields, encryptSensitiveFields } from './encryption.service';
 
 /**
@@ -77,8 +79,8 @@ export const RequestWithAgencySchema = S.mutable(
     completedAt: S.optional(S.NullOr(S.String)),
     denialReason: S.optional(S.NullOr(S.String)),
     isPublic: S.Boolean,
-    createdAt: S.String,
-    updatedAt: S.String,
+    createdAt: S.Date,
+    updatedAt: S.Date,
     /** Associated agency details */
     agency: S.Struct({
       id: S.String,
@@ -127,28 +129,31 @@ export class FOIARequestService {
    */
   async createRequest(userId: string, data: CreateRequestDTO): Promise<FOIARequest> {
     const id = nanoid();
-    const now = new Date().toISOString();
+    const now = new Date();
 
     // Encrypt sensitive fields (description may contain PII)
     const encryptedData = encryptSensitiveFields({ requestContent: data.description }, [
       'requestContent',
     ]);
 
-    await db.insert(schema.foiaRequests).values({
-      id,
-      userId,
-      agencyId: data.agencyId,
-      category: data.category,
-      title: data.title,
-      description: (encryptedData.requestContent as string) ?? data.description,
-      dateRangeStart: data.dateRangeStart,
-      dateRangeEnd: data.dateRangeEnd,
-      templateId: data.templateId,
-      isPublic: data.isPublic ?? true,
-      status: 'draft',
-      createdAt: now,
-      updatedAt: now,
-    });
+    await db
+      .insert(schema.foiaRequests)
+      .values({
+        id,
+        userId,
+        agencyId: data.agencyId,
+        category: data.category,
+        title: data.title,
+        description: (encryptedData.requestContent as string) ?? data.description,
+        dateRangeStart: data.dateRangeStart,
+        dateRangeEnd: data.dateRangeEnd,
+        templateId: data.templateId,
+        isPublic: data.isPublic ?? true,
+        status: 'draft',
+        createdAt: now,
+        updatedAt: now,
+      } as typeof schema.foiaRequests.$inferInsert)
+      .returning();
 
     // Log audit event
     await this.logAudit(userId, 'request_created', 'foia_request', id);
@@ -186,16 +191,16 @@ export class FOIARequestService {
     }
 
     // Get agency to calculate due date
-    const agency = await db
+    const agencies = await db
       .select()
       .from(schema.agencies)
-      .where(eq(schema.agencies.id, request.agencyId))
-      .get();
+      .where(eq(schema.agencies.id, request.agencyId));
+    const agency = agencies[0];
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const dueDate = dayjs()
       .add(agency?.responseDeadlineDays ?? 20, 'day')
-      .toISOString();
+      .toDate();
 
     await db
       .update(schema.foiaRequests)
@@ -230,7 +235,7 @@ export class FOIARequestService {
       throw NotFoundError('Request not found');
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const updateData: Record<string, unknown> = { ...data, updatedAt: now };
 
     // Track completion
@@ -262,11 +267,11 @@ export class FOIARequestService {
    * Decrypts sensitive fields on retrieval
    */
   async getRequestById(id: string): Promise<FOIARequest | null> {
-    const request = await db
+    const requests = await db
       .select()
       .from(schema.foiaRequests)
-      .where(eq(schema.foiaRequests.id, id))
-      .get();
+      .where(eq(schema.foiaRequests.id, id));
+    const request = requests[0];
 
     if (!request) return null;
 
@@ -278,14 +283,14 @@ export class FOIARequestService {
     return {
       ...request,
       description: (decrypted.requestContent as string) ?? request.description,
-    } as FOIARequest;
+    } as unknown as FOIARequest;
   }
 
   /**
    * Get request with agency details
    */
   async getRequestWithAgency(id: string): Promise<RequestWithAgency | null> {
-    const result = await db
+    const results = await db
       .select({
         request: schema.foiaRequests,
         agency: {
@@ -297,13 +302,13 @@ export class FOIARequestService {
       })
       .from(schema.foiaRequests)
       .innerJoin(schema.agencies, eq(schema.foiaRequests.agencyId, schema.agencies.id))
-      .where(eq(schema.foiaRequests.id, id))
-      .get();
+      .where(eq(schema.foiaRequests.id, id));
+    const result = results[0];
 
     if (!result) return null;
 
     return {
-      ...(result.request as FOIARequest),
+      ...(result.request as unknown as FOIARequest),
       agency: result.agency,
     };
   }
@@ -338,15 +343,14 @@ export class FOIARequestService {
       db
         .select({ count: sql<number>`count(*)` })
         .from(schema.foiaRequests)
-        .where(eq(schema.foiaRequests.userId, userId))
-        .get(),
+        .where(eq(schema.foiaRequests.userId, userId)),
     ]);
 
-    const totalItems = countResult?.count ?? 0;
+    const totalItems = countResult[0]?.count ?? 0;
 
     return {
       data: requests.map((r) => ({
-        ...(r.request as FOIARequest),
+        ...(r.request as unknown as FOIARequest),
         agency: r.agency,
       })),
       pagination: {
@@ -422,15 +426,14 @@ export class FOIARequestService {
         .select({ count: sql<number>`count(*)` })
         .from(schema.foiaRequests)
         .innerJoin(schema.agencies, eq(schema.foiaRequests.agencyId, schema.agencies.id))
-        .where(whereClause)
-        .get(),
+        .where(whereClause),
     ]);
 
-    const totalItems = countResult?.count ?? 0;
+    const totalItems = countResult[0]?.count ?? 0;
 
     return {
       data: requests.map((r) => ({
-        ...(r.request as FOIARequest),
+        ...(r.request as unknown as FOIARequest),
         agency: r.agency,
       })),
       pagination: {
@@ -446,8 +449,8 @@ export class FOIARequestService {
    * Get requests approaching deadline
    */
   async getUpcomingDeadlines(days = 7): Promise<RequestWithAgency[]> {
-    const cutoffDate = dayjs().add(days, 'day').toISOString();
-    const now = new Date().toISOString();
+    const cutoffDate = dayjs().add(days, 'day').toDate();
+    const now = new Date();
 
     const requests = await db
       .select({
@@ -475,7 +478,7 @@ export class FOIARequestService {
       .orderBy(asc(schema.foiaRequests.dueDate));
 
     return requests.map((r) => ({
-      ...(r.request as FOIARequest),
+      ...(r.request as unknown as FOIARequest),
       agency: r.agency,
     }));
   }
@@ -484,7 +487,7 @@ export class FOIARequestService {
    * Get overdue requests
    */
   async getOverdueRequests(): Promise<RequestWithAgency[]> {
-    const now = new Date().toISOString();
+    const now = new Date();
 
     const requests = await db
       .select({
@@ -511,7 +514,7 @@ export class FOIARequestService {
       .orderBy(asc(schema.foiaRequests.dueDate));
 
     return requests.map((r) => ({
-      ...(r.request as FOIARequest),
+      ...(r.request as unknown as FOIARequest),
       agency: r.agency,
     }));
   }
@@ -543,7 +546,7 @@ export class FOIARequestService {
       throw BadRequestError('Cannot withdraw a completed request');
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
 
     await db
       .update(schema.foiaRequests)
@@ -566,7 +569,7 @@ export class FOIARequestService {
    * Update agency statistics
    */
   private async updateAgencyStats(agencyId: string): Promise<void> {
-    const stats = await db
+    const statsResult = await db
       .select({
         total: sql<number>`count(*)`,
         pending: sql<number>`sum(case when ${schema.foiaRequests.status} in ('submitted', 'acknowledged', 'processing') then 1 else 0 end)`,
@@ -575,13 +578,13 @@ export class FOIARequestService {
         appealed: sql<number>`sum(case when ${schema.foiaRequests.status} like 'appeal%' then 1 else 0 end)`,
       })
       .from(schema.foiaRequests)
-      .where(eq(schema.foiaRequests.agencyId, agencyId))
-      .get();
+      .where(eq(schema.foiaRequests.agencyId, agencyId));
+    const stats = statsResult[0];
 
     // Calculate average response time
-    const responseTimeResult = await db
+    const responseTimeResultArr = await db
       .select({
-        avgDays: sql<number>`avg(julianday(${schema.foiaRequests.completedAt}) - julianday(${schema.foiaRequests.submittedAt}))`,
+        avgDays: sql<number>`avg(extract(epoch from (${schema.foiaRequests.completedAt} - ${schema.foiaRequests.submittedAt})) / 86400)`,
       })
       .from(schema.foiaRequests)
       .where(
@@ -590,10 +593,10 @@ export class FOIARequestService {
           sql`${schema.foiaRequests.completedAt} is not null`,
           sql`${schema.foiaRequests.submittedAt} is not null`,
         ),
-      )
-      .get();
+      );
+    const responseTimeResult = responseTimeResultArr[0];
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const total = stats?.total ?? 0;
     const fulfilled = stats?.fulfilled ?? 0;
 
@@ -643,7 +646,7 @@ export class FOIARequestService {
       resourceType,
       resourceId,
       details: details ?? null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     });
   }
 }
